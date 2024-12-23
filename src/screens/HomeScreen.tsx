@@ -206,7 +206,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   key={index}
                   style={[
                     styles.checkmarkContainer,
-                    { top: 40 + index * 145, left: -45 },
+                    { top: 30 + index * 100, left: -45 },
                   ]}
                 >
                   <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
@@ -238,8 +238,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <View key={index} style={styles.missionItem}>
                   <View style={styles.missionHeader}>
                     <MaterialCommunityIcons name="clock-time-three" size={14} color="#666" />
-                    <Text style={styles.missionType}>{mission.type}</Text>
                     <Text style={styles.missionDuration}>{mission.duration}</Text>
+                    <Text style={styles.missionType}>{mission.type}</Text>
                   </View>
                   <View style={styles.missionContent}>
                     <View style={styles.missionTextContainer}>
@@ -362,10 +362,10 @@ const styles = StyleSheet.create({
     height: 8,
   },
   aiCoachButton: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#151932',
+    borderRadius: 12,
+    padding: 16,
     marginHorizontal: 20,
-    borderRadius: 15,
-    padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -443,38 +443,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   missionItem: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#151932',
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    marginHorizontal: 2,
-    position: 'relative',
+    padding: 14,
+    marginBottom: 8,
   },
   missionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 6,
   },
   missionType: {
     color: '#666',
     fontSize: 12,
-    textTransform: 'uppercase',
+    marginLeft: 4,
   },
   missionDuration: {
     color: '#666',
     fontSize: 12,
-    marginLeft: 'auto',
+    marginLeft: 4,
   },
   missionContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
   },
   missionTextContainer: {
     flex: 1,
-    marginRight: 20,
+    marginRight: 12,
   },
   missionItemTitle: {
     color: '#fff',
