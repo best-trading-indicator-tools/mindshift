@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Avatar, ListItem } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -59,6 +59,15 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        <Text style={styles.screenTitle}>Profile</Text>
+        <TouchableOpacity 
+          style={styles.helpButton}
+          onPress={() => (navigation as any).navigate('Support')}
+        >
+          <MaterialCommunityIcons name="help-circle-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.avatarContainer}>
         <Avatar
           size={100}
           rounded
@@ -125,9 +134,23 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#121212',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  helpButton: {
+    padding: 8,
+  },
+  avatarContainer: {
     alignItems: 'center',
     marginBottom: 30,
     paddingTop: 20,

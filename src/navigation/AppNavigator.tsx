@@ -8,6 +8,7 @@ import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import SupportScreen from '../screens/SupportScreen';
 import { Icon } from '@rneui/themed';
 
 export type RootTabParamList = {
@@ -19,8 +20,9 @@ export type RootTabParamList = {
 };
 
 export type RootStackParamList = {
-  Main: undefined;
+  MainTabs: undefined;
   AiCoach: undefined;
+  Support: undefined;
   Course: undefined;
   Notifications: undefined;
   Lesson: {
@@ -134,18 +136,27 @@ function AppNavigator() {
         }}
       >
         <Stack.Screen
-          name="Main"
+          name="MainTabs"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="AiCoach" component={AiCoachScreen} />
+        <Stack.Screen
+          name="AiCoach"
+          component={AiCoachScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Support"
+          component={SupportScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="Course"
           component={CourseStackScreen}
           options={{ title: 'Course Details' }}
         />
-        <Stack.Screen 
-          name="Notifications" 
+        <Stack.Screen
+          name="Notifications"
           component={NotificationsScreen}
           options={{
             presentation: 'modal',
