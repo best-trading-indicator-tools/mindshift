@@ -51,6 +51,7 @@ function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon
               type="material-community"
