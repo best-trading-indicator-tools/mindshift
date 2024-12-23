@@ -1,65 +1,124 @@
 import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screens/HomeScreen';
+import AiCoachScreen from '../screens/AiCoachScreen';
+import CourseScreen from '../screens/CourseScreen';
+import ChallengesScreen from '../screens/ChallengesScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const IconComponent = MaterialCommunityIcons as any;
 
-// Screens
-import HomeScreen from '../screens/HomeScreen';
-import CourseScreen from '../screens/CourseScreen';
-import ChallengesScreen from '../screens/ChallengesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+export type RootTabParamList = {
+  Home: undefined;
+  Courses: undefined;
+  Challenges: undefined;
+  Profile: undefined;
+};
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Main: undefined;
+  AiCoach: undefined;
+};
 
-const TabNavigator = () => {
+const Tab = createBottomTabNavigator<RootTabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string = 'circle';
-
-          switch (route.name) {
-            case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Course':
-              iconName = focused ? 'book-open-page-variant' : 'book-open-outline';
-              break;
-            case 'Challenges':
-              iconName = focused ? 'trophy' : 'trophy-outline';
-              break;
-            case 'Profile':
-              iconName = focused ? 'account' : 'account-outline';
-              break;
-          }
-
-          return <IconComponent name={iconName} size={size} color={color} />;
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: '#121212',
+          borderTopColor: '#333',
         },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#1E90FF',
+        tabBarInactiveTintColor: '#666',
         headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Course" component={CourseScreen} />
-      <Tab.Screen name="Challenges" component={ChallengesScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      }}>
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ focused, color, size }) => (
+            <IconComponent
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Courses"
+        component={CourseScreen}
+        options={{
+          tabBarIcon: ({ focused, color, size }) => (
+            <IconComponent
+              name={focused ? 'book-open-page-variant' : 'book-open-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Challenges"
+        component={ChallengesScreen}
+        options={{
+          tabBarIcon: ({ focused, color, size }) => (
+            <IconComponent
+              name={focused ? 'trophy' : 'trophy-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ focused, color, size }) => (
+            <IconComponent
+              name={focused ? 'account' : 'account-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 };
 
-const AppNavigator = () => {
+const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#121212',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}>
         <Stack.Screen
           name="Main"
           component={TabNavigator}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AiCoach"
+          component={AiCoachScreen}
+          options={{
+            title: 'AI Coach',
+            headerBackTitle: 'Back',
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
