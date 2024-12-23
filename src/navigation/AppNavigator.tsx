@@ -4,62 +4,73 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import AiCoachScreen from '../screens/AiCoachScreen';
-import CourseScreen from '../screens/CourseScreen';
+import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-const IconComponent = MaterialCommunityIcons as any;
+import NotificationsScreen from '../screens/NotificationsScreen';
+import { Icon } from '@rneui/themed';
 
 export type RootTabParamList = {
   Home: undefined;
   Courses: undefined;
   Challenges: undefined;
   Profile: undefined;
+  AiCoach: undefined;
 };
 
 export type RootStackParamList = {
   Main: undefined;
   AiCoach: undefined;
+  Course: undefined;
+  Notifications: undefined;
+  Lesson: {
+    lessonId: number;
+  };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const TabNavigator: React.FC = () => {
+function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
           backgroundColor: '#121212',
-          borderTopColor: '#333',
+          borderTopColor: '#2A2A2A',
         },
-        tabBarActiveTintColor: '#1E90FF',
-        tabBarInactiveTintColor: '#666',
-        headerShown: false,
-      }}>
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: '#666666',
+        headerStyle: {
+          backgroundColor: '#121212',
+        },
+        headerTintColor: '#FFFFFF',
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <IconComponent
-              name={focused ? 'home' : 'home-outline'}
-              size={size}
+          tabBarIcon: ({ color, size }) => (
+            <Icon
+              type="material-community"
+              name="home"
               color={color}
+              size={size}
             />
           ),
         }}
       />
       <Tab.Screen
         name="Courses"
-        component={CourseScreen}
+        component={CourseTabScreen}
         options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <IconComponent
-              name={focused ? 'book-open-page-variant' : 'book-open-outline'}
-              size={size}
+          tabBarIcon: ({ color, size }) => (
+            <Icon
+              type="material-community"
+              name="book-open-variant"
               color={color}
+              size={size}
             />
           ),
         }}
@@ -68,11 +79,12 @@ const TabNavigator: React.FC = () => {
         name="Challenges"
         component={ChallengesScreen}
         options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <IconComponent
-              name={focused ? 'trophy' : 'trophy-outline'}
-              size={size}
+          tabBarIcon: ({ color, size }) => (
+            <Icon
+              type="material-community"
+              name="trophy"
               color={color}
+              size={size}
             />
           ),
         }}
@@ -81,20 +93,35 @@ const TabNavigator: React.FC = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <IconComponent
-              name={focused ? 'account' : 'account-outline'}
-              size={size}
+          tabBarIcon: ({ color, size }) => (
+            <Icon
+              type="material-community"
+              name="account"
               color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AiCoach"
+        component={AiCoachScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Icon
+              type="material-community"
+              name="robot"
+              color={color}
+              size={size}
             />
           ),
         }}
       />
     </Tab.Navigator>
   );
-};
+}
 
-const AppNavigator: React.FC = () => {
+function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -102,27 +129,30 @@ const AppNavigator: React.FC = () => {
           headerStyle: {
             backgroundColor: '#121212',
           },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}>
+          headerTintColor: '#FFFFFF',
+        }}
+      >
         <Stack.Screen
           name="Main"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="AiCoach" component={AiCoachScreen} />
         <Stack.Screen
-          name="AiCoach"
-          component={AiCoachScreen}
+          name="Course"
+          component={CourseStackScreen}
+          options={{ title: 'Course Details' }}
+        />
+        <Stack.Screen 
+          name="Notifications" 
+          component={NotificationsScreen}
           options={{
-            title: 'AI Coach',
-            headerBackTitle: 'Back',
+            presentation: 'modal',
           }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
-};
+}
 
 export default AppNavigator;

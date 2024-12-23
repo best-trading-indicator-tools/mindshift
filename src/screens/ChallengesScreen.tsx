@@ -35,40 +35,38 @@ const ChallengesScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text h3>Daily Challenges</Text>
-        <Text style={styles.subtitle}>Complete challenges to earn points</Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>Daily Challenges</Text>
+        <Text style={styles.description}>Complete challenges to earn points</Text>
       </View>
 
       <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
+        <View style={styles.stat}>
           <IconComponent name="star" size={24} color="#FFD700" />
-          <Text style={styles.statValue}>1,250</Text>
-          <Text style={styles.statLabel}>Points</Text>
+          <Text style={styles.statText}>1,250</Text>
         </View>
-        <View style={styles.statItem}>
+        <View style={styles.stat}>
           <IconComponent name="trophy" size={24} color="#6366f1" />
-          <Text style={styles.statValue}>12</Text>
-          <Text style={styles.statLabel}>Completed</Text>
+          <Text style={styles.statText}>12</Text>
         </View>
-        <View style={styles.statItem}>
+        <View style={styles.stat}>
           <IconComponent name="fire" size={24} color="#FF4136" />
-          <Text style={styles.statValue}>5</Text>
-          <Text style={styles.statLabel}>Streak</Text>
+          <Text style={styles.statText}>5</Text>
         </View>
       </View>
 
       {challenges.map((challenge, index) => (
-        <Card key={index} containerStyle={styles.card}>
+        <Card key={index} containerStyle={styles.challengeCard}>
           <View style={styles.challengeHeader}>
             <IconComponent name={challenge.icon} size={24} color="#6366f1" />
             <Text style={styles.challengeTitle}>{challenge.title}</Text>
             <Text style={styles.points}>+{challenge.points}</Text>
           </View>
           <Card.Divider />
-          <Text style={styles.description}>{challenge.description}</Text>
+          <Text style={styles.challengeDescription}>{challenge.description}</Text>
           <Button
             title="Start Challenge"
+            titleStyle={styles.buttonText}
             buttonStyle={styles.button}
             containerStyle={styles.buttonContainer}
           />
@@ -81,39 +79,32 @@ const ChallengesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#121212',
   },
-  header: {
+  content: {
     padding: 20,
-    backgroundColor: '#fff',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 20,
-    marginBottom: 10,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 5,
+    marginBottom: 20,
+    color: '#FFFFFF',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+    color: '#E0E0E0',
   },
-  card: {
+  challengeCard: {
+    backgroundColor: '#1E1E1E',
     borderRadius: 10,
-    marginBottom: 10,
+    padding: 15,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   challengeHeader: {
     flexDirection: 'row',
@@ -122,7 +113,9 @@ const styles = StyleSheet.create({
   },
   challengeTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#FFFFFF',
     marginLeft: 10,
     flex: 1,
   },
@@ -131,13 +124,34 @@ const styles = StyleSheet.create({
     color: '#6366f1',
     fontWeight: 'bold',
   },
-  description: {
-    fontSize: 16,
-    marginBottom: 10,
+  challengeDescription: {
+    fontSize: 14,
+    color: '#B0B0B0',
+    marginBottom: 12,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  stat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    marginLeft: 5,
+    color: '#E0E0E0',
   },
   button: {
     backgroundColor: '#6366f1',
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   buttonContainer: {
     marginTop: 10,

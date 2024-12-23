@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Text } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -18,13 +19,94 @@ const renderIcon = (name: string, color: string, size: number) => {
   return <IconComponent name={name} size={size} color={color} />;
 };
 
+const challenges = [
+  {
+    title: 'Mood Tracker',
+    subtitle: 'Track your daily emotional well-being',
+    icon: 'chart-line',
+    colors: ['#1E90FF', '#4CAF50'],
+  },
+  {
+    title: 'Meditation',
+    subtitle: 'Find your inner peace',
+    icon: 'meditation',
+    colors: ['#9C27B0', '#E91E63'],
+  },
+  {
+    title: 'Gratitude Journal',
+    subtitle: 'Practice daily gratitude',
+    icon: 'notebook',
+    colors: ['#FF9800', '#F44336'],
+  },
+  {
+    title: 'Sleep Better',
+    subtitle: 'Improve your sleep quality',
+    icon: 'moon-waning-crescent',
+    colors: ['#2196F3', '#673AB7'],
+  },
+  {
+    title: 'Mindful Minutes',
+    subtitle: '5 minutes of mindfulness',
+    icon: 'timer-sand',
+    colors: ['#009688', '#4CAF50'],
+  },
+  {
+    title: 'Positive Affirmations',
+    subtitle: 'Build self-confidence',
+    icon: 'heart',
+    colors: ['#FF4081', '#7C4DFF'],
+  },
+  {
+    title: 'Stress Relief',
+    subtitle: 'Quick relaxation exercises',
+    icon: 'yoga',
+    colors: ['#00BCD4', '#3F51B5'],
+  },
+  {
+    title: 'Social Connect',
+    subtitle: 'Stay connected with loved ones',
+    icon: 'account-group',
+    colors: ['#FFC107', '#FF5722'],
+  },
+];
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const windowWidth = Dimensions.get('window').width;
+  const cardWidth = windowWidth - 40;
+
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffset / cardWidth);
+    setActiveIndex(currentIndex);
+  };
+
+  const renderPaginationDots = () => {
+    const dots = [];
+    const numberOfDots = challenges.length;
+
+    for (let i = 0; i < numberOfDots; i++) {
+      dots.push(
+        <View
+          key={i}
+          style={[
+            styles.paginationDot,
+            i === activeIndex ? styles.paginationDotActive : null,
+          ]}
+        />
+      );
+    }
+
+    return <View style={styles.paginationContainer}>{dots}</View>;
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.headerSpacing} />
         <View style={styles.header}>
-          <Text h2 style={styles.greeting}>Hello!</Text>
+          <Text h2 style={styles.greeting}>Bonjour!</Text>
           <View style={styles.statsContainer}>
             <View style={styles.stat}>
               {renderIcon("fire", "#FFD700", 24)}
@@ -34,84 +116,64 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               {renderIcon("medal", "#7B68EE", 24)}
               <Text style={styles.statText}>0</Text>
             </View>
-            <TouchableOpacity style={styles.notificationIcon}>
+            <TouchableOpacity 
+              style={styles.notificationIcon}
+              onPress={() => navigation.navigate('Notifications')}
+            >
               {renderIcon("bell", "#fff", 24)}
             </TouchableOpacity>
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cardsContainer}>
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#1E90FF' }]}>
-            <Text style={styles.cardTitle}>Voice Evaluation</Text>
-            <Text style={styles.cardSubtitle}>Discover how your voice is perceived</Text>
-            <View style={styles.cardImageContainer}>
-              {renderIcon("microphone", "#fff", 40)}
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#4B0082' }]}>
-            <Text style={styles.cardTitle}>Accent Test</Text>
-            <Text style={styles.cardSubtitle}>Get information about your accent</Text>
-            <View style={styles.cardImageContainer}>
-              {renderIcon("account-voice", "#fff", 40)}
-            </View>
-          </TouchableOpacity>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.cardsContainer}
+          ref={scrollViewRef}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          pagingEnabled
+          decelerationRate="fast"
+          snapToInterval={cardWidth}
+          snapToAlignment="center"
+        >
+          {challenges.map((challenge, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={[styles.cardWrapper, { width: cardWidth }]}
+            >
+              <LinearGradient
+                colors={challenge.colors}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={styles.card}
+              >
+                <Text style={styles.cardTitle}>{challenge.title}</Text>
+                <Text style={styles.cardSubtitle}>{challenge.subtitle}</Text>
+                <View style={styles.cardImageContainer}>
+                  {renderIcon(challenge.icon, "#fff", 40)}
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
+        {renderPaginationDots()}
 
         <TouchableOpacity 
           style={styles.aiCoachButton}
           onPress={() => navigation.navigate('AiCoach')}
         >
-          {renderIcon("robot", "#00BFFF", 24)}
-          <Text style={styles.aiCoachText}>AI Coach</Text>
-          {renderIcon("chevron-right", "#fff", 24)}
+          <View style={styles.aiCoachIcon}>
+            {renderIcon("robot", "#fff", 24)}
+          </View>
+          <View style={styles.aiCoachContent}>
+            <Text style={styles.aiCoachTitle}>Coach IA</Text>
+            <Text style={styles.aiCoachSubtitle}>Parle avec ton coach personnel</Text>
+          </View>
+          <View style={styles.aiCoachArrow}>
+            {renderIcon("chevron-right", "#fff", 24)}
+          </View>
         </TouchableOpacity>
-
-        <View style={styles.dailyMissionsContainer}>
-          <View style={styles.missionHeader}>
-            <Text style={styles.missionTitle}>Daily Missions</Text>
-            {renderIcon("information", "#666", 20)}
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressText}>Progress</Text>
-              <Text style={styles.progressPercentage}>100%</Text>
-            </View>
-          </View>
-
-          <View style={styles.missionList}>
-            {[
-              {
-                title: 'Deep Breathing',
-                subtitle: 'Calm, focus and efficiency',
-                icon: 'meditation',
-                duration: '3-5 min',
-              },
-              {
-                title: 'Descending Sound',
-                subtitle: 'Harmony of resonance and depth',
-                icon: 'waveform',
-                duration: '3-5 min',
-              },
-              {
-                title: 'Neutral Intonation',
-                subtitle: 'Neutral Intonation',
-                icon: 'tune-vertical',
-                duration: '3-5 min',
-              },
-            ].map((mission, index) => (
-              <View key={index} style={styles.missionItem}>
-                <View style={styles.missionContent}>
-                  {renderIcon(mission.icon, "#fff", 24)}
-                  <View style={styles.missionTextContainer}>
-                    <Text style={styles.missionItemTitle}>{mission.title}</Text>
-                    <Text style={styles.missionItemSubtitle}>{mission.subtitle}</Text>
-                  </View>
-                  <Text style={styles.missionDuration}>{mission.duration}</Text>
-                </View>
-                {renderIcon("check-circle", "#4CAF50", 24)}
-              </View>
-            ))}
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -126,14 +188,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerSpacing: {
-    height: 20, // Add extra spacing at the top
+    height: 20,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   greeting: {
     color: '#fff',
@@ -155,106 +217,84 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   notificationIcon: {
-    marginLeft: 10,
+    padding: 8,
   },
   cardsContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+  },
+  cardWrapper: {
+    marginRight: 20,
   },
   card: {
-    width: 280,
-    height: 160,
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
-    marginRight: 15,
+    height: 180,
+    justifyContent: 'space-between',
   },
   cardTitle: {
     color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 8,
   },
   cardSubtitle: {
     color: '#fff',
+    fontSize: 16,
     opacity: 0.8,
-    marginTop: 5,
   },
   cardImageContainer: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-  },
-  aiCoachButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    margin: 20,
-    padding: 15,
-    borderRadius: 10,
-  },
-  aiCoachText: {
-    color: '#fff',
-    fontSize: 18,
-    marginLeft: 10,
-    flex: 1,
-  },
-  dailyMissionsContainer: {
-    padding: 20,
-  },
-  missionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  missionTitle: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  progressContainer: {
     alignItems: 'flex-end',
   },
-  progressText: {
-    color: '#666',
-    fontSize: 12,
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+    marginBottom: 20,
   },
-  progressPercentage: {
-    color: '#fff',
-    fontSize: 16,
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#333333',
+    marginHorizontal: 4,
   },
-  missionList: {
-    gap: 15,
+  paginationDotActive: {
+    backgroundColor: '#6366f1',
+    width: 8,
+    height: 8,
   },
-  missionItem: {
+  aiCoachButton: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 10,
+    marginHorizontal: 20,
+    borderRadius: 15,
     padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  missionContent: {
-    flexDirection: 'row',
+  aiCoachIcon: {
+    backgroundColor: '#6366f1',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
   },
-  missionTextContainer: {
+  aiCoachContent: {
+    flex: 1,
     marginLeft: 15,
-    flex: 1,
   },
-  missionItemTitle: {
+  aiCoachTitle: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  missionItemSubtitle: {
-    color: '#666',
+  aiCoachSubtitle: {
+    color: '#888',
     fontSize: 14,
   },
-  missionDuration: {
-    color: '#666',
-    fontSize: 12,
-    marginLeft: 10,
+  aiCoachArrow: {
+    opacity: 0.5,
   },
 });
 
