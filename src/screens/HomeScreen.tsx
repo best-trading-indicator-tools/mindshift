@@ -206,7 +206,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   key={index}
                   style={[
                     styles.checkmarkContainer,
-                    { top: 30 + index * 100, left: -45 },
+                    { top: 35 + index * 120, left: -45 },
                   ]}
                 >
                   <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
@@ -446,7 +446,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#151932',
     borderRadius: 12,
     padding: 14,
-    marginBottom: 8,
+    marginBottom: 20,
+    height: 84,
   },
   missionHeader: {
     flexDirection: 'row',
