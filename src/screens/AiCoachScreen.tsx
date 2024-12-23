@@ -20,7 +20,7 @@ const AiCoachScreen: React.FC<Props> = () => {
     setMessages([
       {
         _id: 1,
-        text: 'Hello! I\'m your AI voice coach. How can I help you improve your speaking skills today?',
+        text: 'Hello! I\'m your AI life coach. How can I help you improve your well-being and achieve personal growth today?',
         createdAt: new Date(),
         user: {
           _id: 2,
@@ -43,7 +43,7 @@ const AiCoachScreen: React.FC<Props> = () => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful voice coach assistant, specializing in helping people improve their speaking skills, accent, and voice modulation. Provide concise, practical advice.',
+            content: 'You are an empathetic and supportive life coach, dedicated to helping people improve their well-being, achieve personal growth, and overcome life challenges. Focus on providing practical, actionable advice while maintaining a compassionate and understanding approach. Draw from principles of positive psychology, mindfulness, and personal development to guide users toward their best selves.',
           },
           {
             role: 'user',
