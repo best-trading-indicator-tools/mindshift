@@ -1,24 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Text, LinearProgress } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import type { CompositeScreenProps } from '@react-navigation/native';
+import type { CompositeScreenProps, NavigationProp } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
 import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../components/Illustrations';
 import ProgressBar from '../components/ProgressBar';
 import NotificationBell from '../components/NotificationBell';
+import auth from '@react-native-firebase/auth';
+import MissionItem from '../components/MissionItem';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-const IconComponent = MaterialCommunityIcons as any;
+interface Mission {
+  title: string;
+  subtitle: string;
+  duration: string;
+  type: string;
+  Illustration: React.ComponentType<any>;
+  onPress?: () => void;
+}
 
-const renderIcon = (name: string, color: string, size: number) => {
-  return <IconComponent name={name} size={size} color={color} />;
+const renderIcon = (name: string, size: string | number, color: string) => {
+  const Icon = MaterialCommunityIcons as any;
+  return <Icon name={name} size={size} color={color} />;
 };
 
 const challenges = [
@@ -74,16 +84,57 @@ const challenges = [
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [userName, setUserName] = useState('User');
   const scrollViewRef = useRef<ScrollView>(null);
   const windowWidth = Dimensions.get('window').width;
   const cardWidth = windowWidth * 0.7; // Make cards 70% of screen width
   const cardSpacing = 12; // Space between cards
   const [hasNotifications, setHasNotifications] = useState(true); // You can control this with your notification logic
 
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        if (currentUser.displayName) {
+          // Get first name only
+          const firstName = currentUser.displayName.split(' ')[0];
+          setUserName(firstName);
+        } else if (currentUser.email) {
+          // If no display name, use email username
+          const emailName = currentUser.email.split('@')[0];
+          setUserName(emailName);
+        }
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
   const handleScroll = (event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffset / (cardWidth + cardSpacing));
     setActiveIndex(currentIndex);
+  };
+
+  const signOut = async () => {
+    try {
+      await auth().signOut();
+      // Navigation will be handled by the auth state listener in App.tsx
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleDevLogout = async () => {
+    try {
+      await auth().signOut();
+      navigation.getParent()?.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const renderPaginationDots = () => {
@@ -109,20 +160,23 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.profileButton}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <MaterialCommunityIcons name="account-circle" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            <NotificationBell 
-              hasNotifications={hasNotifications}
-              onPress={() => navigation.navigate('Notifications')}
-            />
-          </TouchableOpacity>
+          <View>
+            <Text style={styles.greeting}>Welcome back</Text>
+            <Text style={styles.name}>{userName}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity onPress={handleDevLogout} style={styles.signOutButton}>
+              {renderIcon("logout", 24, "#FFFFFF")}
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.getParent()?.navigate('Notifications');
+              }}
+              style={styles.notificationButton}
+            >
+              <NotificationBell />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView 
@@ -166,7 +220,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.cardTitle}>{challenge.title}</Text>
                 <Text style={styles.cardSubtitle}>{challenge.subtitle}</Text>
                 <View style={styles.cardImageContainer}>
-                  {renderIcon(challenge.icon, "#fff", 40)}
+                  {renderIcon(challenge.icon, 40, "#fff")}
                 </View>
               </View>
             </TouchableOpacity>
@@ -176,17 +230,19 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.aiCoachButton}
-          onPress={() => navigation.navigate('AiCoach')}
+          onPress={() => {
+            navigation.getParent()?.navigate('AiCoach');
+          }}
         >
           <View style={styles.aiCoachIcon}>
-            {renderIcon("robot", "#fff", 24)}
+            {renderIcon("robot", 24, "#fff")}
           </View>
           <View style={styles.aiCoachContent}>
             <Text style={styles.aiCoachTitle}>AI Coach</Text>
             <Text style={styles.aiCoachSubtitle}>Talk with your personal coach</Text>
           </View>
           <View style={styles.aiCoachArrow}>
-            {renderIcon("chevron-right", "#fff", 24)}
+            {renderIcon("chevron-right", 24, "#fff")}
           </View>
         </TouchableOpacity>
 
@@ -201,56 +257,51 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.missionsContent}>
             <ProgressBar totalSteps={5} completedSteps={5} />
             <View style={styles.missionsList}>
-              {[0, 1, 2].map((index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.checkmarkContainer,
-                    { top: 35 + index * 120, left: -45 },
-                  ]}
-                >
-                  <MaterialCommunityIcons name="check-circle" size={24} color="#4CAF50" />
-                </View>
-              ))}
               {[
                 {
                   title: 'Deep Breathing',
                   subtitle: 'Calm, focus and efficiency',
                   duration: '3-5 min',
                   type: 'Training',
-                  Illustration: MeditationIllustration,
+                  icon: 'meditation',
+                  onPress: () => {
+                    navigation.getParent()?.navigate('DeepBreathing');
+                  },
                 },
                 {
-                  title: 'Mindful Walking',
-                  subtitle: 'Connect with your surroundings',
+                  title: 'Voix Nasale',
+                  subtitle: 'Éliminer la nasalité de la voix',
                   duration: '3-5 min',
                   type: 'Training',
-                  Illustration: WalkingIllustration,
+                  icon: 'microphone',
                 },
                 {
-                  title: 'Neutral Tone',
-                  subtitle: 'Practice neutral speaking',
+                  title: 'Fry Vocal',
+                  subtitle: 'Relâchez les cordes vocales',
                   duration: '3-5 min',
                   type: 'Training',
-                  Illustration: GratitudeIllustration,
+                  icon: 'waveform',
+                },
+                {
+                  title: 'Intonation Montante',
+                  subtitle: 'Intonation Montante',
+                  duration: '3-5 min',
+                  type: 'Training',
+                  icon: 'arrow-up-bold',
+                },
+                {
+                  title: 'Rires',
+                  subtitle: 'Entraîne le diaphragme',
+                  duration: '3-5 min',
+                  type: 'Training',
+                  icon: 'emoticon-happy',
                 },
               ].map((mission, index) => (
-                <View key={index} style={styles.missionItem}>
-                  <View style={styles.missionHeader}>
-                    <MaterialCommunityIcons name="clock-time-three" size={14} color="#666" />
-                    <Text style={styles.missionDuration}>{mission.duration}</Text>
-                    <Text style={styles.missionType}>{mission.type}</Text>
-                  </View>
-                  <View style={styles.missionContent}>
-                    <View style={styles.missionTextContainer}>
-                      <Text style={styles.missionItemTitle}>{mission.title}</Text>
-                      <Text style={styles.missionItemSubtitle}>{mission.subtitle}</Text>
-                    </View>
-                    <View style={styles.missionIllustrationContainer}>
-                      <mission.Illustration style={styles.missionIllustration} />
-                    </View>
-                  </View>
-                </View>
+                <MissionItem
+                  key={index}
+                  {...mission}
+                  isCompleted={index <= 2}
+                />
               ))}
             </View>
           </View>
@@ -275,7 +326,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  profileButton: {
+  greeting: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  name: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  signOutButton: {
+    padding: 8,
+    marginRight: 12,
+  },
+  notificationButton: {
     padding: 8,
   },
   statsContainer: {
@@ -396,7 +464,8 @@ const styles = StyleSheet.create({
   missionsContainer: {
     marginTop: 20,
     flex: 1,
-    width: '80%',
+    width: '90%', 
+    marginHorizontal: '5%', 
     position: 'relative',
   },
   checkmarkContainer: {
@@ -445,9 +514,9 @@ const styles = StyleSheet.create({
   missionItem: {
     backgroundColor: '#151932',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-    height: 84,
+    padding: 16,
+    marginBottom: 16,
+    width: '100%', 
   },
   missionHeader: {
     flexDirection: 'row',
@@ -484,17 +553,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   missionIllustrationContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    overflow: 'hidden',
-    backgroundColor: '#2A2A2A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    right: 70, 
+    top: 0, 
   },
   missionIllustration: {
     width: '100%',
     height: '100%',
+  },
+  devLogoutButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: '#FF4444',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  devLogoutText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

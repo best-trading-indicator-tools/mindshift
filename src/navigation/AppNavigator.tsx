@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from '../screens/HomeScreen';
 import AiCoachScreen from '../screens/AiCoachScreen';
 import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
@@ -9,22 +10,24 @@ import ChallengesScreen from '../screens/ChallengesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SupportScreen from '../screens/SupportScreen';
-import { Icon } from '@rneui/themed';
+import LoginScreen from '../screens/LoginScreen';
+import DeepBreathingScreen from '../screens/DeepBreathingScreen';
 
 export type RootTabParamList = {
   Home: undefined;
   Courses: undefined;
   Challenges: undefined;
   Profile: undefined;
-  AiCoach: undefined;
 };
 
 export type RootStackParamList = {
+  Login: undefined;
   MainTabs: undefined;
   AiCoach: undefined;
   Support: undefined;
   Course: undefined;
   Notifications: undefined;
+  DeepBreathing: undefined;
   Lesson: {
     lessonId: number;
   };
@@ -53,81 +56,55 @@ function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Icon
-              type="material-community"
-              name="home"
-              color={color}
-              size={size}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => {
+            const Icon = MaterialCommunityIcons as any;
+            return <Icon name="home" size={size} color={color} />;
+          },
         }}
       />
       <Tab.Screen
         name="Courses"
         component={CourseTabScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon
-              type="material-community"
-              name="book-open-variant"
-              color={color}
-              size={size}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => {
+            const Icon = MaterialCommunityIcons as any;
+            return <Icon name="book-open-variant" size={size} color={color} />;
+          },
         }}
       />
       <Tab.Screen
         name="Challenges"
         component={ChallengesScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon
-              type="material-community"
-              name="trophy"
-              color={color}
-              size={size}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => {
+            const Icon = MaterialCommunityIcons as any;
+            return <Icon name="trophy" size={size} color={color} />;
+          },
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon
-              type="material-community"
-              name="account"
-              color={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="AiCoach"
-        component={AiCoachScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon
-              type="material-community"
-              name="robot"
-              color={color}
-              size={size}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => {
+            const Icon = MaterialCommunityIcons as any;
+            return <Icon name="account" size={size} color={color} />;
+          },
         }}
       />
     </Tab.Navigator>
   );
 }
 
-function AppNavigator() {
+interface AppNavigatorProps {
+  initialRoute: keyof RootStackParamList;
+}
+
+function AppNavigator({ initialRoute }: AppNavigatorProps) {
   return (
     <NavigationContainer>
       <Stack.Navigator
+        initialRouteName={initialRoute}
         screenOptions={{
           headerStyle: {
             backgroundColor: '#121212',
@@ -135,6 +112,11 @@ function AppNavigator() {
           headerTintColor: '#FFFFFF',
         }}
       >
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="MainTabs"
           component={TabNavigator}
@@ -160,6 +142,14 @@ function AppNavigator() {
           component={NotificationsScreen}
           options={{
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="DeepBreathing"
+          component={DeepBreathingScreen}
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
           }}
         />
       </Stack.Navigator>
