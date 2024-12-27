@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { Text, LinearProgress } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -110,11 +110,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     getCurrentUser();
   }, []);
 
-  const handleScroll = (event: any) => {
+  const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const currentIndex = Math.round(contentOffset / (cardWidth + cardSpacing));
-    setActiveIndex(currentIndex);
-  };
+    const newIndex = Math.round(contentOffset / (cardWidth + cardSpacing));
+    if (newIndex !== activeIndex) {
+      setActiveIndex(newIndex);
+    }
+  }, [activeIndex, cardWidth, cardSpacing]);
 
   const signOut = async () => {
     try {
@@ -215,6 +217,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     color={challenge.colors[1]}
                     variant="determinate"
                     value={1}
+                    animation={false}
                   />
                 </View>
                 <Text style={styles.cardTitle}>{challenge.title}</Text>
@@ -554,7 +557,7 @@ const styles = StyleSheet.create({
   },
   missionIllustrationContainer: {
     position: 'absolute',
-    right: 70, 
+    right: 0, 
     top: 0, 
   },
   missionIllustration: {

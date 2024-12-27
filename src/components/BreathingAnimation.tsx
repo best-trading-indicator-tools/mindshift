@@ -1,34 +1,49 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds
-const HOLD_DURATION = 5000;   // 5 seconds
-const GONG_DURATION = 1000;   // 1 second for gong
-const TOTAL_CYCLES = 5;
+const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
+const HOLD_DURATION = 5000;   // 5 seconds hold
+const GONG_DURATION = 2000;   // 2 seconds for gong
+const TOTAL_CYCLES = 1;
 
-const BreathingAnimation: React.FC = () => {
+// Enable playback in silence mode
+Sound.setCategory('Playback', true);
+
+const BreathingAnimation: React.FC<{ 
+  navigation: any;
+  onComplete: () => void;
+}> = ({ navigation, onComplete }) => {
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
-  const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out'>('in');
+  const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
+  const [countdown, setCountdown] = useState(5);
   const animation = useRef(new Animated.Value(0)).current;
-  const isFirstRender = useRef(true);
   const gongSound = useRef<Sound | null>(null);
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
 
+  // Initialize sound
   useEffect(() => {
     // Initialize gong sound
-    const sound = new Sound(require('../assets/audio/church.wav'), (error) => {
+    const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
       if (error) {
         console.log('Failed to load gong sound', error);
         return;
       }
+      console.log('Sound loaded successfully');
+      gongSound.current = sound;
+      // Start the first cycle
+      playGong();
+      startBreathingCycle();
     });
-    gongSound.current = sound;
 
+    // Cleanup when component unmounts
     return () => {
       if (gongSound.current) {
+        gongSound.current.stop();
         gongSound.current.release();
+        gongSound.current = null;
       }
     };
   }, []);
@@ -36,96 +51,142 @@ const BreathingAnimation: React.FC = () => {
   const playGong = () => {
     if (gongSound.current) {
       gongSound.current.stop(() => {
+        gongSound.current?.setCurrentTime(0);
         gongSound.current?.play((success) => {
           if (!success) {
-            console.log('Gong sound playback failed');
+            console.log('Sound playback failed');
           }
         });
+        // Stop the sound after GONG_DURATION
+        const timeout = setTimeout(() => {
+          gongSound.current?.stop();
+        }, GONG_DURATION);
+        return () => clearTimeout(timeout);
       });
     }
   };
 
-  useEffect(() => {
-    const id = animation.addListener(() => {});
+  const startBreathingCycle = useCallback(() => {
+    // Clear any existing timers
+    timersRef.current.forEach(timer => clearTimeout(timer));
+    timersRef.current = [];
 
-    const breatheIn = Animated.timing(animation, {
-      toValue: 1,
-      duration: BREATH_DURATION,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    });
+    // Reset animation value
+    animation.setValue(0);
 
-    const holdIn = Animated.delay(HOLD_DURATION);
+    // Start with 'in' phase
+    setPhase('in');
+    setCountdown(5);
+    playGong();
 
-    const breatheOut = Animated.timing(animation, {
-      toValue: 0,
-      duration: BREATH_DURATION,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    });
-
-    const holdOut = Animated.delay(HOLD_DURATION);
+    // Set up countdown timers for each second
+    const countdownTimers = [];
+    for (let i = 4; i >= 1; i--) {
+      countdownTimers.push(
+        setTimeout(() => setCountdown(i), (5 - i) * 1000)
+      );
+    }
 
     const sequence = Animated.sequence([
-      Animated.sequence([
-        Animated.delay(GONG_DURATION), // Delay for gong sound
-        breatheIn,
-        holdIn,
-        Animated.delay(GONG_DURATION), // Delay for gong sound
-        breatheOut,
-        holdOut,
-      ])
+      // Breath in
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: BREATH_DURATION,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      // Hold in
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: HOLD_DURATION,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      // Breath out
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: BREATH_DURATION,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      // Hold out
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: HOLD_DURATION,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
     ]);
 
-    if (!isFirstRender.current) {
-      sequence.start(({ finished }) => {
-        if (finished) {
-          switch (phase) {
-            case 'in':
-              setPhase('hold-in');
-              break;
-            case 'hold-in':
-              playGong();
-              setPhase('out');
-              break;
-            case 'out':
-              setPhase('hold-out');
-              break;
-            case 'hold-out':
-              if (breathsLeft > 1) {
-                playGong();
-                setPhase('in');
-                setBreathsLeft(prev => prev - 1);
-                sequence.reset();
-                sequence.start();
-              }
-              break;
-          }
-        }
-      });
-
-      // Play gong at the start of breathing in
-      if (phase === 'in') {
+    // Set up phase change timers
+    const phaseTimers = [
+      // Breath in -> Hold
+      setTimeout(() => {
+        setPhase('hold-in');
+        setCountdown(5);
+      }, BREATH_DURATION),
+      
+      // Hold -> Breath out
+      setTimeout(() => {
+        setPhase('out');
+        setCountdown(5);
         playGong();
+      }, BREATH_DURATION + HOLD_DURATION),
+      
+      // Breath out -> Hold
+      setTimeout(() => {
+        setPhase('hold-out');
+        setCountdown(5);
+      }, BREATH_DURATION * 2 + HOLD_DURATION),
+      
+      // Hold -> Next cycle or complete
+      setTimeout(() => {
+        if (breathsLeft > 1) {
+          setBreathsLeft(prev => prev - 1);
+          startBreathingCycle();
+        } else {
+          setPhase('complete');
+        }
+      }, (BREATH_DURATION + HOLD_DURATION) * 2)
+    ];
+
+    // Add countdown timers for each phase
+    for (let phase = 1; phase <= 4; phase++) {
+      const phaseStart = phase === 1 ? 0 : 
+                        phase === 2 ? BREATH_DURATION :
+                        phase === 3 ? BREATH_DURATION + HOLD_DURATION :
+                        BREATH_DURATION * 2 + HOLD_DURATION;
+      
+      for (let i = 4; i >= 1; i--) {
+        phaseTimers.push(
+          setTimeout(() => setCountdown(i), phaseStart + (5 - i) * 1000)
+        );
       }
     }
-    isFirstRender.current = false;
+
+    timersRef.current = [...countdownTimers, ...phaseTimers];
+
+    // Start the sequence
+    sequence.start();
 
     return () => {
-      sequence.stop();
-      animation.removeListener(id);
+      timersRef.current.forEach(timer => clearTimeout(timer));
     };
-  }, [phase, breathsLeft]);
+  }, [breathsLeft, animation]);
 
   const getWaveStyle = (offset: number) => ({
     transform: [
       {
-        translateY: animation.interpolate({
+        scale: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -100 + offset],
+          outputRange: [0.8 + (offset * 0.1), 1.3 + (offset * 0.1)], // Less extreme scaling
         }),
       },
     ],
+    opacity: animation.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0.8 - (offset * 0.15), 0.5 - (offset * 0.15), 0.3 - (offset * 0.15)],
+    }),
   });
 
   const getPhaseText = () => {
@@ -138,47 +199,98 @@ const BreathingAnimation: React.FC = () => {
         return 'Breath out';
       case 'hold-out':
         return 'Hold';
+      case 'complete':
+        return 'Have a great day!';
       default:
         return '';
     }
   };
 
+  const handleCompletion = () => {
+    // Clean up gong sound first
+    if (gongSound.current) {
+      gongSound.current.stop();
+      gongSound.current.release();
+      gongSound.current = null;
+    }
+
+    // Call onComplete immediately to navigate back
+    onComplete();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (gongSound.current) {
+        gongSound.current.stop();
+        gongSound.current.release();
+        gongSound.current = null;
+      }
+    };
+  }, []);
+
+  if (phase === 'complete') {
+    return (
+      <TouchableOpacity 
+        style={styles.fullScreenButton}
+        onPress={onComplete}
+      >
+        <LinearGradient
+          colors={['#3730A3', '#6366F1', '#818CF8']}
+          style={styles.fullScreenGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Text style={styles.completionText}>
+            Have a good day!
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.phaseText}>
-          {getPhaseText()}
-        </Text>
-        <Text style={styles.breathsText}>
-          {breathsLeft} breaths left
-        </Text>
-      </View>
-
       <View style={styles.wavesContainer}>
         <Animated.View style={[styles.waveWrapper, getWaveStyle(0)]}>
           <LinearGradient
-            colors={['#4A1D96', '#7C3AED', '#8B5CF6']}
+            colors={['#3730A3', '#6366F1', '#818CF8']}
             style={styles.wave}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+            locations={[0, 0.5, 1]}
           />
         </Animated.View>
-        <Animated.View style={[styles.waveWrapper, getWaveStyle(30)]}>
+        <Animated.View style={[styles.waveWrapper, getWaveStyle(1)]}>
           <LinearGradient
-            colors={['#4A1D96', '#7C3AED', '#8B5CF6']}
+            colors={['#3730A3', '#6366F1', '#818CF8']}
             style={styles.wave}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+            locations={[0, 0.5, 1]}
           />
         </Animated.View>
-        <Animated.View style={[styles.waveWrapper, getWaveStyle(60)]}>
+        <Animated.View style={[styles.waveWrapper, getWaveStyle(2)]}>
           <LinearGradient
-            colors={['#4A1D96', '#7C3AED', '#8B5CF6']}
+            colors={['#3730A3', '#6366F1', '#818CF8']}
             style={styles.wave}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+            locations={[0, 0.5, 1]}
           />
         </Animated.View>
+      </View>
+
+      <View style={styles.textContainer}>
+        <Text style={styles.phaseText}>
+          {getPhaseText()}
+        </Text>
+        <Text style={styles.countdownText}>
+          {countdown}
+        </Text>
+        <Text style={styles.breathsText}>
+          {breathsLeft} {breathsLeft === 1 ? 'breath' : 'breaths'} left
+        </Text>
       </View>
     </View>
   );
@@ -187,41 +299,80 @@ const BreathingAnimation: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-  },
-  content: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 2,
-  },
-  phaseText: {
-    fontSize: 48,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  breathsText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    opacity: 0.8,
-    textAlign: 'center',
+    backgroundColor: '#000000',
   },
   wavesContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+    position: 'absolute',
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   waveWrapper: {
     position: 'absolute',
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT * 1.2,
-    bottom: -SCREEN_HEIGHT * 0.2,
+    height: SCREEN_WIDTH,
+    borderRadius: SCREEN_WIDTH / 2,
+    overflow: 'hidden',
   },
   wave: {
-    flex: 1,
-    borderTopLeftRadius: SCREEN_WIDTH * 0.5,
-    borderTopRightRadius: SCREEN_WIDTH * 0.5,
+    width: '100%',
+    height: '100%',
+  },
+  textContainer: {
+    position: 'absolute',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  phaseText: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
+  },
+  breathsText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    opacity: 0.8,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
+  },
+  fullScreenButton: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+  fullScreenGradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  completionText: {
+    color: '#FFFFFF',
+    fontSize: 42,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: 20,
+  },
+  countdownText: {
+    color: '#FFFFFF',
+    fontSize: 72,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
 });
 

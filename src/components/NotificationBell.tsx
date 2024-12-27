@@ -13,10 +13,12 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
   onPress 
 }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     if (hasNotifications) {
-      Animated.loop(
+      // Create the animation sequence
+      animationRef.current = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
             toValue: 1.2,
@@ -31,9 +33,23 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
             useNativeDriver: true,
           }),
         ])
-      ).start();
+      );
+      
+      // Start the animation
+      animationRef.current.start();
+    } else {
+      // Reset the animation value when there are no notifications
+      pulseAnim.setValue(1);
     }
-  }, [hasNotifications]);
+
+    // Cleanup function
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current = null;
+      }
+    };
+  }, [hasNotifications, pulseAnim]);
 
   return (
     <View style={styles.container}>

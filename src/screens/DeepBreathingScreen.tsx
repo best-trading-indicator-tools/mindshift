@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Modal,
   Dimensions,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -61,15 +63,49 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleCloseAnimation = () => {
-    setShowAnimation(false);
-    // Stop the sound when animation ends
+    // First stop and release the nature sound
     if (sound) {
       sound.stop();
+      sound.release();
+      setSound(null);
     }
+    
+    // Then close the modal and navigate back
+    setShowAnimation(false);
+    navigation.goBack();
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.stop();
+        sound.release();
+        setSound(null);
+      }
+    };
+  }, [sound]);
+
+  useEffect(() => {
+    // Save the current status bar style
+    const currentStyle = StatusBar.currentHeight;
+    
+    return () => {
+      // Reset status bar on unmount
+      StatusBar.setBarStyle('light-content');
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('#000000');
+      }
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#000000"
+        translucent={false}
+      />
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -100,17 +136,21 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       <Modal
         visible={showAnimation}
         animationType="fade"
-        transparent={true}
+        transparent={false}
         onRequestClose={handleCloseAnimation}
+        statusBarTranslucent={false}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: '#000000' }]}>
           <TouchableOpacity 
             style={styles.closeButton}
             onPress={handleCloseAnimation}
           >
             {renderIcon("close", 30, "#FFFFFF")}
           </TouchableOpacity>
-          <BreathingAnimation />
+          <BreathingAnimation 
+            navigation={navigation} 
+            onComplete={handleCloseAnimation}
+          />
         </View>
       </Modal>
     </SafeAreaView>

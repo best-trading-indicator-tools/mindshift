@@ -60,6 +60,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#151932',
     borderRadius: 12,
     padding: 16,
+    paddingLeft: 32,
+    paddingRight: 46,
     marginBottom: 16,
     position: 'relative',
   },
@@ -83,12 +85,12 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   textContainer: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 50,
   },
   title: {
     color: '#fff',
@@ -101,18 +103,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 16,
+    position: 'relative',
   },
   checkmark: {
     position: 'absolute',
-    left: -12,
+    left: -49,
     top: '50%',
     transform: [{ translateY: -12 }],
     backgroundColor: '#000',
     borderRadius: 12,
+    padding: 2,
+    zIndex: 999,
   },
 });
 
