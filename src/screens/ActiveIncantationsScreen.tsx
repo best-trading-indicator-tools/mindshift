@@ -282,9 +282,7 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       clearInterval(intervalRef.current);
     }
     setShowExitModal(false);
-    setTimeout(() => {
-      navigation.navigate('MainTabs');
-    }, 0);
+    navigation.navigate('MainTabs');
   };
 
   useEffect(() => {
@@ -377,6 +375,7 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         visible={showExitModal}
         transparent={true}
         animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -391,10 +390,10 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.modalButton, styles.exitButton]}
+              style={[styles.modalButton, { backgroundColor: '#FFD700' }]}
               onPress={handleExit}
             >
-              <Text style={styles.exitButtonText}>Exit</Text>
+              <Text style={{ color: '#000000', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Exit</Text>
             </TouchableOpacity>
           </View>
         </View>

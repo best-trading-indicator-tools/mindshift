@@ -26,7 +26,16 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
   onStart,
   onExit,
 }) => {
-  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  const handleContinue = () => {
+    setShowExitModal(false);
+  };
+
+  const handleExit = () => {
+    setShowExitModal(false);
+    onExit();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -38,7 +47,7 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
       >
         <TouchableOpacity 
           style={styles.exitButton}
-          onPress={() => setShowExitConfirmation(true)}
+          onPress={() => setShowExitModal(true)}
         >
           <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -53,9 +62,10 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
       </LinearGradient>
 
       <Modal
-        visible={showExitConfirmation}
+        visible={showExitModal}
         transparent={true}
         animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -64,16 +74,16 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
               You're making progress! Continue practicing to maintain your results.
             </Text>
             <TouchableOpacity 
-              style={styles.continueButton}
-              onPress={() => setShowExitConfirmation(false)}
+              style={[styles.modalButton, styles.continueButton]}
+              onPress={handleContinue}
             >
               <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.exitModalButton}
-              onPress={onExit}
+              style={[styles.modalButton, { backgroundColor: '#FFD700' }]}
+              onPress={handleExit}
             >
-              <Text style={styles.exitModalButtonText}>Exit</Text>
+              <Text style={{ color: '#000000', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Exit</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -85,30 +95,30 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   gradient: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   exitButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    left: 20,
-    zIndex: 1,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Platform.OS === 'ios' ? 50 : 40,
+    marginLeft: 20,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 32,
   },
   title: {
     fontSize: 42,
@@ -116,7 +126,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 60,
     textAlign: 'center',
-    width: '100%',
   },
   description: {
     fontSize: 24,
@@ -124,7 +133,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 36,
     marginBottom: 40,
-    width: '100%',
   },
   startButton: {
     backgroundColor: '#FFFFFF',
@@ -140,12 +148,12 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#151932',
+    backgroundColor: '#1F2937',
     borderRadius: 20,
     padding: 24,
     width: '85%',
@@ -160,33 +168,21 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
   },
-  continueButton: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: 40,
+  modalButton: {
+    width: '100%',
     paddingVertical: 16,
     borderRadius: 30,
-    width: '100%',
     marginBottom: 12,
   },
+  continueButton: {
+    backgroundColor: '#6366F1',
+  },
   continueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  exitModalButton: {
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    width: '100%',
-    borderRadius: 30,
-    backgroundColor: '#FF4B4B',
-  },
-  exitModalButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',

@@ -13,6 +13,7 @@ export interface Affirmation {
   createdAt: Date;
   audioUrl: string;
   duration: number;
+  name: string;
 }
 
 export const saveAffirmation = async (
@@ -29,7 +30,10 @@ export const saveAffirmation = async (
   try {
     // 1. Upload audio file to Firebase Storage
     console.log('Starting audio upload to Firebase Storage');
+    console.log('Audio URI to upload:', audioUri);
     const audioRef = storage().ref(`affirmations/${userId}/${Date.now()}.m4a`);
+    console.log('Storage reference created:', audioRef.fullPath);
+    
     await audioRef.putFile(audioUri);
     console.log('Audio file uploaded successfully');
     const audioUrl = await audioRef.getDownloadURL();
@@ -45,7 +49,9 @@ export const saveAffirmation = async (
       createdAt: firestore.FieldValue.serverTimestamp(),
       audioUrl,
       duration,
+      name: text.slice(0, 30) + (text.length > 30 ? '...' : ''),
     };
+    console.log('Affirmation data prepared:', affirmationData);
 
     const docRef = await firestore()
       .collection(COLLECTION_NAME)

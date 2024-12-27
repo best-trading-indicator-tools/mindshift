@@ -100,9 +100,11 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
     try {
       const path = Platform.select({
-        ios: 'affirmation.m4a',
+        ios: `affirmation_${Date.now()}.m4a`,
         android: `${Date.now()}.mp4`,
       });
+      
+      console.log('Starting recording with path:', path);
 
       const uri = await audioRecorderPlayer.current.startRecorder(path, {
         AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
@@ -111,6 +113,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         AVNumberOfChannelsKeyIOS: 2,
         AVFormatIDKeyIOS: AVEncodingOption.aac,
       });
+
+      console.log('Recording started, URI:', uri);
 
       audioRecorderPlayer.current.addRecordBackListener((e) => {
         setRecordingDuration(e.currentPosition);
@@ -126,16 +130,25 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handleStopRecording = async () => {
     try {
+      console.log('Stopping recording...');
       const uri = await audioRecorderPlayer.current.stopRecorder();
+      console.log('Recording stopped, final URI:', uri);
+      
       audioRecorderPlayer.current.removeRecordBackListener();
       setIsRecording(false);
 
       // Save to Firebase
+      console.log('Attempting to save to Firebase with URI:', uri);
+      console.log('Text:', newAffirmationText);
+      console.log('Duration:', recordingDuration);
+      
       const savedAffirmation = await saveAffirmation(
         newAffirmationText,
         uri,
         recordingDuration,
       );
+
+      console.log('Affirmation saved successfully:', savedAffirmation);
 
       setRecordings(prev => [savedAffirmation, ...prev]);
       setShowRecordingModal(false);
@@ -144,6 +157,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setRecordingDuration(0);
     } catch (error) {
       console.error('Failed to stop recording:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
       Alert.alert('Error', 'Failed to save recording. Please try again.');
     }
   };
@@ -256,7 +272,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         }
         buttonText={recordings.length > 0 ? "Start Listening" : "Start Recording"}
         onStart={() => setShowIntro(false)}
-        onExit={() => navigation.goBack()}
+        onExit={() => navigation.navigate('MainTabs')}
       />
     );
   }
@@ -639,16 +655,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   exitButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    left: 20,
-    zIndex: 1,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#FFD700',
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+  },
+  exitButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
