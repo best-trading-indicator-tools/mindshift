@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
@@ -16,13 +16,17 @@ function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
-  useEffect(() => {
-    const subscriber = auth().onAuthStateChanged((user) => {
-      setUser(user);
+  const onAuthStateChanged = useCallback((user: FirebaseAuthTypes.User | null) => {
+    setUser(user);
+    if (initializing) {
       setInitializing(false);
-    });
+    }
+  }, [initializing]);
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber;
-  }, []);
+  }, [onAuthStateChanged]);
 
   if (initializing) {
     return (

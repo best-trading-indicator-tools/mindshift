@@ -14,77 +14,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import BreathingAnimation from '../components/BreathingAnimation';
+import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
+import ExitExerciseButton from '../components/ExitExerciseButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
-const renderIcon = (name: string, size: string | number, color: string) => {
-  const Icon = MaterialCommunityIcons as any;
-  return <Icon name={name} size={size} color={color} />;
-};
-
 const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
+  const [showIntro, setShowIntro] = useState(true);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [sound, setSound] = useState<any>(null);
-
-  useEffect(() => {
-    // Load the sound when component mounts
-    const loadSound = async () => {
-      const Sound = require('react-native-sound');
-      Sound.setCategory('Playback');
-
-      const natureSound = new Sound(require('../assets/audio/nature.wav'), (error: Error | null) => {
-        if (error) {
-          console.log('Failed to load the sound', error);
-          return;
-        }
-        // Set looping to true for continuous play
-        natureSound.setNumberOfLoops(-1);
-        setSound(natureSound);
-      });
-    };
-
-    loadSound();
-
-    // Cleanup when component unmounts
-    return () => {
-      if (sound) {
-        sound.stop();
-        sound.release();
-      }
-    };
-  }, []);
-
-  const handleShowAnimation = () => {
-    setShowAnimation(true);
-    // Start playing the sound when animation starts
-    if (sound) {
-      sound.play();
-    }
-  };
-
-  const handleCloseAnimation = () => {
-    // First stop and release the nature sound
-    if (sound) {
-      sound.stop();
-      sound.release();
-      setSound(null);
-    }
-    
-    // Then close the modal and navigate back
-    setShowAnimation(false);
-    navigation.goBack();
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.stop();
-        sound.release();
-        setSound(null);
-      }
-    };
-  }, [sound]);
 
   useEffect(() => {
     // Save the current status bar style
@@ -99,6 +36,25 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
+  if (showIntro) {
+    return (
+      <ExerciseIntroScreen
+        title="Deep Breathing"
+        description={
+          "Train your diaphragm with deep breathing exercises.\n\n" +
+          "Take slow, deep breaths and hold them to strengthen your diaphragm.\n\n" +
+          "This will help you speak with more power and control."
+        }
+        buttonText="Start Exercise"
+        onStart={() => {
+          setShowIntro(false);
+          setShowAnimation(true);
+        }}
+        onExit={() => navigation.goBack()}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar 
@@ -106,53 +62,17 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
         backgroundColor="#000000"
         translucent={false}
       />
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          {renderIcon("close", 24, "#FFFFFF")}
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.content}>
-        <View style={styles.illustration}>
-          {/* Add your meditation illustration here */}
-        </View>
-        <Text style={styles.title}>Deep Breathing</Text>
-        <Text style={styles.description}>
-          Five deep breaths can help improve concentration and attention, allowing you
-          to approach your daily tasks with greater ease and efficiency.
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.watchButton}
-        onPress={handleShowAnimation}
-      >
-        <Text style={styles.watchButtonText}>Watch the video</Text>
-      </TouchableOpacity>
-
-      <Modal
-        visible={showAnimation}
-        animationType="fade"
-        transparent={false}
-        onRequestClose={handleCloseAnimation}
-        statusBarTranslucent={false}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: '#000000' }]}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={handleCloseAnimation}
-          >
-            {renderIcon("close", 30, "#FFFFFF")}
-          </TouchableOpacity>
-          <BreathingAnimation 
-            navigation={navigation} 
-            onComplete={handleCloseAnimation}
+        {showAnimation && (
+          <BreathingAnimation
+            navigation={navigation}
+            onComplete={() => navigation.goBack()}
           />
-        </View>
-      </Modal>
+        )}
+      </View>
+      <View style={styles.exitButtonContainer}>
+        <ExitExerciseButton onExit={() => navigation.goBack()} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -162,64 +82,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
   content: {
     flex: 1,
-    padding: 24,
-    alignItems: 'center',
-  },
-  illustration: {
-    width: 200,
-    height: 200,
-    marginBottom: 32,
-    // Add your illustration styling here
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  watchButton: {
-    backgroundColor: '#6366f1',
-    marginHorizontal: 24,
-    marginBottom: 32,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  watchButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    padding: 10,
+    position: 'relative',
     zIndex: 1,
+  },
+  exitButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
   },
 });
 

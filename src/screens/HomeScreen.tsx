@@ -11,6 +11,7 @@ import ProgressBar from '../components/ProgressBar';
 import NotificationBell from '../components/NotificationBell';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
+import { isExerciseCompletedToday } from '../services/exerciseService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -82,6 +83,58 @@ const challenges = [
   },
 ];
 
+const DAILY_MISSIONS = [
+  {
+    title: 'Deep Breathing',
+    subtitle: 'Train your diaphragm',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'emoticon-happy',
+  },
+  {
+    title: 'Active Incantations',
+    subtitle: 'Speak affirmations with conviction',
+    duration: '2-3 min',
+    type: 'Training',
+    icon: 'microphone',
+  },
+  {
+    title: 'Passive Incantations',
+    subtitle: 'Record and listen to your affirmations',
+    duration: '5-10 min',
+    type: 'Training',
+    icon: 'headphones',
+  },
+  {
+    title: 'Voix Nasale',
+    subtitle: 'Éliminer la nasalité de la voix',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'microphone',
+  },
+  {
+    title: 'Fry Vocal',
+    subtitle: 'Relâchez les cordes vocales',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'waveform',
+  },
+  {
+    title: 'Intonation Montante',
+    subtitle: 'Intonation Montante',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'arrow-up-bold',
+  },
+  {
+    title: 'Rires',
+    subtitle: 'Entraîne le diaphragme',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'emoticon-happy',
+  },
+];
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userName, setUserName] = useState('User');
@@ -90,6 +143,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const cardWidth = windowWidth * 0.7; // Make cards 70% of screen width
   const cardSpacing = 12; // Space between cards
   const [hasNotifications, setHasNotifications] = useState(true); // You can control this with your notification logic
+  const [completedExercises, setCompletedExercises] = useState<string[]>([]);
+  const isCheckingRef = useRef(false);
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -109,6 +164,54 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
     getCurrentUser();
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    checkExerciseCompletions();
+  }, []); // Empty dependency array for initial load
+
+  // Focus listener
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Only check completions if we have a user and if we haven't checked recently
+      if (auth().currentUser && !isCheckingRef.current) {
+        isCheckingRef.current = true;
+        checkExerciseCompletions().finally(() => {
+          isCheckingRef.current = false;
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const checkExerciseCompletions = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.log('No user found, skipping exercise completion check');
+        return;
+      }
+
+      console.log('Checking exercise completions for user:', currentUser.uid);
+      
+      const results = await Promise.all([
+        isExerciseCompletedToday('deep-breathing'),
+        isExerciseCompletedToday('active-incantations'),
+        isExerciseCompletedToday('passive-incantations'),
+      ]);
+      
+      const completed = [];
+      if (results[0]) completed.push('deep-breathing');
+      if (results[1]) completed.push('active-incantations');
+      if (results[2]) completed.push('passive-incantations');
+      
+      setCompletedExercises(completed);
+    } catch (error) {
+      console.error('Error checking exercise completion:', error);
+      console.error('Error details:', JSON.stringify(error));
+    }
+  };
 
   const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
@@ -254,56 +357,39 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.missionsTitle}>Daily Missions</Text>
             <View style={styles.progressCircle}>
               <Text style={styles.progressText}>Progress</Text>
-              <Text style={styles.progressPercentage}>100%</Text>
+              <Text style={styles.progressPercentage}>
+                {Math.round((completedExercises.length / DAILY_MISSIONS.length) * 100)}%
+              </Text>
             </View>
           </View>
           <View style={styles.missionsContent}>
-            <ProgressBar totalSteps={5} completedSteps={5} />
+            <ProgressBar 
+              totalSteps={DAILY_MISSIONS.length}
+              completedSteps={completedExercises.length} 
+            />
             <View style={styles.missionsList}>
-              {[
-                {
-                  title: 'Deep Breathing',
-                  subtitle: 'Calm, focus and efficiency',
-                  duration: '3-5 min',
-                  type: 'Training',
-                  icon: 'meditation',
-                  onPress: () => {
-                    navigation.getParent()?.navigate('DeepBreathing');
-                  },
-                },
-                {
-                  title: 'Voix Nasale',
-                  subtitle: 'Éliminer la nasalité de la voix',
-                  duration: '3-5 min',
-                  type: 'Training',
-                  icon: 'microphone',
-                },
-                {
-                  title: 'Fry Vocal',
-                  subtitle: 'Relâchez les cordes vocales',
-                  duration: '3-5 min',
-                  type: 'Training',
-                  icon: 'waveform',
-                },
-                {
-                  title: 'Intonation Montante',
-                  subtitle: 'Intonation Montante',
-                  duration: '3-5 min',
-                  type: 'Training',
-                  icon: 'arrow-up-bold',
-                },
-                {
-                  title: 'Rires',
-                  subtitle: 'Entraîne le diaphragme',
-                  duration: '3-5 min',
-                  type: 'Training',
-                  icon: 'emoticon-happy',
-                },
-              ].map((mission, index) => (
+              {DAILY_MISSIONS.map((mission, index) => (
                 <MissionItem
                   key={index}
                   {...mission}
-                  isCompleted={index <= 2}
+                  onPress={
+                    mission.title === 'Deep Breathing' 
+                      ? () => navigation.getParent()?.navigate('DeepBreathing')
+                      : mission.title === 'Active Incantations'
+                      ? () => navigation.getParent()?.navigate('ActiveIncantations')
+                      : mission.title === 'Passive Incantations'
+                      ? () => navigation.getParent()?.navigate('PassiveIncantations')
+                      : undefined
+                  }
+                  isCompleted={
+                    mission.title === 'Deep Breathing'
+                      ? completedExercises.includes('deep-breathing')
+                      : mission.title === 'Active Incantations'
+                      ? completedExercises.includes('active-incantations')
+                      : mission.title === 'Passive Incantations'
+                      ? completedExercises.includes('passive-incantations')
+                      : false
+                  }
                 />
               ))}
             </View>

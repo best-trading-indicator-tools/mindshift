@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
+import { markExerciseAsCompleted } from '../services/exerciseService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
@@ -22,29 +23,41 @@ const BreathingAnimation: React.FC<{
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const isFirstRender = useRef(true);
+  const isMounted = useRef(true);
 
   // Initialize sound
   useEffect(() => {
-    // Initialize gong sound
+    if (!isFirstRender.current) return;
+    isFirstRender.current = false;
+
     const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
       if (error) {
         console.log('Failed to load gong sound', error);
         return;
       }
-      console.log('Sound loaded successfully');
-      gongSound.current = sound;
-      // Start the first cycle
-      playGong();
-      startBreathingCycle();
+      if (isMounted.current) {
+        console.log('Sound loaded successfully');
+        gongSound.current = sound;
+        // Start the first cycle
+        playGong();
+        startBreathingCycle();
+      }
     });
 
-    // Cleanup when component unmounts
     return () => {
+      isMounted.current = false;
       if (gongSound.current) {
         gongSound.current.stop();
         gongSound.current.release();
         gongSound.current = null;
       }
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+      animation.removeAllListeners();
+      timersRef.current.forEach(timer => clearTimeout(timer));
     };
   }, []);
 
@@ -67,6 +80,8 @@ const BreathingAnimation: React.FC<{
   };
 
   const startBreathingCycle = useCallback(() => {
+    if (!isMounted.current) return;
+    
     // Clear any existing timers
     timersRef.current.forEach(timer => clearTimeout(timer));
     timersRef.current = [];
@@ -77,39 +92,27 @@ const BreathingAnimation: React.FC<{
     // Start with 'in' phase
     setPhase('in');
     setCountdown(5);
-    playGong();
 
-    // Set up countdown timers for each second
-    const countdownTimers = [];
-    for (let i = 4; i >= 1; i--) {
-      countdownTimers.push(
-        setTimeout(() => setCountdown(i), (5 - i) * 1000)
-      );
-    }
-
+    // Create the animation sequence
     const sequence = Animated.sequence([
-      // Breath in
       Animated.timing(animation, {
         toValue: 1,
         duration: BREATH_DURATION,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
-      // Hold in
       Animated.timing(animation, {
         toValue: 1,
         duration: HOLD_DURATION,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-      // Breath out
       Animated.timing(animation, {
         toValue: 0,
         duration: BREATH_DURATION,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
-      // Hold out
       Animated.timing(animation, {
         toValue: 0,
         duration: HOLD_DURATION,
@@ -118,60 +121,50 @@ const BreathingAnimation: React.FC<{
       }),
     ]);
 
-    // Set up phase change timers
-    const phaseTimers = [
-      // Breath in -> Hold
-      setTimeout(() => {
+    animationRef.current = sequence;
+
+    // Set up phase timers
+    const newTimers = [];
+    
+    // Breath in -> Hold
+    newTimers.push(setTimeout(() => {
+      if (isMounted.current) {
         setPhase('hold-in');
         setCountdown(5);
-      }, BREATH_DURATION),
-      
-      // Hold -> Breath out
-      setTimeout(() => {
+      }
+    }, BREATH_DURATION));
+
+    // Hold -> Breath out
+    newTimers.push(setTimeout(() => {
+      if (isMounted.current) {
         setPhase('out');
         setCountdown(5);
         playGong();
-      }, BREATH_DURATION + HOLD_DURATION),
-      
-      // Breath out -> Hold
-      setTimeout(() => {
+      }
+    }, BREATH_DURATION + HOLD_DURATION));
+
+    // Breath out -> Hold
+    newTimers.push(setTimeout(() => {
+      if (isMounted.current) {
         setPhase('hold-out');
         setCountdown(5);
-      }, BREATH_DURATION * 2 + HOLD_DURATION),
-      
-      // Hold -> Next cycle or complete
-      setTimeout(() => {
+      }
+    }, BREATH_DURATION * 2 + HOLD_DURATION));
+
+    // Complete cycle
+    newTimers.push(setTimeout(() => {
+      if (isMounted.current) {
         if (breathsLeft > 1) {
           setBreathsLeft(prev => prev - 1);
-          startBreathingCycle();
+          setTimeout(startBreathingCycle, 100);
         } else {
           setPhase('complete');
         }
-      }, (BREATH_DURATION + HOLD_DURATION) * 2)
-    ];
-
-    // Add countdown timers for each phase
-    for (let phase = 1; phase <= 4; phase++) {
-      const phaseStart = phase === 1 ? 0 : 
-                        phase === 2 ? BREATH_DURATION :
-                        phase === 3 ? BREATH_DURATION + HOLD_DURATION :
-                        BREATH_DURATION * 2 + HOLD_DURATION;
-      
-      for (let i = 4; i >= 1; i--) {
-        phaseTimers.push(
-          setTimeout(() => setCountdown(i), phaseStart + (5 - i) * 1000)
-        );
       }
-    }
+    }, (BREATH_DURATION + HOLD_DURATION) * 2));
 
-    timersRef.current = [...countdownTimers, ...phaseTimers];
-
-    // Start the sequence
+    timersRef.current = newTimers;
     sequence.start();
-
-    return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
-    };
   }, [breathsLeft, animation]);
 
   const getWaveStyle = (offset: number) => ({
@@ -206,12 +199,19 @@ const BreathingAnimation: React.FC<{
     }
   };
 
-  const handleCompletion = () => {
+  const handleCompletion = async () => {
     // Clean up gong sound first
     if (gongSound.current) {
       gongSound.current.stop();
       gongSound.current.release();
       gongSound.current = null;
+    }
+
+    try {
+      // Mark the exercise as completed in Firestore
+      await markExerciseAsCompleted('deep-breathing');
+    } catch (error) {
+      console.error('Failed to mark exercise as completed:', error);
     }
 
     // Call onComplete immediately to navigate back
@@ -233,7 +233,7 @@ const BreathingAnimation: React.FC<{
     return (
       <TouchableOpacity 
         style={styles.fullScreenButton}
-        onPress={onComplete}
+        onPress={handleCompletion}
       >
         <LinearGradient
           colors={['#3730A3', '#6366F1', '#818CF8']}

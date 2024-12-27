@@ -12,6 +12,8 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SupportScreen from '../screens/SupportScreen';
 import LoginScreen from '../screens/LoginScreen';
 import DeepBreathingScreen from '../screens/DeepBreathingScreen';
+import ActiveIncantationsScreen from '../screens/ActiveIncantationsScreen';
+import PassiveIncantationsScreen from '../screens/PassiveIncantationsScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -28,6 +30,8 @@ export type RootStackParamList = {
   Course: undefined;
   Notifications: undefined;
   DeepBreathing: undefined;
+  ActiveIncantations: undefined;
+  PassiveIncantations: undefined;
   Lesson: {
     lessonId: number;
   };
@@ -151,6 +155,16 @@ function AppNavigator({ initialRoute }: AppNavigatorProps) {
             headerShown: false,
             presentation: 'modal'
           }}
+        />
+        <Stack.Screen
+          name="ActiveIncantations"
+          component={ActiveIncantationsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PassiveIncantations"
+          component={PassiveIncantationsScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
