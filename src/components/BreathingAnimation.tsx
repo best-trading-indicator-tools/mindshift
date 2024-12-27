@@ -7,7 +7,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
 const HOLD_DURATION = 5000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
-const TOTAL_CYCLES = 1;
+const TOTAL_CYCLES = 5;
 
 // Enable playback in silence mode
 Sound.setCategory('Playback', true);
