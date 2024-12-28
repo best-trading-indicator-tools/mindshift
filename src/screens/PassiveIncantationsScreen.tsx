@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   View, 
   Text, 
@@ -12,11 +12,13 @@ import {
   Alert,
   PermissionsAndroid,
   Switch,
+  ScrollView,
+  GestureResponderEvent,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../services/exerciseService';
-import { Affirmation } from '../services/affirmationService';
+import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../services/affirmationService';
 import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,
   AVEncodingOption,
@@ -52,20 +54,28 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [intervalBetweenAffirmations, setIntervalBetweenAffirmations] = useState(3);
   const [shuffleAffirmations, setShuffleAffirmations] = useState(false);
   const [loopingId, setLoopingId] = useState<string | null>(null);
-  
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string>('All Affirmations');
+  const [newTag, setNewTag] = useState('');
+  const [showTagInput, setShowTagInput] = useState(false);
+  const [selectedTagForRecording, setSelectedTagForRecording] = useState<string>('');
+  const [showRecordingTagInput, setShowRecordingTagInput] = useState(false);
+
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
 
   useEffect(() => {
     loadAffirmations();
+    loadSavedTags();
+    const player = audioRecorderPlayer.current;
     return () => {
-      audioRecorderPlayer.current.stopPlayer();
-      audioRecorderPlayer.current.removePlayBackListener();
+      player.stopPlayer().catch(() => {});
+      player.removePlayBackListener();
     };
   }, []);
 
   const loadAffirmations = async () => {
     try {
-      const savedRecordings = await AsyncStorage.getItem('affirmations');
+      const savedRecordings = await AsyncStorage.getItem(STORAGE_KEYS.AFFIRMATIONS);
       if (savedRecordings) {
         const parsedRecordings = JSON.parse(savedRecordings);
         setRecordings(parsedRecordings);
@@ -76,6 +86,39 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setRecordings([]);
     }
   };
+
+  const loadSavedTags = async () => {
+    const savedTags = await loadTags();
+    setTags(savedTags);
+  };
+
+  const handleAddTag = async (fromRecordingModal: boolean = false) => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      const updatedTags = [...tags, newTag.trim()];
+      setTags(updatedTags);
+      await saveTags(updatedTags);
+      if (fromRecordingModal) {
+        setSelectedTagForRecording(newTag.trim());
+        setShowRecordingTagInput(false);
+      } else {
+        setShowTagInput(false);
+      }
+      setNewTag('');
+    }
+  };
+
+  const handleAddTagPress = (_: GestureResponderEvent) => {
+    handleAddTag(false);
+  };
+
+  const handleAddTagRecordingPress = (_: GestureResponderEvent) => {
+    handleAddTag(true);
+  };
+
+  const filteredRecordings = useMemo(() => {
+    if (selectedTag === 'All Affirmations') return recordings;
+    return recordings.filter(recording => recording.tag === selectedTag);
+  }, [recordings, selectedTag]);
 
   const saveNewOrder = async (recordingsToSave: Affirmation[]) => {
     try {
@@ -355,12 +398,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const handleListenAll = async () => {
-    if (recordings.length === 0) return;
+    if (filteredRecordings.length === 0) return;
     
     let currentIndex = 0;
     const recordingsToPlay = shuffleAffirmations ? 
-      [...recordings].sort(() => Math.random() - 0.5) : 
-      [...recordings];
+      [...filteredRecordings].sort(() => Math.random() - 0.5) : 
+      [...filteredRecordings];
 
     const playNext = async () => {
       // Reset UI state from previous playback
@@ -484,6 +527,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         audioUrl: uri,
         duration: recordingDuration,
         createdAt: new Date(),
+        tag: selectedTagForRecording
       };
 
       // Update local state
@@ -491,10 +535,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       
       // Save to AsyncStorage
       try {
-        const existingRecordings = await AsyncStorage.getItem('affirmations');
+        const existingRecordings = await AsyncStorage.getItem(STORAGE_KEYS.AFFIRMATIONS);
         const currentRecordings = existingRecordings ? JSON.parse(existingRecordings) : [];
         currentRecordings.unshift(newAffirmation);
-        await AsyncStorage.setItem('affirmations', JSON.stringify(currentRecordings));
+        await AsyncStorage.setItem(STORAGE_KEYS.AFFIRMATIONS, JSON.stringify(currentRecordings));
       } catch (error) {
         console.error('Error saving to AsyncStorage:', error);
         Alert.alert('Error', 'Failed to save recording. Please try again.');
@@ -505,26 +549,187 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setNewAffirmationText('');
       setRecordingPath('');
       setRecordingDuration(0);
+      setSelectedTagForRecording('');
     } catch (error) {
       console.error('Failed to stop recording:', error);
       Alert.alert('Error', 'Failed to save recording. Please try again.');
     }
   };
 
+  const renderTagList = () => (
+    <View style={styles.tagContainer}>
+      <View style={styles.tagListWrapper}>
+        <Text style={styles.filterLabel}>Filter</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tagScrollContent}
+        >
+          <TouchableOpacity
+            style={[
+              styles.tagButton,
+              selectedTag === 'All Affirmations' && styles.tagButtonActive
+            ]}
+            onPress={() => setSelectedTag('All Affirmations')}
+          >
+            <Text style={[
+              styles.tagText,
+              selectedTag === 'All Affirmations' && styles.tagTextActive
+            ]}>All Affirmations</Text>
+          </TouchableOpacity>
+          {tags.map((tag) => (
+            <TouchableOpacity
+              key={tag}
+              style={[
+                styles.tagButton,
+                selectedTag === tag && styles.tagButtonActive
+              ]}
+              onPress={() => setSelectedTag(tag)}
+            >
+              <Text style={[
+                styles.tagText,
+                selectedTag === tag && styles.tagTextActive
+              ]}>{tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {showTagInput && (
+        <View style={styles.tagInputContainer}>
+          <TextInput
+            style={styles.tagInput}
+            value={newTag}
+            onChangeText={setNewTag}
+            placeholder="New tag..."
+            placeholderTextColor="#666"
+            autoFocus
+          />
+          <TouchableOpacity 
+            style={styles.tagInputButton}
+            onPress={handleAddTagPress}
+          >
+            <Text style={styles.tagInputButtonText}>Add</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.tagInputButton}
+            onPress={() => {
+              setNewTag('');
+              setShowTagInput(false);
+            }}
+          >
+            <Text style={styles.tagInputButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderRecordingModal = () => (
+    <Modal
+      visible={showRecordingModal}
+      animationType="slide"
+      transparent={true}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Record Affirmation</Text>
+          <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
+          
+          <View style={styles.tagSelectionContainer}>
+            <Text style={styles.tagSelectionTitle}>Select or Create Tag</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tagScrollContent}
+            >
+              {tags.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={[
+                    styles.tagButton,
+                    selectedTagForRecording === tag && styles.tagButtonActive
+                  ]}
+                  onPress={() => setSelectedTagForRecording(tag)}
+                >
+                  <Text style={[
+                    styles.tagText,
+                    selectedTagForRecording === tag && styles.tagTextActive
+                  ]}>{tag}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={styles.addTagButton}
+                onPress={() => setShowRecordingTagInput(true)}
+              >
+                <MaterialCommunityIcons name="plus" size={20} color="#FFD700" />
+              </TouchableOpacity>
+            </ScrollView>
+
+            {showRecordingTagInput && (
+              <View style={styles.tagInputContainer}>
+                <TextInput
+                  style={styles.tagInput}
+                  value={newTag}
+                  onChangeText={setNewTag}
+                  placeholder="New tag..."
+                  placeholderTextColor="#666"
+                  autoFocus
+                />
+                <TouchableOpacity 
+                  style={styles.tagInputButton}
+                  onPress={handleAddTagRecordingPress}
+                >
+                  <Text style={styles.tagInputButtonText}>Add</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.tagInputButton}
+                  onPress={() => {
+                    setNewTag('');
+                    setShowRecordingTagInput(false);
+                  }}
+                >
+                  <Text style={styles.tagInputButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity 
+            style={[
+              styles.recordButton,
+              isRecording && styles.recordingActive
+            ]}
+            onPress={isRecording ? handleStopRecording : handleStartRecording}
+          >
+            <MaterialCommunityIcons 
+              name={isRecording ? "stop" : "microphone"} 
+              size={32} 
+              color="#FFFFFF" 
+            />
+          </TouchableOpacity>
+          <Text style={styles.recordingInstructions}>
+            {isRecording ? "Recording... Tap to stop" : "Tap to start recording"}
+          </Text>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
         {renderHeader()}
+        {renderTagList()}
         {renderAudioSettingsModal()}
+        {renderRecordingModal()}
 
         <View style={{ flex: 1 }}>
           <DraggableFlatList<Affirmation>
-            data={recordings}
+            data={filteredRecordings}
             onDragEnd={({ data }) => {
-              'worklet';
-              const newRecordings = [...data];
-              runOnJS(setRecordings)(newRecordings);
-              runOnJS(saveNewOrder)(newRecordings);
+              setRecordings(data);
+              saveNewOrder(data);
             }}
             keyExtractor={item => item.id}
             renderItem={renderItem}
@@ -596,36 +801,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </View>
             </View>
           </KeyboardAvoidingView>
-        </Modal>
-
-        {/* Recording Modal */}
-        <Modal
-          visible={showRecordingModal}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Record Affirmation</Text>
-              <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
-              <TouchableOpacity 
-                style={[
-                  styles.recordButton,
-                  isRecording && styles.recordingActive
-                ]}
-                onPress={isRecording ? handleStopRecording : handleStartRecording}
-              >
-                <MaterialCommunityIcons 
-                  name={isRecording ? "stop" : "microphone"} 
-                  size={32} 
-                  color="#FFFFFF" 
-                />
-              </TouchableOpacity>
-              <Text style={styles.recordingInstructions}>
-                {isRecording ? "Recording... Tap to stop" : "Tap to start recording"}
-              </Text>
-            </View>
-          </View>
         </Modal>
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -900,6 +1075,90 @@ const styles = StyleSheet.create({
   },
   loopButtonActive: {
     backgroundColor: '#6366F1',
+  },
+  tagContainer: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3744',
+  },
+  tagListWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+  },
+  filterLabel: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  tagScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingRight: 16,
+  },
+  tagButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#2A3744',
+    marginRight: 8,
+  },
+  tagButtonActive: {
+    backgroundColor: '#FFD700',
+  },
+  tagText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  tagTextActive: {
+    color: '#000000',
+    fontWeight: '600',
+  },
+  addTagButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#2A3744',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tagInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 8,
+  },
+  tagInput: {
+    flex: 1,
+    backgroundColor: '#2A3744',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  tagInputButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#6366F1',
+  },
+  tagInputButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tagSelectionContainer: {
+    marginVertical: 20,
+  },
+  tagSelectionTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
   },
 });
 
