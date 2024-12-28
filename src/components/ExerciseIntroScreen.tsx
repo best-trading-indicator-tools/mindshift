@@ -55,10 +55,11 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
         <View style={styles.content}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.description}>{description}</Text>
-          <TouchableOpacity style={styles.startButton} onPress={onStart}>
-            <Text style={styles.startButtonText}>{buttonText}</Text>
-          </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.startButton} onPress={onStart}>
+          <Text style={styles.startButtonText}>{buttonText}</Text>
+        </TouchableOpacity>
       </LinearGradient>
 
       <Modal
@@ -95,14 +96,12 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#3730A3',
   },
   gradient: {
     flex: 1,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   exitButton: {
     width: 40,
@@ -116,30 +115,40 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingBottom: 120,
+    paddingTop: 10,
   },
   title: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 60,
+    marginBottom: 40,
     textAlign: 'center',
   },
   description: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: 40,
+    lineHeight: 30,
+    marginBottom: 20,
   },
   startButton: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 50,
     paddingVertical: 20,
     borderRadius: 40,
-    marginTop: 40,
+    position: 'absolute',
+    bottom: 50,
+    alignSelf: 'center',
+    zIndex: 1,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   startButtonText: {
     color: '#6366F1',

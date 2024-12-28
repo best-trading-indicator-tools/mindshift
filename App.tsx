@@ -11,6 +11,8 @@ import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
 
 function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
@@ -37,11 +39,13 @@ function App(): JSX.Element {
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AppNavigator initialRoute={user ? 'MainTabs' : 'Login'} />
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppNavigator initialRoute={user ? 'MainTabs' : 'Login'} />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

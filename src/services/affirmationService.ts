@@ -1,9 +1,3 @@
-import firestore from '@react-native-firebase/firestore';
-import storage from '@react-native-firebase/storage';
-import auth from '@react-native-firebase/auth';
-
-const COLLECTION_NAME = 'affirmations';
-
 export interface Affirmation {
   id: string;
   text: string;
@@ -12,6 +6,7 @@ export interface Affirmation {
   createdAt: Date;
 }
 
+// No need for these functions anymore since we're handling storage in the component
 export const getUserAffirmations = async (): Promise<Affirmation[]> => {
   throw new Error('This function is deprecated. Use local storage instead.');
 };

@@ -1,74 +1,41 @@
-import React from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useEffect, useRef } from 'react';
+import { isExerciseCompletedToday } from '../services/exerciseService';
 
-interface NotificationBellProps {
-  hasNotifications?: boolean;
-  onPress?: () => void;
-}
-
-const NotificationBell: React.FC<NotificationBellProps> = ({ 
-  hasNotifications = false,
-  onPress 
-}) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+const NotificationBell: React.FC = () => {
+  const [hasNotifications, setHasNotifications] = useState(false);
 
   useEffect(() => {
-    if (hasNotifications) {
-      // Create the animation sequence
-      animationRef.current = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      
-      // Start the animation
-      animationRef.current.start();
-    } else {
-      // Reset the animation value when there are no notifications
-      pulseAnim.setValue(1);
-    }
+    checkNotifications();
+  }, []);
 
-    // Cleanup function
-    return () => {
-      if (animationRef.current) {
-        animationRef.current.stop();
-        animationRef.current = null;
-      }
-    };
-  }, [hasNotifications, pulseAnim]);
+  const checkNotifications = async () => {
+    try {
+      const results = await Promise.all([
+        isExerciseCompletedToday('deep-breathing'),
+        isExerciseCompletedToday('active-incantations'),
+        isExerciseCompletedToday('passive-incantations'),
+        isExerciseCompletedToday('voix-nasale'),
+        isExerciseCompletedToday('fry-vocal'),
+      ]);
+
+      const completedCount = results.filter(Boolean).length;
+      const totalMissions = 5;
+      
+      // Show notification dot if either:
+      // 1. There are incomplete missions
+      // 2. All missions are completed (to show congratulations)
+      setHasNotifications(completedCount < totalMissions || completedCount === totalMissions);
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <MaterialCommunityIcons
-        name="bell-outline"
-        size={24}
-        color="#fff"
-        onPress={onPress}
-      />
-      {hasNotifications && (
-        <Animated.View
-          style={[
-            styles.notificationDot,
-            {
-              transform: [{ scale: pulseAnim }],
-            },
-          ]}
-        />
-      )}
+      <MaterialCommunityIcons name="bell" size={24} color="#FFFFFF" />
+      {hasNotifications && <View style={styles.notificationDot} />}
     </View>
   );
 };
@@ -76,17 +43,17 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    width: 24,
-    height: 24,
   },
   notificationDot: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -2,
+    right: -2,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#FF4444',
+    borderWidth: 1,
+    borderColor: '#121212',
   },
 });
 

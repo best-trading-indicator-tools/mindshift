@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,
+    width: '80%',
   },
   exitButtonText: {
     color: '#000000',

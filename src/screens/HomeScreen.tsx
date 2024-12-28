@@ -11,7 +11,7 @@ import ProgressBar from '../components/ProgressBar';
 import NotificationBell from '../components/NotificationBell';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
-import { isExerciseCompletedToday } from '../services/exerciseService';
+import { isExerciseCompletedToday, getStreak } from '../services/exerciseService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -138,6 +138,7 @@ const DAILY_MISSIONS = [
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userName, setUserName] = useState('User');
+  const [streak, setStreak] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const windowWidth = Dimensions.get('window').width;
   const cardWidth = windowWidth * 0.7; // Make cards 70% of screen width
@@ -168,6 +169,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Initial load
   useEffect(() => {
     checkExerciseCompletions();
+    loadStreak();
   }, []); // Empty dependency array for initial load
 
   // Focus listener
@@ -176,7 +178,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       // Only check completions if we have a user and if we haven't checked recently
       if (auth().currentUser && !isCheckingRef.current) {
         isCheckingRef.current = true;
-        checkExerciseCompletions().finally(() => {
+        Promise.all([
+          checkExerciseCompletions(),
+          loadStreak()
+        ]).finally(() => {
           isCheckingRef.current = false;
         });
       }
@@ -210,6 +215,16 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error checking exercise completion:', error);
       console.error('Error details:', JSON.stringify(error));
+    }
+  };
+
+  const loadStreak = async () => {
+    try {
+      const currentStreak = await getStreak();
+      console.log('Current streak:', currentStreak);
+      setStreak(currentStreak);
+    } catch (error) {
+      console.error('Error loading streak:', error);
     }
   };
 
@@ -267,9 +282,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Welcome back</Text>
-            <Text style={styles.name}>{userName}</Text>
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>{userName}</Text>
+            </View>
           </View>
           <View style={styles.headerRight}>
+            <View style={styles.streakContainer}>
+              <MaterialCommunityIcons name="fire" size={24} color="#FFD700" />
+              <Text style={styles.streakText}>{streak}</Text>
+            </View>
             <TouchableOpacity onPress={handleDevLogout} style={styles.signOutButton}>
               {renderIcon("logout", 24, "#FFFFFF")}
             </TouchableOpacity>
@@ -665,6 +686,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginRight: 12,
+  },
+  streakText: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

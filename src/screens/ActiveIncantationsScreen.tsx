@@ -504,14 +504,17 @@ const styles = StyleSheet.create({
     bottom: 40,
     alignSelf: 'center',
     backgroundColor: '#FFD700',
-    paddingHorizontal: 30,
+    paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 25,
+    width: '40%',
+    alignItems: 'center',
   },
   bottomExitButtonText: {
     color: '#000000',
     fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

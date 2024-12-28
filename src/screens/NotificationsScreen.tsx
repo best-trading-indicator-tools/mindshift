@@ -1,83 +1,102 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  ScrollView,
+  Text,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
-import { Text, Icon } from '@rneui/themed';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { isExerciseCompletedToday } from '../services/exerciseService';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'reminder' | 'success';
+  timestamp: Date;
+}
 
-const notifications = [
-  {
-    id: '1',
-    title: 'Challenge Incomplete!',
-    message: "Don't let one missed day discourage you. Keep pushing forward to reach your goals.",
-    icon: 'flag-variant',
-    color: '#6366f1',
-    time: '2h ago'
-  },
-  {
-    id: '2',
-    title: 'Outstanding Progress!',
-    message: "You did it! It wasn't easy, but you've completed today's mindfulness session.",
-    icon: 'star',
-    color: '#FFD700',
-    time: '5h ago'
-  },
-  {
-    id: '3',
-    title: 'Mindfulness Master',
-    message: "You've completed your first meditation session! This is just the beginning of your journey to inner peace.",
-    icon: 'meditation',
-    color: '#4CAF50',
-    time: '1d ago'
-  },
-  {
-    id: '4',
-    title: 'Digital Wellness Achievement',
-    message: "Training will help you manage stress, improve focus, and build resilience. Keep up the great work!",
-    icon: 'trophy',
-    color: '#6366f1',
-    time: '2d ago'
-  }
-];
+const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
+  useEffect(() => {
+    checkDailyMissions();
+  }, []);
+
+  const checkDailyMissions = async () => {
+    try {
+      const results = await Promise.all([
+        isExerciseCompletedToday('deep-breathing'),
+        isExerciseCompletedToday('active-incantations'),
+        isExerciseCompletedToday('passive-incantations'),
+        isExerciseCompletedToday('voix-nasale'),
+        isExerciseCompletedToday('fry-vocal'),
+      ]);
+
+      const completedCount = results.filter(Boolean).length;
+      const totalMissions = 5;
+      const remainingMissions = totalMissions - completedCount;
+
+      let newNotifications: Notification[] = [];
+
+      if (remainingMissions > 0) {
+        newNotifications.push({
+          id: 'daily-reminder',
+          title: 'Missed Day Challenge',
+          message: `A gentle reminder that you still have ${remainingMissions} mission${remainingMissions > 1 ? 's' : ''} to complete today. It's not too late to catch up!`,
+          type: 'reminder',
+          timestamp: new Date(),
+        });
+      }
+
+      if (completedCount === totalMissions) {
+        newNotifications.push({
+          id: 'completion',
+          title: 'Outstanding!',
+          message: "You've completed all your daily missions! Keep up the great work to maintain your streak.",
+          type: 'success',
+          timestamp: new Date(),
+        });
+      }
+
+      setNotifications(newNotifications);
+    } catch (error) {
+      console.error('Error checking missions:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Notifications</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon
-            type="material-community"
-            name="close"
-            size={24}
-            color="#FFFFFF"
-          />
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={styles.closeButton}
+        >
+          <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-      
+
       <ScrollView style={styles.notificationsList}>
         {notifications.map((notification) => (
-          <View key={notification.id} style={styles.notificationCard}>
-            <View style={styles.notificationDot} />
-            <View style={styles.iconContainer}>
-              <Icon
-                type="material-community"
-                name={notification.icon}
-                size={24}
-                color={notification.color}
+          <View 
+            key={notification.id} 
+            style={[
+              styles.notificationCard,
+              notification.type === 'success' && styles.successCard
+            ]}
+          >
+            <View style={styles.notificationIcon}>
+              <MaterialCommunityIcons 
+                name={notification.type === 'success' ? 'trophy' : 'run'}
+                size={24} 
+                color={notification.type === 'success' ? '#FFD700' : '#FFFFFF'} 
               />
             </View>
-            <View style={styles.contentContainer}>
+            <View style={styles.notificationContent}>
               <Text style={styles.notificationTitle}>{notification.title}</Text>
               <Text style={styles.notificationMessage}>{notification.message}</Text>
-              <Text style={styles.timeText}>{notification.time}</Text>
             </View>
           </View>
         ))}
@@ -89,71 +108,62 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#121212',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
+    borderBottomColor: '#2A3744',
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
+  closeButton: {
+    padding: 8,
+  },
   notificationsList: {
     flex: 1,
-    padding: 15,
+    padding: 16,
   },
   notificationCard: {
-    flexDirection: 'row',
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#151932',
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    position: 'relative',
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  notificationDot: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#6366f1',
+  successCard: {
+    backgroundColor: '#1a1f3d',
   },
-  iconContainer: {
+  notificationIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 12,
   },
-  contentContainer: {
+  notificationContent: {
     flex: 1,
-    paddingRight: 20,
   },
   notificationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 5,
-  },
-  notificationMessage: {
-    fontSize: 14,
-    color: '#A0A0A0',
-    lineHeight: 20,
     marginBottom: 8,
   },
-  timeText: {
-    fontSize: 12,
-    color: '#666666',
+  notificationMessage: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    lineHeight: 22,
   },
 });
 
