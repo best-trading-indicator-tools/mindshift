@@ -339,7 +339,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const handleComplete = async () => {
     try {
       // Mark exercise as completed
-      await markExerciseAsCompleted('passive-incantations');
+      await markExerciseAsCompleted('passive-incantations', 'Passive Incantations');
       
       // Clean up audio player
       if (isPlaying) {

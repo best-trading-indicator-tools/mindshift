@@ -8,7 +8,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
 import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../components/Illustrations';
 import ProgressBar from '../components/ProgressBar';
-import NotificationBell from '../components/NotificationBell';
+import { NotificationBell } from '../components/NotificationBell';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
 import { isExerciseCompletedToday, getStreak } from '../services/exerciseService';
@@ -92,6 +92,13 @@ const DAILY_MISSIONS = [
     icon: 'emoticon-happy',
   },
   {
+    title: 'Daily Gratitude',
+    subtitle: 'Count your blessings',
+    duration: '5-10 min',
+    type: 'Reflection',
+    icon: 'heart-outline',
+  },
+  {
     title: 'Active Incantations',
     subtitle: 'Speak affirmations with conviction',
     duration: '2-3 min',
@@ -106,32 +113,11 @@ const DAILY_MISSIONS = [
     icon: 'headphones',
   },
   {
-    title: 'Voix Nasale',
-    subtitle: 'Éliminer la nasalité de la voix',
-    duration: '3-5 min',
-    type: 'Training',
-    icon: 'microphone',
-  },
-  {
-    title: 'Fry Vocal',
-    subtitle: 'Relâchez les cordes vocales',
-    duration: '3-5 min',
-    type: 'Training',
-    icon: 'waveform',
-  },
-  {
-    title: 'Intonation Montante',
-    subtitle: 'Intonation Montante',
-    duration: '3-5 min',
-    type: 'Training',
-    icon: 'arrow-up-bold',
-  },
-  {
-    title: 'Rires',
-    subtitle: 'Entraîne le diaphragme',
-    duration: '3-5 min',
-    type: 'Training',
-    icon: 'emoticon-happy',
+    title: 'Golden Checklist',
+    subtitle: 'End of day achievements review',
+    duration: '2-3 min',
+    type: 'Review',
+    icon: 'checkbox-marked',
   },
 ];
 
@@ -200,18 +186,31 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       console.log('Checking exercise completions for user:', currentUser.uid);
       
-      const results = await Promise.all([
-        isExerciseCompletedToday('deep-breathing'),
-        isExerciseCompletedToday('active-incantations'),
-        isExerciseCompletedToday('passive-incantations'),
-      ]);
+      // Get completion status for all exercises
+      const exerciseIds = DAILY_MISSIONS.map(mission => {
+        switch (mission.title) {
+          case 'Deep Breathing':
+            return 'deep-breathing';
+          case 'Daily Gratitude':
+            return 'gratitude';
+          case 'Active Incantations':
+            return 'active-incantations';
+          case 'Passive Incantations':
+            return 'passive-incantations';
+          case 'Golden Checklist':
+            return 'golden-checklist';
+          default:
+            return null;
+        }
+      }).filter(Boolean) as string[];
+
+      const results = await Promise.all(
+        exerciseIds.map(id => isExerciseCompletedToday(id))
+      );
       
-      const completed = [];
-      if (results[0]) completed.push('deep-breathing');
-      if (results[1]) completed.push('active-incantations');
-      if (results[2]) completed.push('passive-incantations');
-      
+      const completed = exerciseIds.filter((id, index) => results[index]);
       setCompletedExercises(completed);
+      
     } catch (error) {
       console.error('Error checking exercise completion:', error);
       console.error('Error details:', JSON.stringify(error));
@@ -400,6 +399,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       ? () => navigation.getParent()?.navigate('ActiveIncantations')
                       : mission.title === 'Passive Incantations'
                       ? () => navigation.getParent()?.navigate('PassiveIncantations')
+                      : mission.title === 'Daily Gratitude'
+                      ? () => navigation.getParent()?.navigate('Gratitude')
+                      : mission.title === 'Golden Checklist'
+                      ? () => navigation.getParent()?.navigate('GoldenChecklist')
                       : undefined
                   }
                   isCompleted={
@@ -409,6 +412,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       ? completedExercises.includes('active-incantations')
                       : mission.title === 'Passive Incantations'
                       ? completedExercises.includes('passive-incantations')
+                      : mission.title === 'Daily Gratitude'
+                      ? completedExercises.includes('gratitude')
+                      : mission.title === 'Golden Checklist'
+                      ? completedExercises.includes('golden-checklist')
                       : false
                   }
                 />

@@ -41,9 +41,9 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       <ExerciseIntroScreen
         title="Deep Breathing"
         description={
-          "Train your diaphragm with deep breathing exercises.\n\n" +
-          "Take slow, deep breaths and hold them to strengthen your diaphragm.\n\n" +
-          "This will help you speak with more power and control."
+          "Take a moment to find peace and calmness.\n\n" +
+          "Follow the guided breathing exercise to reduce stress and anxiety.\n\n" +
+          "This practice will help you relax and center yourself."
         }
         buttonText="Start Exercise"
         onStart={() => {

@@ -14,6 +14,8 @@ import LoginScreen from '../screens/LoginScreen';
 import DeepBreathingScreen from '../screens/DeepBreathingScreen';
 import ActiveIncantationsScreen from '../screens/ActiveIncantationsScreen';
 import PassiveIncantationsScreen from '../screens/PassiveIncantationsScreen';
+import GratitudeScreen from '../screens/GratitudeScreen';
+import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -32,6 +34,8 @@ export type RootStackParamList = {
   DeepBreathing: undefined;
   ActiveIncantations: undefined;
   PassiveIncantations: undefined;
+  Gratitude: undefined;
+  GoldenChecklist: undefined;
   Lesson: {
     lessonId: number;
   };
@@ -164,6 +168,16 @@ function AppNavigator({ initialRoute }: AppNavigatorProps) {
         <Stack.Screen
           name="PassiveIncantations"
           component={PassiveIncantationsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Gratitude"
+          component={GratitudeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="GoldenChecklist"
+          component={GoldenChecklistScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

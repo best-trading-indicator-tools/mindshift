@@ -40,10 +40,10 @@ const ExerciseIntroScreen: React.FC<ExerciseIntroScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#3730A3', '#6366F1', '#818CF8']}
+        colors={['#3730A3', '#6366F1']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
       >
         <TouchableOpacity 
           style={styles.exitButton}
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    paddingBottom: 0,
   },
   exitButton: {
     width: 40,
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Platform.OS === 'ios' ? 50 : 40,
+    marginTop: 10,
     marginLeft: 20,
   },
   content: {
@@ -118,8 +119,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingBottom: 120,
-    paddingTop: 10,
+    paddingBottom: 80,
   },
   title: {
     fontSize: 36,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderRadius: 40,
     position: 'absolute',
-    bottom: 50,
+    bottom: 30,
     alignSelf: 'center',
     zIndex: 1,
     elevation: 5,

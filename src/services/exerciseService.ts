@@ -1,13 +1,17 @@
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addNotification } from './notificationService';
+
+const EXERCISE_COMPLETION_KEY = 'exercise_completions';
 
 export type ExerciseType = 
   | 'deep-breathing'
   | 'active-incantations'
   | 'passive-incantations'
-  | 'meditation'
+  | 'voix-nasale'
+  | 'fry-vocal'
   | 'gratitude'
-  | 'visualization';
+  | 'golden-checklist';
 
 export interface ExerciseCompletion {
   userId: string;
@@ -20,29 +24,49 @@ const getStorageKey = (exerciseType: string, date: Date) => {
   return `exercise_${userId}_${exerciseType}_${date.toISOString().split('T')[0]}`;
 };
 
-export const markExerciseAsCompleted = async (exerciseType: string) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const storageKey = getStorageKey(exerciseType, today);
-  const completion: ExerciseCompletion = {
-    userId: auth().currentUser?.uid || 'local-user',
-    exerciseType,
-    completedAt: today
-  };
+export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string) => {
+  try {
+    const today = new Date().toDateString();
+    const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
+    const completions = completionsJson ? JSON.parse(completionsJson) : {};
+    
+    // Check if already completed today before doing anything
+    if (completions[exerciseId]?.date === today) {
+      return true; // Already completed today, just return success
+    }
 
-  await AsyncStorage.setItem(storageKey, JSON.stringify(completion));
-  await updateStreak();
+    // If not completed today, add notification and update completion
+    await addNotification({
+      id: `completion-${exerciseId}-${Date.now()}`,
+      title: 'Well Done!',
+      message: `You've completed your ${exerciseName} exercise. Keep up the great work!`,
+      type: 'success'
+    });
+
+    // Update completion status
+    completions[exerciseId] = { date: today };
+    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify(completions));
+    
+    // Check overall daily progress after marking exercise as complete
+    await checkDailyProgress();
+    
+    return true;
+  } catch (error) {
+    console.error('Error marking exercise as completed:', error);
+    return false;
+  }
 };
 
-export const isExerciseCompletedToday = async (exerciseType: string): Promise<boolean> => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const storageKey = getStorageKey(exerciseType, today);
-  const completion = await AsyncStorage.getItem(storageKey);
-  
-  return completion !== null;
+export const isExerciseCompletedToday = async (exerciseId: string): Promise<boolean> => {
+  try {
+    const today = new Date().toDateString();
+    const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
+    const completions = completionsJson ? JSON.parse(completionsJson) : {};
+    return completions[exerciseId]?.date === today;
+  } catch (error) {
+    console.error('Error checking exercise completion:', error);
+    return false;
+  }
 };
 
 const STREAK_KEY = 'exercise_streak';
@@ -55,6 +79,8 @@ export const updateStreak = async () => {
       isExerciseCompletedToday('deep-breathing'),
       isExerciseCompletedToday('active-incantations'),
       isExerciseCompletedToday('passive-incantations'),
+      isExerciseCompletedToday('gratitude'),
+      isExerciseCompletedToday('golden-checklist'),
     ]);
 
     console.log('Exercise completion results:', results);
@@ -112,5 +138,53 @@ export const getStreak = async (): Promise<number> => {
   } catch (error) {
     console.error('Error getting streak:', error);
     return 0;
+  }
+};
+
+export const checkDailyProgress = async () => {
+  try {
+    const missions = [
+      { key: 'deep-breathing', name: 'Deep Breathing' },
+      { key: 'active-incantations', name: 'Active Incantations' },
+      { key: 'passive-incantations', name: 'Passive Incantations' },
+      { key: 'gratitude', name: 'Daily Gratitude' },
+      { key: 'golden-checklist', name: 'Golden Checklist' }
+    ];
+
+    const results = await Promise.all(
+      missions.map(mission => isExerciseCompletedToday(mission.key))
+    );
+
+    const completedCount = results.filter(Boolean).length;
+    const totalMissions = missions.length;
+    const remainingMissions = totalMissions - completedCount;
+    const progressPercentage = Math.round((completedCount / totalMissions) * 100);
+
+    // Only send reminder if there are completed missions but some are still remaining
+    if (completedCount > 0 && remainingMissions > 0) {
+      await addNotification({
+        id: `daily-reminder-${Date.now()}`,
+        title: 'Daily Progress',
+        message: `You've completed ${completedCount} out of ${totalMissions} missions today. Keep going!`,
+        type: 'reminder'
+      });
+    }
+
+    if (completedCount === totalMissions) {
+      await addNotification({
+        id: `all-complete-${Date.now()}`,
+        title: 'Outstanding!',
+        message: "You've completed all your daily missions! Your dedication is inspiring. Keep up the great work!",
+        type: 'success'
+      });
+    }
+
+    // Store the progress percentage for UI updates
+    await AsyncStorage.setItem('daily_progress', progressPercentage.toString());
+
+    return { completedCount, totalMissions, remainingMissions, progressPercentage };
+  } catch (error) {
+    console.error('Error checking daily progress:', error);
+    return { completedCount: 0, totalMissions: 0, remainingMissions: 0, progressPercentage: 0 };
   }
 }; 

@@ -1,60 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { isExerciseCompletedToday } from '../services/exerciseService';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
+import { getNotifications } from '../services/notificationService';
 
-const NotificationBell: React.FC = () => {
-  const [hasNotifications, setHasNotifications] = useState(false);
+type NavigationProp = NativeStackNavigationProp<RootStackParamList & RootTabParamList>;
+
+export const NotificationBell: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
+    const checkNotifications = async () => {
+      const notifications = await getNotifications();
+      setHasUnread(notifications.some(notification => !notification.isRead));
+    };
+
     checkNotifications();
+    
+    // Check for new notifications every minute
+    const interval = setInterval(checkNotifications, 60000);
+    return () => clearInterval(interval);
   }, []);
 
-  const checkNotifications = async () => {
-    try {
-      const results = await Promise.all([
-        isExerciseCompletedToday('deep-breathing'),
-        isExerciseCompletedToday('active-incantations'),
-        isExerciseCompletedToday('passive-incantations'),
-        isExerciseCompletedToday('voix-nasale'),
-        isExerciseCompletedToday('fry-vocal'),
-      ]);
-
-      const completedCount = results.filter(Boolean).length;
-      const totalMissions = 5;
-      
-      // Show notification dot if either:
-      // 1. There are incomplete missions
-      // 2. All missions are completed (to show congratulations)
-      setHasNotifications(completedCount < totalMissions || completedCount === totalMissions);
-    } catch (error) {
-      console.error('Error checking notifications:', error);
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name="bell" size={24} color="#FFFFFF" />
-      {hasNotifications && <View style={styles.notificationDot} />}
-    </View>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={() => navigation.navigate('Notifications')}
+    >
+      <MaterialCommunityIcons 
+        name="bell-outline" 
+        size={24} 
+        color="#FFFFFF" 
+      />
+      {hasUnread && <View style={styles.badge} />}
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    padding: 8,
     position: 'relative',
   },
-  notificationDot: {
+  badge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF4444',
-    borderWidth: 1,
-    borderColor: '#121212',
+    backgroundColor: '#FF0000',
   },
 });
-
-export default NotificationBell;

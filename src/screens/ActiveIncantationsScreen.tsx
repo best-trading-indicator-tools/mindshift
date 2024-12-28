@@ -260,7 +260,7 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleComplete = async () => {
     try {
-      await markExerciseAsCompleted('active-incantations');
+      await markExerciseAsCompleted('active-incantations', 'Active Incantations');
       navigation.goBack();
     } catch (error) {
       console.error('Error marking exercise as completed:', error);

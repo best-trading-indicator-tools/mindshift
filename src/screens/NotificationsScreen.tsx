@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,66 +6,78 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { isExerciseCompletedToday } from '../services/exerciseService';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'reminder' | 'success';
-  timestamp: Date;
-}
+import { Notification, getNotifications, markNotificationAsRead } from '../services/notificationService';
 
 const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkDailyMissions();
+  const loadNotifications = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const notifs = await getNotifications();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const filteredNotifs = notifs
+        .filter(n => new Date(n.timestamp) >= today)
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      
+      setNotifications(filteredNotifs);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      Alert.alert(
+        'Error',
+        'Unable to load notifications. Please try again later.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const checkDailyMissions = async () => {
-    try {
-      const results = await Promise.all([
-        isExerciseCompletedToday('deep-breathing'),
-        isExerciseCompletedToday('active-incantations'),
-        isExerciseCompletedToday('passive-incantations'),
-        isExerciseCompletedToday('voix-nasale'),
-        isExerciseCompletedToday('fry-vocal'),
-      ]);
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
-      const completedCount = results.filter(Boolean).length;
-      const totalMissions = 5;
-      const remainingMissions = totalMissions - completedCount;
-
-      let newNotifications: Notification[] = [];
-
-      if (remainingMissions > 0) {
-        newNotifications.push({
-          id: 'daily-reminder',
-          title: 'Missed Day Challenge',
-          message: `A gentle reminder that you still have ${remainingMissions} mission${remainingMissions > 1 ? 's' : ''} to complete today. It's not too late to catch up!`,
-          type: 'reminder',
-          timestamp: new Date(),
-        });
-      }
-
-      if (completedCount === totalMissions) {
-        newNotifications.push({
-          id: 'completion',
-          title: 'Outstanding!',
-          message: "You've completed all your daily missions! Keep up the great work to maintain your streak.",
-          type: 'success',
-          timestamp: new Date(),
-        });
-      }
-
-      setNotifications(newNotifications);
-    } catch (error) {
-      console.error('Error checking missions:', error);
+  const handleNotificationPress = useCallback(async (notification: Notification) => {
+    if (!notification.isRead) {
+      await markNotificationAsRead(notification.id);
+      loadNotifications();
     }
-  };
+  }, [loadNotifications]);
+
+  const renderNotification = useCallback(({ id, type, title, message, timestamp, isRead }: Notification) => (
+    <TouchableOpacity 
+      key={id} 
+      style={[
+        styles.notificationCard,
+        type === 'success' && styles.successCard,
+        isRead && styles.readCard
+      ]}
+      onPress={() => handleNotificationPress({ id, type, title, message, timestamp, isRead })}
+    >
+      <View style={styles.notificationIcon}>
+        <MaterialCommunityIcons 
+          name={type === 'success' ? 'trophy' : 'bell-ring'}
+          size={24} 
+          color={type === 'success' ? '#FFD700' : '#FFFFFF'} 
+        />
+      </View>
+      <View style={styles.notificationContent}>
+        <Text style={[styles.notificationTitle, isRead && styles.readText]}>{title}</Text>
+        <Text style={[styles.notificationMessage, isRead && styles.readText]}>{message}</Text>
+        <Text style={styles.notificationTime}>
+          {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </View>
+      {!isRead && <View style={styles.unreadDot} />}
+    </TouchableOpacity>
+  ), [handleNotificationPress]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,28 +90,23 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.notificationsList}>
-        {notifications.map((notification) => (
-          <View 
-            key={notification.id} 
-            style={[
-              styles.notificationCard,
-              notification.type === 'success' && styles.successCard
-            ]}
-          >
-            <View style={styles.notificationIcon}>
-              <MaterialCommunityIcons 
-                name={notification.type === 'success' ? 'trophy' : 'run'}
-                size={24} 
-                color={notification.type === 'success' ? '#FFD700' : '#FFFFFF'} 
-              />
-            </View>
-            <View style={styles.notificationContent}>
-              <Text style={styles.notificationTitle}>{notification.title}</Text>
-              <Text style={styles.notificationMessage}>{notification.message}</Text>
-            </View>
+      <ScrollView 
+        style={styles.notificationsList}
+        contentContainerStyle={styles.notificationsContent}
+      >
+        {isLoading ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="loading" size={48} color="#666666" />
+            <Text style={styles.emptyStateText}>Loading notifications...</Text>
           </View>
-        ))}
+        ) : notifications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="bell-off" size={48} color="#666666" />
+            <Text style={styles.emptyStateText}>No notifications yet</Text>
+          </View>
+        ) : (
+          notifications.map(renderNotification)
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -112,24 +119,34 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#2A3744',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
   closeButton: {
     padding: 8,
   },
   notificationsList: {
     flex: 1,
+  },
+  notificationsContent: {
     padding: 16,
+    paddingBottom: 32,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    marginTop: 100,
+  },
+  emptyStateText: {
+    color: '#666666',
+    fontSize: 16,
+    marginTop: 16,
   },
   notificationCard: {
     backgroundColor: '#151932',
@@ -138,15 +155,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    position: 'relative',
   },
   successCard: {
     backgroundColor: '#1a1f3d',
+  },
+  readCard: {
+    opacity: 0.7,
   },
   notificationIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -164,6 +184,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#CCCCCC',
     lineHeight: 22,
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  readText: {
+    opacity: 0.7,
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6366F1',
   },
 });
 
