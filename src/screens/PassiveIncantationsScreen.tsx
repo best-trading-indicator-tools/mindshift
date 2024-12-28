@@ -18,6 +18,7 @@ import {
   TouchableWithoutFeedback,
   PanResponder,
   Animated,
+  Dimensions,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -68,10 +69,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [showPlaybackScreen, setShowPlaybackScreen] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Affirmation | null>(null);
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
+  const [nextBackgroundIndex, setNextBackgroundIndex] = useState(1);
   const backgroundPosition = useRef(new Animated.Value(0)).current;
   const [showPlaybackTagModal, setShowPlaybackTagModal] = useState(false);
   const [previousIndex, setPreviousIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [presentationMode, setPresentationMode] = useState(false);
+  const backgroundRotationInterval = useRef<NodeJS.Timeout | null>(null);
 
   const backgroundImages = [
     require('../assets/illustrations/zen1.jpg'),
@@ -88,16 +92,23 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         backgroundPosition.setValue(gestureState.dx);
       },
       onPanResponderRelease: (_, gestureState) => {
-        const screenWidth = 200; // Threshold for swipe
-        if (Math.abs(gestureState.dx) > screenWidth / 3) {
-          // Start fade out
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 300,
+        const screenWidth = Dimensions.get('window').width;
+        const threshold = screenWidth / 3;
+        
+        if (Math.abs(gestureState.dx) > threshold) {
+          // Complete the transition
+          const direction = gestureState.dx > 0 ? 1 : -1;
+          
+          // First complete the animation
+          Animated.spring(backgroundPosition, {
+            toValue: direction * screenWidth,
             useNativeDriver: true,
+            velocity: gestureState.vx,
+            tension: 30,
+            friction: 7,
           }).start(() => {
-            setPreviousIndex(currentBackgroundIndex);
-            if (gestureState.dx > 0) {
+            // After animation completes, update indices and reset position
+            if (direction > 0) {
               // Swipe right
               setCurrentBackgroundIndex(prev => 
                 prev === 0 ? backgroundImages.length - 1 : prev - 1
@@ -108,21 +119,30 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 prev === backgroundImages.length - 1 ? 0 : prev + 1
               );
             }
-            // Start fade in
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }).start();
+            // Reset position immediately after updating indices
+            backgroundPosition.setValue(0);
           });
+        } else {
+          // Reset position if swipe wasn't far enough
+          Animated.spring(backgroundPosition, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 30,
+            friction: 7,
+          }).start();
         }
-        Animated.spring(backgroundPosition, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
       },
     })
   ).current;
+
+  // Calculate next background index
+  useEffect(() => {
+    setNextBackgroundIndex(
+      currentBackgroundIndex === backgroundImages.length - 1 
+        ? 0 
+        : currentBackgroundIndex + 1
+    );
+  }, [currentBackgroundIndex]);
 
   useEffect(() => {
     loadAffirmations();
@@ -133,6 +153,43 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       player.removePlayBackListener();
     };
   }, []);
+
+  useEffect(() => {
+    if (presentationMode && showPlaybackScreen) {
+      // Start rotating backgrounds every 5 seconds
+      backgroundRotationInterval.current = setInterval(() => {
+        // Start fade out
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start(() => {
+          setPreviousIndex(currentBackgroundIndex);
+          setCurrentBackgroundIndex(prev => 
+            prev === backgroundImages.length - 1 ? 0 : prev + 1
+          );
+          // Start fade in
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }).start();
+        });
+      }, 5000);
+    } else {
+      // Clear interval when presentation mode is disabled
+      if (backgroundRotationInterval.current) {
+        clearInterval(backgroundRotationInterval.current);
+      }
+    }
+
+    // Cleanup
+    return () => {
+      if (backgroundRotationInterval.current) {
+        clearInterval(backgroundRotationInterval.current);
+      }
+    };
+  }, [presentationMode, showPlaybackScreen]);
 
   const loadAffirmations = async () => {
     try {
@@ -254,12 +311,17 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
     return (
       <ScaleDecorator>
-        <View style={[
-          styles.recordingItem,
-          isEditMode && styles.recordingItemEdit,
-          isBeingPlayed && !isEditMode && styles.recordingItemPlaying,
-          isActive && styles.draggingItem,
-        ]}>
+        <TouchableOpacity
+          onLongPress={drag}
+          disabled={!isEditMode}
+          delayLongPress={200}
+          style={[
+            styles.recordingItem,
+            isEditMode && styles.recordingItemEdit,
+            isBeingPlayed && !isEditMode && styles.recordingItemPlaying,
+            isActive && styles.draggingItem,
+          ]}
+        >
           <View style={styles.recordingContent}>
             {isEditMode ? (
               <View style={styles.editButtons}>
@@ -277,7 +339,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 </TouchableOpacity>
               </View>
             ) : (
-              // Play button (green zone)
               <TouchableOpacity 
                 style={styles.playButton}
                 onPress={() => handlePlaybackControl(item)}
@@ -290,12 +351,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </TouchableOpacity>
             )}
 
-            {/* Recording info (red zone) */}
             <TouchableOpacity 
               style={styles.recordingInfo}
               onPress={() => !isEditMode && handlePlayRecording(item)}
-              onPressIn={isEditMode ? drag : undefined}
-              disabled={isEditMode}
+              disabled={isEditMode || isActive}
             >
               <Text style={styles.recordingText}>{item.text || `Recording ${recordings.findIndex(r => r.id === item.id) + 1}`}</Text>
               <Text style={styles.recordingDuration}>
@@ -325,7 +384,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               />
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </ScaleDecorator>
     );
   };
@@ -393,6 +452,19 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               trackColor={{ false: "#2A3744", true: "#6366F1" }}
               thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
             />
+          </View>
+
+          <View style={styles.settingsItem}>
+            <MaterialCommunityIcons name="presentation" size={24} color="#666" />
+            <View style={styles.settingsToggleContainer}>
+              <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
+              <Switch
+                value={presentationMode}
+                onValueChange={setPresentationMode}
+                trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
+                thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
+              />
+            </View>
           </View>
         </View>
       </View>
@@ -756,6 +828,71 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     setShowPlaybackTagModal(false);
   };
 
+  const renderBackgroundImages = () => {
+    const screenWidth = Dimensions.get('window').width;
+    
+    return (
+      <View style={styles.playbackBackground}>
+        {/* Current Image */}
+        <Animated.View
+          style={[
+            styles.backgroundImageContainer,
+            {
+              transform: [{
+                translateX: backgroundPosition,
+              }],
+            },
+          ]}
+        >
+          <Image
+            source={backgroundImages[currentBackgroundIndex]}
+            style={styles.backgroundImage}
+          />
+        </Animated.View>
+
+        {/* Next Image */}
+        <Animated.View
+          style={[
+            styles.backgroundImageContainer,
+            {
+              transform: [{
+                translateX: backgroundPosition.interpolate({
+                  inputRange: [-screenWidth, 0, screenWidth],
+                  outputRange: [0, screenWidth, screenWidth * 2],
+                }),
+              }],
+            },
+          ]}
+        >
+          <Image
+            source={backgroundImages[nextBackgroundIndex]}
+            style={styles.backgroundImage}
+          />
+        </Animated.View>
+
+        {/* Previous Image */}
+        <Animated.View
+          style={[
+            styles.backgroundImageContainer,
+            {
+              transform: [{
+                translateX: backgroundPosition.interpolate({
+                  inputRange: [-screenWidth, 0, screenWidth],
+                  outputRange: [-screenWidth * 2, -screenWidth, 0],
+                }),
+              }],
+            },
+          ]}
+        >
+          <Image
+            source={backgroundImages[currentBackgroundIndex === 0 ? backgroundImages.length - 1 : currentBackgroundIndex - 1]}
+            style={styles.backgroundImage}
+          />
+        </Animated.View>
+      </View>
+    );
+  };
+
   const renderPlaybackScreen = () => (
     <>
       <Modal
@@ -764,50 +901,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         transparent={true}
       >
         <View style={styles.playbackScreenContainer}>
-          <Animated.View 
-            style={[
-              styles.playbackBackground,
-              {
-                transform: [{
-                  translateX: backgroundPosition
-                }]
-              }
-            ]}
+          <View 
             {...panResponder.panHandlers}
+            style={StyleSheet.absoluteFill}
           >
-            {/* Previous Image */}
-            <Animated.View
-              style={[
-                styles.backgroundImageContainer,
-                {
-                  opacity: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [1, 0],
-                  }),
-                },
-              ]}
-            >
-              <Image
-                source={backgroundImages[previousIndex]}
-                style={styles.backgroundImage}
-              />
-            </Animated.View>
-
-            {/* Current Image */}
-            <Animated.View
-              style={[
-                styles.backgroundImageContainer,
-                {
-                  opacity: fadeAnim,
-                },
-              ]}
-            >
-              <Image
-                source={backgroundImages[currentBackgroundIndex]}
-                style={styles.backgroundImage}
-              />
-            </Animated.View>
-          </Animated.View>
+            {renderBackgroundImages()}
+          </View>
 
           <View style={styles.playbackOverlay}>
             {/* Top Tag - Now Tappable */}
@@ -862,30 +961,135 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.playbackToolbarButton}
-                onPress={() => {
-                  console.log('Settings button clicked');
-                  setShowAudioSettings(true);
-                }}
+                onPress={() => setShowAudioSettings(true)}
               >
                 <MaterialCommunityIcons name="tune-vertical" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
+            {/* Voice & Music Settings Modal */}
+            <Modal
+              visible={showAudioSettings}
+              animationType="slide"
+              transparent={true}
+            >
+              <View style={styles.modalContainer}>
+                <View style={[styles.modalContent, styles.settingsModalContent]}>
+                  <View style={styles.settingsModalHeader}>
+                    <Text style={styles.settingsModalTitle}>Voice & Music Options</Text>
+                    <Text style={styles.settingsModalSubtitle}>For playlist: {selectedTag}</Text>
+                    <TouchableOpacity 
+                      style={styles.settingsModalClose}
+                      onPress={() => setShowAudioSettings(false)}
+                    >
+                      <Text style={styles.settingsModalCloseText}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.settingsModalBody}>
+                    <View style={styles.settingsItem}>
+                      <MaterialCommunityIcons name="volume-high" size={24} color="#666" />
+                      <View style={styles.settingsSliderContainer}>
+                        <Text style={styles.settingsItemLabel}>Background Volume</Text>
+                        <Slider
+                          style={styles.settingsSlider}
+                          value={backgroundVolume}
+                          onValueChange={setBackgroundVolume}
+                          minimumValue={0}
+                          maximumValue={1}
+                          minimumTrackTintColor="#6366F1"
+                          maximumTrackTintColor="#E5E7EB"
+                          thumbTintColor="#6366F1"
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                      <MaterialCommunityIcons name="account-voice" size={24} color="#666" />
+                      <View style={styles.settingsSliderContainer}>
+                        <Text style={styles.settingsItemLabel}>Affirmations Volume</Text>
+                        <Slider
+                          style={styles.settingsSlider}
+                          value={affirmationsVolume}
+                          onValueChange={setAffirmationsVolume}
+                          minimumValue={0}
+                          maximumValue={1}
+                          minimumTrackTintColor="#6366F1"
+                          maximumTrackTintColor="#E5E7EB"
+                          thumbTintColor="#6366F1"
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                      <MaterialCommunityIcons name="timer-outline" size={24} color="#666" />
+                      <View style={styles.settingsSliderContainer}>
+                        <Text style={styles.settingsItemLabel}>Interval Between Affirmations</Text>
+                        <View style={styles.intervalSliderContainer}>
+                          <Slider
+                            style={styles.settingsSlider}
+                            value={intervalBetweenAffirmations}
+                            onValueChange={setIntervalBetweenAffirmations}
+                            minimumValue={1}
+                            maximumValue={10}
+                            step={1}
+                            minimumTrackTintColor="#6366F1"
+                            maximumTrackTintColor="#E5E7EB"
+                            thumbTintColor="#6366F1"
+                          />
+                          <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                      <MaterialCommunityIcons name="shuffle-variant" size={24} color="#666" />
+                      <View style={styles.settingsToggleContainer}>
+                        <Text style={styles.settingsItemLabel}>Shuffle Affirmations</Text>
+                        <Switch
+                          value={shuffleAffirmations}
+                          onValueChange={setShuffleAffirmations}
+                          trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
+                          thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                      <MaterialCommunityIcons name="presentation" size={24} color="#666" />
+                      <View style={styles.settingsToggleContainer}>
+                        <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
+                        <Switch
+                          value={presentationMode}
+                          onValueChange={setPresentationMode}
+                          trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
+                          thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
             {/* Close Button */}
             <TouchableOpacity 
               style={styles.playbackCloseButton}
               onPress={() => {
-                // Stop any playing audio
                 if (isPlaying) {
                   audioRecorderPlayer.current.stopPlayer();
                   setIsPlaying(false);
                   setPlayingId(null);
                 }
-                // Reset all playback related states
                 setShowPlaybackScreen(false);
                 setSelectedRecording(null);
                 setShowPlaybackTagModal(false);
                 setShowAudioSettings(false);
+                // Stop presentation mode when closing
+                setPresentationMode(false);
+                if (backgroundRotationInterval.current) {
+                  clearInterval(backgroundRotationInterval.current);
+                }
               }}
             >
               <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
@@ -935,78 +1139,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             </Modal>
           </View>
         </View>
-      </Modal>
-
-      <Modal
-        visible={showAudioSettings}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowAudioSettings(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowAudioSettings(false)}>
-          <View style={styles.modalContainer}>
-            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-              <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Voice & Music Options</Text>
-                  <TouchableOpacity onPress={() => setShowAudioSettings(false)}>
-                    <Text style={styles.doneButton}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.settingsLabel}>Background Volume</Text>
-                <Slider
-                  style={styles.slider}
-                  value={backgroundVolume}
-                  onValueChange={setBackgroundVolume}
-                  minimumValue={0}
-                  maximumValue={1}
-                  minimumTrackTintColor="#6366F1"
-                  maximumTrackTintColor="#2A3744"
-                  thumbTintColor="#6366F1"
-                />
-
-                <Text style={styles.settingsLabel}>Affirmations Volume</Text>
-                <Slider
-                  style={styles.slider}
-                  value={affirmationsVolume}
-                  onValueChange={setAffirmationsVolume}
-                  minimumValue={0}
-                  maximumValue={1}
-                  minimumTrackTintColor="#6366F1"
-                  maximumTrackTintColor="#2A3744"
-                  thumbTintColor="#6366F1"
-                />
-
-                <Text style={styles.settingsLabel}>Delay Between Affirmations (seconds)</Text>
-                <View style={styles.intervalContainer}>
-                  <Slider
-                    style={styles.slider}
-                    value={intervalBetweenAffirmations}
-                    onValueChange={setIntervalBetweenAffirmations}
-                    minimumValue={1}
-                    maximumValue={10}
-                    step={1}
-                    minimumTrackTintColor="#6366F1"
-                    maximumTrackTintColor="#2A3744"
-                    thumbTintColor="#6366F1"
-                  />
-                  <Text style={styles.intervalValue}>{intervalBetweenAffirmations}s</Text>
-                </View>
-
-                <View style={styles.shuffleContainer}>
-                  <Text style={styles.settingsLabel}>Shuffle Affirmations</Text>
-                  <Switch
-                    value={shuffleAffirmations}
-                    onValueChange={setShuffleAffirmations}
-                    trackColor={{ false: "#2A3744", true: "#6366F1" }}
-                    thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
-                  />
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
       </Modal>
     </>
   );
@@ -1085,7 +1217,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             dragItemOverflow={true}
-            activationDistance={0}
+            activationDistance={5}
           />
         </View>
 
@@ -1396,7 +1528,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   recordingActive: {
-    backgroundColor: '#DC2626', // Red color when recording
+    backgroundColor: '#DC2626',
   },
   intervalContainer: {
     flexDirection: 'row',
@@ -1405,9 +1537,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   intervalValue: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 8,
   },
   playbackControls: {
     flexDirection: 'row',
@@ -1528,6 +1660,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  backgroundImageContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
   backgroundImage: {
     width: '100%',
     height: '100%',
@@ -1638,12 +1774,9 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600',
   },
-  backgroundImageContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
   tickContainer: {
     position: 'absolute',
-    width: 200,  // Same as circle2
+    width: 200,
     height: 200,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1692,7 +1825,7 @@ const styles = StyleSheet.create({
   },
   circlePattern: {
     position: 'absolute',
-    width: 300,  // Increased to accommodate outer circles
+    width: 300,
     height: 300,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1701,11 +1834,76 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '57%',
     top: '50%',
-    width: 300,  // Match circlePattern size
+    width: 300,
     height: 300,
-    transform: [{ translateX: -150 }, { translateY: -150 }],  // Half of new width/height
+    transform: [{ translateX: -150 }, { translateY: -150 }],
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  settingsModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 0,
+  },
+  settingsModalHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  settingsModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  settingsModalSubtitle: {
+    fontSize: 14,
+    color: '#FFB800',
+    marginBottom: 8,
+  },
+  settingsModalClose: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  settingsModalCloseText: {
+    color: '#6366F1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  settingsModalBody: {
+    padding: 20,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  settingsSliderContainer: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  settingsItemLabel: {
+    fontSize: 16,
+    color: '#000000',
+    marginBottom: 8,
+  },
+  settingsSlider: {
+    width: '100%',
+    height: 40,
+  },
+  intervalSliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  settingsToggleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginLeft: 16,
   },
 });
 
