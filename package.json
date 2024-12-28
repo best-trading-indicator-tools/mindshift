@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "ios-fr": "react-native run-ios --configuration Debug --language=fr --region=FR"
+    "iphone16": "npx react-native run-ios --simulator=\"iPhone 16\"",
+    "david": "npx react-native run-ios --device \"00008130-00141D593803401C\""
   },
   "dependencies": {
     "@invertase/react-native-apple-authentication": "^2.4.0",
@@ -30,6 +31,7 @@
     "react-native-config": "^1.5.3",
     "react-native-document-picker": "^9.3.1",
     "react-native-dotenv": "^3.4.11",
+    "react-native-gesture-handler": "^2.21.2",
     "react-native-get-random-values": "^1.11.0",
     "react-native-gifted-chat": "^2.6.4",
     "react-native-linear-gradient": "^2.8.3",

@@ -553,9 +553,9 @@ const styles = StyleSheet.create({
   missionsContainer: {
     marginTop: 20,
     flex: 1,
-    width: '90%', 
-    marginHorizontal: '5%', 
+    width: '100%',
     position: 'relative',
+    paddingHorizontal: 16,
   },
   checkmarkContainer: {
     position: 'absolute',
@@ -598,7 +598,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     gap: 12,
     width: '100%',
-    paddingHorizontal: 0,
+    paddingLeft: 8,
+    paddingRight: 16,
   },
   missionItem: {
     backgroundColor: '#151932',
@@ -638,8 +639,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   missionItemSubtitle: {
-    color: '#666',
+    color: '#fff',
     fontSize: 14,
+    opacity: 0.9,
   },
   missionIllustrationContainer: {
     position: 'absolute',

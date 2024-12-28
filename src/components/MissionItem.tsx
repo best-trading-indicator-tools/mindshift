@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   statusIconContainer: {
     position: 'absolute',
-    left: -50,
+    left: -80,
     backgroundColor: '#000',
     borderRadius: 12,
     padding: 2,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
     flex: 1,
-    marginLeft: 0,
+    marginLeft: -40,
   },
   content: {
     flex: 1,
@@ -118,8 +118,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    color: '#666',
+    color: '#fff',
     fontSize: 14,
+    fontWeight: '400',
   },
   iconContainer: {
     width: 40,

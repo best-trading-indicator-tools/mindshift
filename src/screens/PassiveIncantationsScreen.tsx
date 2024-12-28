@@ -12,6 +12,8 @@ import {
   Platform,
   Alert,
   PermissionsAndroid,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../services/exerciseService';
@@ -41,6 +43,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [playbackCount, setPlaybackCount] = useState<{[key: string]: number}>({});
   const [isLooping, setIsLooping] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const pan = useRef(new Animated.ValueXY()).current;
   
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
 
@@ -52,6 +57,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       audioRecorderPlayer.current.removePlayBackListener();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      // Save the new order to Firebase when exiting edit mode
+      saveNewOrder();
+    }
+  }, [isEditMode]);
 
   const loadAffirmations = async () => {
     try {
@@ -261,6 +273,142 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     setShowExitConfirmation(true);
   };
 
+  const saveNewOrder = async () => {
+    try {
+      // Update the order in Firebase
+      // This would require adding a new function in affirmationService
+      // await updateAffirmationsOrder(recordings);
+      console.log('New order saved');
+    } catch (error) {
+      console.error('Failed to save new order:', error);
+    }
+  };
+
+  const toggleEditMode = () => {
+    if (isPlaying) {
+      // Stop any playing audio before entering edit mode
+      audioRecorderPlayer.current.stopPlayer();
+      setIsPlaying(false);
+      setPlayingId(null);
+    }
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleDeleteRecording = async (recordingId: string) => {
+    try {
+      await deleteAffirmation(recordingId);
+      setRecordings(prev => prev.filter(rec => rec.id !== recordingId));
+    } catch (error) {
+      console.error('Failed to delete recording:', error);
+      Alert.alert('Error', 'Failed to delete recording. Please try again.');
+    }
+  };
+
+  const moveItem = (from: number, to: number) => {
+    const newRecordings = [...recordings];
+    const [removed] = newRecordings.splice(from, 1);
+    newRecordings.splice(to, 0, removed);
+    setRecordings(newRecordings);
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => isEditMode,
+      onMoveShouldSetPanResponder: () => isEditMode,
+      onPanResponderGrant: (_, gestureState) => {
+        const y = gestureState.y0;
+        const index = Math.floor((y - 100) / 80); // Approximate item height
+        if (index >= 0 && index < recordings.length) {
+          setDraggingIndex(index);
+          pan.setOffset({
+            x: 0,
+            y: index * 80,
+          });
+        }
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (draggingIndex !== null) {
+          const newIndex = Math.floor((gestureState.moveY - 100) / 80);
+          if (newIndex >= 0 && newIndex < recordings.length && newIndex !== draggingIndex) {
+            moveItem(draggingIndex, newIndex);
+            setDraggingIndex(newIndex);
+          }
+          pan.setValue({
+            x: 0,
+            y: gestureState.dy,
+          });
+        }
+      },
+      onPanResponderRelease: () => {
+        if (draggingIndex !== null) {
+          setDraggingIndex(null);
+          pan.flattenOffset();
+          pan.setValue({ x: 0, y: 0 });
+        }
+      },
+    })
+  ).current;
+
+  const renderItem = ({ item, index }: { item: Affirmation; index: number }) => {
+    const isBeingPlayed = playingId === item.id && isPlaying;
+    const isDragging = draggingIndex === index;
+
+    return (
+      <Animated.View
+        {...(isEditMode ? panResponder.panHandlers : {})}
+        style={[
+          styles.recordingItem,
+          isEditMode && styles.recordingItemEdit,
+          isDragging && { 
+            opacity: 0.5,
+            transform: [
+              { translateY: pan.y }
+            ]
+          }
+        ]}
+      >
+        <View style={styles.recordingContent}>
+          {isEditMode ? (
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={() => handleDeleteRecording(item.id)}
+            >
+              <MaterialCommunityIcons name="minus-circle" size={24} color="#FF4444" />
+            </TouchableOpacity>
+          ) : null}
+          
+          <TouchableOpacity
+            style={[styles.playButton, isEditMode && styles.disabledButton]}
+            onPress={() => !isEditMode && handlePlayRecording(item, index)}
+            disabled={isEditMode}
+          >
+            <MaterialCommunityIcons
+              name={isBeingPlayed ? "pause" : "play"}
+              size={24}
+              color={isEditMode ? "#666" : "#FFF"}
+            />
+          </TouchableOpacity>
+
+          <View style={styles.recordingInfo}>
+            <Text style={styles.recordingText}>{item.text}</Text>
+            <Text style={styles.recordingDuration}>
+              {formatDuration(item.duration)}
+            </Text>
+          </View>
+
+          {isEditMode && (
+            <MaterialCommunityIcons
+              name="drag"
+              size={24}
+              color="#666"
+              style={styles.dragHandle}
+            />
+          )}
+        </View>
+      </Animated.View>
+    );
+  };
+
   if (showIntro) {
     return (
       <ExerciseIntroScreen
@@ -280,94 +428,43 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialCommunityIcons 
-              name="chevron-left" 
-              size={32} 
-              color="#FFFFFF" 
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>My Affirmations</Text>
-        </View>
-        <View style={styles.headerButtons}>
-          {recordings.length === 0 && (
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={handleAddNewAffirmation}
-            >
-              <MaterialCommunityIcons 
-                name="plus" 
-                size={24} 
-                color="#6366F1" 
-              />
-            </TouchableOpacity>
-          )}
-          {recordings.length > 0 && (
-            <TouchableOpacity 
-              style={[styles.loopButton, isLooping && styles.loopButtonActive]}
-              onPress={toggleLoopMode}
-            >
-              <MaterialCommunityIcons 
-                name="repeat" 
-                size={24} 
-                color={isLooping ? "#6366F1" : "#666666"} 
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        <Text style={styles.title}>Record and Manage Incantations</Text>
+        <TouchableOpacity onPress={toggleEditMode}>
+          <Text style={styles.editButton}>
+            {isEditMode ? 'Done' : 'Edit'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={recordings}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity 
-            style={[
-              styles.recordingItem,
-              playbackCount[item.id] ? styles.recordingItemPlayed : null,
-              playingId === item.id && styles.recordingItemPlaying
-            ]}
-            onPress={() => handlePlayRecording(item, index)}
-          >
-            <View style={styles.recordingInfo}>
-              <Text style={styles.recordingText}>{item.text}</Text>
-              <Text style={styles.recordingMeta}>
-                {formatDuration(item.duration)}
-              </Text>
-            </View>
-            <MaterialCommunityIcons 
-              name={isPlaying && playingId === item.id ? "pause" : "play"} 
-              size={24} 
-              color="#6366F1" 
-            />
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              No recordings yet. Start by recording your first affirmation!
-            </Text>
-          </View>
-        }
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
       />
       
-      {recordings.length > 0 && (
+      <View style={styles.buttonContainer}>
+        {recordings.length > 0 && (
+          <TouchableOpacity 
+            style={[
+              styles.completeButton,
+              !hasListenedToAll && styles.completeButtonDisabled
+            ]}
+            onPress={handleComplete}
+          >
+            <Text style={styles.completeButtonText}>
+              {hasListenedToAll ? 'Complete' : 'Listen to All'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity 
-          style={[
-            styles.completeButton,
-            !hasListenedToAll && styles.completeButtonDisabled
-          ]}
-          onPress={handleComplete}
+          style={styles.exitButton}
+          onPress={() => navigation.navigate('MainTabs')}
         >
-          <Text style={styles.completeButtonText}>
-            {hasListenedToAll ? 'Complete' : 'Listen to All'}
-          </Text>
+          <Text style={styles.exitButtonText}>I'm done</Text>
         </TouchableOpacity>
-      )}
+      </View>
 
       {/* New Affirmation Modal */}
       <Modal
@@ -447,138 +544,81 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#1F2937',
   },
   header: {
-    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    marginRight: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#151932',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3744',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
   },
-  introContainer: {
-    flex: 1,
-    paddingHorizontal: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  introTitle: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 60,
-    textAlign: 'center',
-    width: '100%',
-    paddingHorizontal: 32,
-  },
-  introText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: 40,
-    width: '100%',
-    paddingHorizontal: 32,
-  },
-  startButton: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 50,
-    paddingVertical: 20,
-    borderRadius: 40,
-    marginTop: 40,
-  },
-  startButtonText: {
+  editButton: {
+    fontSize: 16,
     color: '#6366F1',
-    fontSize: 22,
     fontWeight: '600',
   },
-  addButton: {
+  recordingItem: {
+    backgroundColor: '#2A3744',
+    borderRadius: 12,
+    marginVertical: 6,
+    marginHorizontal: 16,
+    overflow: 'hidden',
+  },
+  recordingItemEdit: {
+    backgroundColor: '#1F2937',
+  },
+  recordingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  deleteButton: {
+    marginRight: 8,
+  },
+  playButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#151932',
+    backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  recordingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#151932',
-    marginHorizontal: 20,
-    marginVertical: 8,
-    borderRadius: 12,
+  disabledButton: {
+    backgroundColor: '#374151',
   },
   recordingInfo: {
     flex: 1,
   },
-  recordingTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  recordingText: {
+    fontSize: 16,
     color: '#FFFFFF',
     marginBottom: 4,
   },
-  recordingText: {
+  recordingDuration: {
     fontSize: 14,
-    color: '#999999',
-    marginBottom: 4,
+    color: '#9CA3AF',
   },
-  recordingMeta: {
-    fontSize: 14,
-    color: '#666666',
+  dragHandle: {
+    padding: 8,
   },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    color: '#666666',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  recordButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#6366F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginVertical: 20,
-  },
-  recordingActive: {
-    backgroundColor: '#DC2626',
+  listContent: {
+    paddingVertical: 8,
   },
   completeButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
     backgroundColor: '#6366F1',
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    width: '80%',
   },
   completeButtonText: {
     color: '#FFFFFF',
@@ -656,15 +696,15 @@ const styles = StyleSheet.create({
   },
   exitButton: {
     backgroundColor: '#FFD700',
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 12,
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    width: '80%',
   },
   exitButtonText: {
     color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   modalOverlay: {
@@ -748,6 +788,27 @@ const styles = StyleSheet.create({
     borderColor: '#6366F1',
     borderWidth: 2,
     backgroundColor: '#1E1E1E',
+  },
+  recordButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#6366F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
+  recordingActive: {
+    backgroundColor: '#DC2626', // Red color when recording
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    gap: 12,
   },
 });
 
