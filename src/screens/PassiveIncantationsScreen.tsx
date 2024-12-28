@@ -14,7 +14,9 @@ import {
   PermissionsAndroid,
   Animated,
   PanResponder,
+  Switch,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 import { saveAffirmation, getUserAffirmations, deleteAffirmation, Affirmation } from '../services/affirmationService';
@@ -26,6 +28,8 @@ import AudioRecorderPlayer, {
   AudioSourceAndroidType,
 } from 'react-native-audio-recorder-player';
 import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
 
 const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [showIntro, setShowIntro] = useState(true);
@@ -46,6 +50,11 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const pan = useRef(new Animated.ValueXY()).current;
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
+  const [backgroundVolume, setBackgroundVolume] = useState(0);
+  const [affirmationsVolume, setAffirmationsVolume] = useState(1);
+  const [intervalBetweenAffirmations, setIntervalBetweenAffirmations] = useState(3);
+  const [shuffleAffirmations, setShuffleAffirmations] = useState(false);
   
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
 
@@ -65,11 +74,21 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     }
   }, [isEditMode]);
 
+  useEffect(() => {
+    // Add listener to prevent warning
+    const panListener = pan.addListener(() => {});
+    return () => {
+      // Clean up listener
+      pan.removeListener(panListener);
+    };
+  }, []);
+
   const loadAffirmations = async () => {
     try {
-      const userAffirmations = await getUserAffirmations();
-      console.log('Loaded affirmations:', userAffirmations);
-      setRecordings(userAffirmations || []);
+      const savedRecordings = await AsyncStorage.getItem('affirmations');
+      if (savedRecordings) {
+        setRecordings(JSON.parse(savedRecordings));
+      }
     } catch (error) {
       console.error('Failed to load affirmations:', error);
       Alert.alert(
@@ -149,29 +168,36 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       audioRecorderPlayer.current.removeRecordBackListener();
       setIsRecording(false);
 
-      // Save to Firebase
-      console.log('Attempting to save to Firebase with URI:', uri);
-      console.log('Text:', newAffirmationText);
-      console.log('Duration:', recordingDuration);
+      // Save locally instead of Firebase
+      const newAffirmation: Affirmation = {
+        id: Date.now().toString(),
+        text: newAffirmationText,
+        audioUrl: uri,
+        duration: recordingDuration,
+        createdAt: new Date(),
+      };
+
+      // Update local state
+      setRecordings(prev => [newAffirmation, ...prev]);
       
-      const savedAffirmation = await saveAffirmation(
-        newAffirmationText,
-        uri,
-        recordingDuration,
-      );
+      // Save to AsyncStorage
+      try {
+        const existingRecordings = await AsyncStorage.getItem('affirmations');
+        const recordings = existingRecordings ? JSON.parse(existingRecordings) : [];
+        recordings.unshift(newAffirmation);
+        await AsyncStorage.setItem('affirmations', JSON.stringify(recordings));
+      } catch (error) {
+        console.error('Error saving to AsyncStorage:', error);
+        Alert.alert('Error', 'Failed to save recording. Please try again.');
+        return;
+      }
 
-      console.log('Affirmation saved successfully:', savedAffirmation);
-
-      setRecordings(prev => [savedAffirmation, ...prev]);
       setShowRecordingModal(false);
       setNewAffirmationText('');
       setRecordingPath('');
       setRecordingDuration(0);
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message);
-      }
       Alert.alert('Error', 'Failed to save recording. Please try again.');
     }
   };
@@ -190,6 +216,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         if (typeof index === 'number') {
           setCurrentIndex(index);
         }
+        
+        // Set the volume for the affirmation
+        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
         
         await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
         audioRecorderPlayer.current.addPlayBackListener((e) => {
@@ -212,11 +241,23 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               setHasListenedToAll(true);
             }
 
-            // If looping is enabled, play the next recording
+            // If looping is enabled, play the next recording after the interval
             if (isLooping) {
-              const nextIndex = (currentIndex + 1) % recordings.length;
-              setCurrentIndex(nextIndex);
-              handlePlayRecording(recordings[nextIndex], nextIndex);
+              setTimeout(() => {
+                let nextIndex;
+                if (shuffleAffirmations) {
+                  // Get random index excluding current one
+                  const availableIndices = Array.from(
+                    { length: recordings.length },
+                    (_, i) => i
+                  ).filter(i => i !== currentIndex);
+                  nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+                } else {
+                  nextIndex = (currentIndex + 1) % recordings.length;
+                }
+                setCurrentIndex(nextIndex);
+                handlePlayRecording(recordings[nextIndex], nextIndex);
+              }, intervalBetweenAffirmations * 1000);
             }
           }
         });
@@ -275,10 +316,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const saveNewOrder = async () => {
     try {
-      // Update the order in Firebase
-      // This would require adding a new function in affirmationService
-      // await updateAffirmationsOrder(recordings);
-      console.log('New order saved');
+      await AsyncStorage.setItem('affirmations', JSON.stringify(recordings));
     } catch (error) {
       console.error('Failed to save new order:', error);
     }
@@ -296,8 +334,23 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handleDeleteRecording = async (recordingId: string) => {
     try {
-      await deleteAffirmation(recordingId);
-      setRecordings(prev => prev.filter(rec => rec.id !== recordingId));
+      // Remove from local state
+      const updatedRecordings = recordings.filter(rec => rec.id !== recordingId);
+      setRecordings(updatedRecordings);
+
+      // Update AsyncStorage
+      await AsyncStorage.setItem('affirmations', JSON.stringify(updatedRecordings));
+
+      // Delete the audio file
+      const recording = recordings.find(rec => rec.id === recordingId);
+      if (recording?.audioUrl) {
+        // Use RNFS to delete the file
+        try {
+          await RNFS.unlink(recording.audioUrl);
+        } catch (error) {
+          console.error('Error deleting audio file:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to delete recording:', error);
       Alert.alert('Error', 'Failed to delete recording. Please try again.');
@@ -409,6 +462,94 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     );
   };
 
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.title}>Record and Manage</Text>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity onPress={handleAddNewAffirmation} style={styles.headerButton}>
+          <MaterialCommunityIcons name="plus" size={24} color="#6366F1" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowAudioSettings(true)} style={styles.headerButton}>
+          <MaterialCommunityIcons name="tune-vertical" size={24} color="#6366F1" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={toggleEditMode}>
+          <Text style={styles.editButton}>
+            {isEditMode ? 'Done' : 'Edit'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderAudioSettingsModal = () => (
+    <Modal
+      visible={showAudioSettings}
+      animationType="slide"
+      transparent={true}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Voice & Music Options</Text>
+            <TouchableOpacity onPress={() => setShowAudioSettings(false)}>
+              <Text style={styles.doneButton}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.settingsLabel}>Background Volume</Text>
+          <Slider
+            style={styles.slider}
+            value={backgroundVolume}
+            onValueChange={setBackgroundVolume}
+            minimumValue={0}
+            maximumValue={1}
+            minimumTrackTintColor="#6366F1"
+            maximumTrackTintColor="#2A3744"
+            thumbTintColor="#6366F1"
+          />
+
+          <Text style={styles.settingsLabel}>Affirmations Volume</Text>
+          <Slider
+            style={styles.slider}
+            value={affirmationsVolume}
+            onValueChange={setAffirmationsVolume}
+            minimumValue={0}
+            maximumValue={1}
+            minimumTrackTintColor="#6366F1"
+            maximumTrackTintColor="#2A3744"
+            thumbTintColor="#6366F1"
+          />
+
+          <Text style={styles.settingsLabel}>Interval Between Affirmations</Text>
+          <View style={styles.intervalContainer}>
+            <Slider
+              style={styles.slider}
+              value={intervalBetweenAffirmations}
+              onValueChange={setIntervalBetweenAffirmations}
+              minimumValue={1}
+              maximumValue={10}
+              step={1}
+              minimumTrackTintColor="#6366F1"
+              maximumTrackTintColor="#2A3744"
+              thumbTintColor="#6366F1"
+            />
+            <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
+          </View>
+
+          <View style={styles.shuffleContainer}>
+            <Text style={styles.settingsLabel}>Shuffle Affirmations</Text>
+            <Switch
+              value={shuffleAffirmations}
+              onValueChange={setShuffleAffirmations}
+              trackColor={{ false: "#2A3744", true: "#6366F1" }}
+              thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (showIntro) {
     return (
       <ExerciseIntroScreen
@@ -427,14 +568,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Record and Manage Incantations</Text>
-        <TouchableOpacity onPress={toggleEditMode}>
-          <Text style={styles.editButton}>
-            {isEditMode ? 'Done' : 'Edit'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {renderHeader()}
+      {renderAudioSettingsModal()}
 
       <FlatList
         data={recordings}
@@ -769,7 +904,7 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   loopButton: {
     width: 40,
@@ -809,6 +944,46 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     gap: 12,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  doneButton: {
+    color: '#6366F1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  settingsLabel: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  intervalContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  intervalValue: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  shuffleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 24,
   },
 });
 

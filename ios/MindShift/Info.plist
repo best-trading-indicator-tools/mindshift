@@ -80,5 +80,9 @@
 	<true/>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>We need access to documents for file attachments in support requests.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>
