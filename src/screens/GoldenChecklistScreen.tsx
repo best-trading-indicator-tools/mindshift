@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import { markExerciseAsCompleted } from '../services/exerciseService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;
 
@@ -32,6 +33,23 @@ const CHECKLIST_ITEMS = [
       'Small movements every hour → Maintains circulation and reduces stiffness',
       'Regular workout → Improves sleep quality and duration',
       'Consistent sleep schedule → Regulates circadian rhythm'
+    ]
+  },
+  {
+    id: 'noViolentContent',
+    title: 'No Violent Content',
+    subtitle: 'Protect your subconscious mind',
+    physicalBenefits: [
+      'Reduces stress hormones like cortisol',
+      'Lowers blood pressure and heart rate',
+      'Improves sleep quality',
+      'Reduces muscle tension'
+    ],
+    mentalBenefits: [
+      'Maintains mental peace and clarity',
+      'Protects subconscious from negative programming',
+      'Reduces anxiety and stress levels',
+      'Promotes positive thought patterns'
     ]
   },
   {
@@ -267,33 +285,57 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState<typeof CHECKLIST_ITEMS[0] | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
 
+  // Load checked items when screen opens
+  useEffect(() => {
+    loadCheckedItems();
+  }, []);
+
   const handleExit = () => {
     setShowExitModal(true);
   };
 
-  const handleCheckboxPress = (itemId: string) => {
-    setCheckedItems(prev => {
-      if (prev.includes(itemId)) {
-        return prev.filter(id => id !== itemId);
-      } else {
-        return [...prev, itemId];
+  const loadCheckedItems = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const storedItems = await AsyncStorage.getItem(`checklist_${today}`);
+      if (storedItems) {
+        setCheckedItems(JSON.parse(storedItems));
       }
-    });
+    } catch (error) {
+      console.error('Error loading checked items:', error);
+    }
+  };
+
+  const saveCheckedItems = async (items: string[]) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await AsyncStorage.setItem(`checklist_${today}`, JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving checked items:', error);
+    }
+  };
+
+  const handleCheckboxPress = async (itemId: string) => {
+    const newCheckedItems = checkedItems.includes(itemId)
+      ? checkedItems.filter(id => id !== itemId)
+      : [...checkedItems, itemId];
+    
+    setCheckedItems(newCheckedItems);
+    await saveCheckedItems(newCheckedItems);
   };
 
   const handleItemPress = (item: typeof CHECKLIST_ITEMS[0]) => {
     setSelectedItem(item);
   };
 
-  const handleModalComplete = () => {
+  const handleModalComplete = async () => {
     if (selectedItem) {
-      setCheckedItems(prev => {
-        if (prev.includes(selectedItem.id)) {
-          return prev.filter(id => id !== selectedItem.id);
-        } else {
-          return [...prev, selectedItem.id];
-        }
-      });
+      const newCheckedItems = checkedItems.includes(selectedItem.id)
+        ? checkedItems.filter(id => id !== selectedItem.id)
+        : [...checkedItems, selectedItem.id];
+      
+      setCheckedItems(newCheckedItems);
+      await saveCheckedItems(newCheckedItems);
       setSelectedItem(null);
     }
   };
@@ -383,13 +425,13 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
             <Text style={styles.modalText}>
-              You're making progress! Continue reviewing your daily achievements.
+              Don't worry - your checked items will be saved and will stay checked when you return. You can continue your review anytime today.
             </Text>
             <TouchableOpacity 
               style={[styles.modalButton, styles.continueButton]}
               onPress={() => setShowExitModal(false)}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>Continue Review</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalButton, styles.exitModalButton]}

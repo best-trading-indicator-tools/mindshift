@@ -187,4 +187,22 @@ export const checkDailyProgress = async () => {
     console.error('Error checking daily progress:', error);
     return { completedCount: 0, totalMissions: 0, remainingMissions: 0, progressPercentage: 0 };
   }
+};
+
+export const resetAllDailyExercises = async () => {
+  try {
+    const today = new Date().toDateString();
+    // Reset exercise completions
+    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify({}));
+    
+    // Reset golden checklist items
+    const todayISOString = new Date().toISOString().split('T')[0];
+    await AsyncStorage.removeItem(`checklist_${todayISOString}`);
+    
+    console.log('Successfully reset all daily exercises');
+    return true;
+  } catch (error) {
+    console.error('Error resetting daily exercises:', error);
+    return false;
+  }
 }; 

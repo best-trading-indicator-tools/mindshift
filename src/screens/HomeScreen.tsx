@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Image } from 'react-native';
 import { Text, LinearProgress } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps, NavigationProp } from '@react-navigation/native';
@@ -11,7 +11,7 @@ import ProgressBar from '../components/ProgressBar';
 import { NotificationBell } from '../components/NotificationBell';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
-import { isExerciseCompletedToday, getStreak } from '../services/exerciseService';
+import { isExerciseCompletedToday, getStreak, resetAllDailyExercises } from '../services/exerciseService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -290,6 +290,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="fire" size={24} color="#FFD700" />
               <Text style={styles.streakText}>{streak}</Text>
             </View>
+            <TouchableOpacity 
+              onPress={async () => {
+                await resetAllDailyExercises();
+                checkExerciseCompletions();
+              }} 
+              style={[styles.signOutButton, { marginRight: 8 }]}
+            >
+              {renderIcon("refresh", 24, "#FFFFFF")}
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleDevLogout} style={styles.signOutButton}>
               {renderIcon("logout", 24, "#FFFFFF")}
             </TouchableOpacity>
@@ -361,7 +370,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           }}
         >
           <View style={styles.aiCoachIcon}>
-            {renderIcon("robot", 24, "#fff")}
+            <Image
+              source={require('../assets/illustrations/atom.gif')}
+              style={{ width: 50, height: 50 }}
+            />
           </View>
           <View style={styles.aiCoachContent}>
             <Text style={styles.aiCoachTitle}>AI Coach</Text>
@@ -555,7 +567,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   aiCoachIcon: {
-    backgroundColor: '#6366f1',
     width: 40,
     height: 40,
     borderRadius: 20,
