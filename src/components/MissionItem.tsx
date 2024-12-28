@@ -46,7 +46,7 @@ const MissionItem: React.FC<MissionItemProps> = ({
           <View style={styles.mainContent}>
             <View style={styles.textContainer}>
               <Text style={styles.title}>{title}</Text>
-              <Text style={styles.subtitle}>{subtitle}</Text>
+              <Text style={[styles.subtitle]} numberOfLines={1}>{subtitle}</Text>
             </View>
             
             <View style={styles.iconContainer}>
@@ -103,13 +103,13 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
   },
   textContainer: {
-    flex: 0.7,
-    marginRight: 0,
+    flex: 1,
+    marginRight: 8,
   },
   title: {
     color: '#fff',
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 0,
+    marginLeft: 'auto',
   },
 });
 

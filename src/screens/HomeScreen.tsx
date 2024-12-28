@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   missionsContainer: {
     marginTop: 20,
     flex: 1,
-    width: '100%',
+    width: '90%',
     position: 'relative',
     paddingHorizontal: 16,
   },
