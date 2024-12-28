@@ -51,6 +51,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [affirmationsVolume, setAffirmationsVolume] = useState(1);
   const [intervalBetweenAffirmations, setIntervalBetweenAffirmations] = useState(3);
   const [shuffleAffirmations, setShuffleAffirmations] = useState(false);
+  const [loopingId, setLoopingId] = useState<string | null>(null);
   
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
 
@@ -66,7 +67,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     try {
       const savedRecordings = await AsyncStorage.getItem('affirmations');
       if (savedRecordings) {
-        setRecordings(JSON.parse(savedRecordings));
+        const parsedRecordings = JSON.parse(savedRecordings);
+        setRecordings(parsedRecordings);
       }
     } catch (error) {
       console.error('Failed to load affirmations:', error);
@@ -75,9 +77,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     }
   };
 
-  const saveNewOrder = async () => {
+  const saveNewOrder = async (recordingsToSave: Affirmation[]) => {
     try {
-      await AsyncStorage.setItem('affirmations', JSON.stringify(recordings));
+      await AsyncStorage.setItem('affirmations', JSON.stringify(recordingsToSave));
     } catch (error) {
       console.error('Failed to save new order:', error);
     }
@@ -107,26 +109,60 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     try {
       if (isPlaying && playingId === recording.id) {
         await audioRecorderPlayer.current.stopPlayer();
+        audioRecorderPlayer.current.removePlayBackListener();
         setIsPlaying(false);
         setPlayingId(null);
       } else {
         if (isPlaying) {
           await audioRecorderPlayer.current.stopPlayer();
+          audioRecorderPlayer.current.removePlayBackListener();
         }
         
-        await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
-        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+        const startPlayback = async () => {
+          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+          setIsPlaying(true);
+          setPlayingId(recording.id);
+        };
+
+        await startPlayback();
         
         audioRecorderPlayer.current.addPlayBackListener((e) => {
-          if (e.currentPosition === e.duration) {
-            audioRecorderPlayer.current.stopPlayer();
-            setIsPlaying(false);
-            setPlayingId(null);
+          if (e.currentPosition >= e.duration) {
+            if (loopingId === recording.id) {
+              audioRecorderPlayer.current.stopPlayer();
+              audioRecorderPlayer.current.removePlayBackListener();
+              // Add delay before starting next loop
+              setTimeout(async () => {
+                if (loopingId === recording.id) { // Check if still in loop mode
+                  await startPlayback();
+                  audioRecorderPlayer.current.addPlayBackListener((e) => {
+                    if (e.currentPosition >= e.duration) {
+                      if (loopingId === recording.id) {
+                        audioRecorderPlayer.current.stopPlayer();
+                        audioRecorderPlayer.current.removePlayBackListener();
+                        setTimeout(startPlayback, intervalBetweenAffirmations * 1000);
+                      } else {
+                        audioRecorderPlayer.current.stopPlayer();
+                        audioRecorderPlayer.current.removePlayBackListener();
+                        setIsPlaying(false);
+                        setPlayingId(null);
+                      }
+                    }
+                  });
+                } else {
+                  setIsPlaying(false);
+                  setPlayingId(null);
+                }
+              }, intervalBetweenAffirmations * 1000);
+            } else {
+              audioRecorderPlayer.current.stopPlayer();
+              audioRecorderPlayer.current.removePlayBackListener();
+              setIsPlaying(false);
+              setPlayingId(null);
+            }
           }
         });
-        
-        setIsPlaying(true);
-        setPlayingId(recording.id);
       }
     } catch (error) {
       console.error('Failed to play recording:', error);
@@ -162,6 +198,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<Affirmation>) => {
     const isBeingPlayed = playingId === item.id && isPlaying;
+    const isLooping = loopingId === item.id;
 
     return (
       <ScaleDecorator>
@@ -202,6 +239,19 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 {formatDuration(item.duration)}
               </Text>
             </View>
+
+            {!isEditMode && (
+              <TouchableOpacity
+                style={[styles.loopButton, isLooping && styles.loopButtonActive]}
+                onPress={() => setLoopingId(isLooping ? null : item.id)}
+              >
+                <MaterialCommunityIcons
+                  name="repeat"
+                  size={24}
+                  color={isLooping ? "#FFFFFF" : "#9CA3AF"}
+                />
+              </TouchableOpacity>
+            )}
 
             {isEditMode && (
               <MaterialCommunityIcons
@@ -313,13 +363,21 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       [...recordings];
 
     const playNext = async () => {
+      // Reset UI state from previous playback
+      setIsPlaying(false);
+      setPlayingId(null);
+
       // Stop any currently playing audio
-      if (isPlaying) {
+      try {
         await audioRecorderPlayer.current.stopPlayer();
-        audioRecorderPlayer.current.removePlayBackListener();
+      } catch (error) {
+        // No active player to stop
       }
+      
+      audioRecorderPlayer.current.removePlayBackListener();
 
       if (currentIndex >= recordingsToPlay.length) {
+        // Ensure UI is reset after the last recording
         setIsPlaying(false);
         setPlayingId(null);
         return;
@@ -331,6 +389,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
         await audioRecorderPlayer.current.setVolume(affirmationsVolume);
         
+        // Update UI to show current playing state
         setIsPlaying(true);
         setPlayingId(recording.id);
         
@@ -338,10 +397,15 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           if (e.currentPosition >= e.duration) {
             audioRecorderPlayer.current.stopPlayer();
             audioRecorderPlayer.current.removePlayBackListener();
+            
+            // Reset UI state for current recording
             setIsPlaying(false);
             setPlayingId(null);
+            
+            // Schedule next recording
+            const delay = intervalBetweenAffirmations * 1000;
             currentIndex++;
-            setTimeout(playNext, intervalBetweenAffirmations * 1000);
+            setTimeout(playNext, delay);
           }
         });
       } catch (error) {
@@ -386,8 +450,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         ios: `affirmation_${Date.now()}.m4a`,
         android: `${Date.now()}.mp4`,
       });
-      
-      console.log('Starting recording with path:', path);
 
       const uri = await audioRecorderPlayer.current.startRecorder(path, {
         AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
@@ -396,8 +458,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         AVNumberOfChannelsKeyIOS: 2,
         AVFormatIDKeyIOS: AVEncodingOption.aac,
       });
-
-      console.log('Recording started, URI:', uri);
 
       audioRecorderPlayer.current.addRecordBackListener((e) => {
         setRecordingDuration(e.currentPosition);
@@ -413,9 +473,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handleStopRecording = async () => {
     try {
-      console.log('Stopping recording...');
       const uri = await audioRecorderPlayer.current.stopRecorder();
-      console.log('Recording stopped, final URI:', uri);
       
       audioRecorderPlayer.current.removeRecordBackListener();
       setIsRecording(false);
@@ -466,7 +524,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               'worklet';
               const newRecordings = [...data];
               runOnJS(setRecordings)(newRecordings);
-              runOnJS(saveNewOrder)();
+              runOnJS(saveNewOrder)(newRecordings);
             }}
             keyExtractor={item => item.id}
             renderItem={renderItem}
@@ -825,6 +883,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  playbackControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loopButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2A3744',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  loopButtonActive: {
+    backgroundColor: '#6366F1',
   },
 });
 
