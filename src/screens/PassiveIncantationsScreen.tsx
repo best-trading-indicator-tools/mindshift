@@ -14,6 +14,10 @@ import {
   Switch,
   ScrollView,
   GestureResponderEvent,
+  Image,
+  TouchableWithoutFeedback,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -60,8 +64,65 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [showTagInput, setShowTagInput] = useState(false);
   const [selectedTagForRecording, setSelectedTagForRecording] = useState<string>('');
   const [showRecordingTagInput, setShowRecordingTagInput] = useState(false);
+  const [rerecordingId, setRerecordingId] = useState<string | null>(null);
+  const [showPlaybackScreen, setShowPlaybackScreen] = useState(false);
+  const [selectedRecording, setSelectedRecording] = useState<Affirmation | null>(null);
+  const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
+  const backgroundPosition = useRef(new Animated.Value(0)).current;
+  const [showPlaybackTagModal, setShowPlaybackTagModal] = useState(false);
+  const [previousIndex, setPreviousIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const backgroundImages = [
+    require('../assets/illustrations/zen1.jpg'),
+    require('../assets/illustrations/zen2.jpg'),
+    require('../assets/illustrations/zen3.jpg'),
+  ];
 
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        backgroundPosition.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const screenWidth = 200; // Threshold for swipe
+        if (Math.abs(gestureState.dx) > screenWidth / 3) {
+          // Start fade out
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            setPreviousIndex(currentBackgroundIndex);
+            if (gestureState.dx > 0) {
+              // Swipe right
+              setCurrentBackgroundIndex(prev => 
+                prev === 0 ? backgroundImages.length - 1 : prev - 1
+              );
+            } else {
+              // Swipe left
+              setCurrentBackgroundIndex(prev => 
+                prev === backgroundImages.length - 1 ? 0 : prev + 1
+              );
+            }
+            // Start fade in
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+          });
+        }
+        Animated.spring(backgroundPosition, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
 
   useEffect(() => {
     loadAffirmations();
@@ -149,68 +210,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const handlePlayRecording = async (recording: Affirmation) => {
-    try {
-      if (isPlaying && playingId === recording.id) {
-        await audioRecorderPlayer.current.stopPlayer();
-        audioRecorderPlayer.current.removePlayBackListener();
-        setIsPlaying(false);
-        setPlayingId(null);
-      } else {
-        if (isPlaying) {
-          await audioRecorderPlayer.current.stopPlayer();
-          audioRecorderPlayer.current.removePlayBackListener();
-        }
-        
-        const startPlayback = async () => {
-          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
-          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
-          setIsPlaying(true);
-          setPlayingId(recording.id);
-        };
-
-        await startPlayback();
-        
-        audioRecorderPlayer.current.addPlayBackListener((e) => {
-          if (e.currentPosition >= e.duration) {
-            if (loopingId === recording.id) {
-              audioRecorderPlayer.current.stopPlayer();
-              audioRecorderPlayer.current.removePlayBackListener();
-              // Add delay before starting next loop
-              setTimeout(async () => {
-                if (loopingId === recording.id) { // Check if still in loop mode
-                  await startPlayback();
-                  audioRecorderPlayer.current.addPlayBackListener((e) => {
-                    if (e.currentPosition >= e.duration) {
-                      if (loopingId === recording.id) {
-                        audioRecorderPlayer.current.stopPlayer();
-                        audioRecorderPlayer.current.removePlayBackListener();
-                        setTimeout(startPlayback, intervalBetweenAffirmations * 1000);
-                      } else {
-                        audioRecorderPlayer.current.stopPlayer();
-                        audioRecorderPlayer.current.removePlayBackListener();
-                        setIsPlaying(false);
-                        setPlayingId(null);
-                      }
-                    }
-                  });
-                } else {
-                  setIsPlaying(false);
-                  setPlayingId(null);
-                }
-              }, intervalBetweenAffirmations * 1000);
-            } else {
-              audioRecorderPlayer.current.stopPlayer();
-              audioRecorderPlayer.current.removePlayBackListener();
-              setIsPlaying(false);
-              setPlayingId(null);
-            }
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to play recording:', error);
-      Alert.alert('Error', 'Failed to play recording. Please try again.');
-    }
+    setSelectedRecording(recording);
+    setShowPlaybackScreen(true);
   };
 
   const formatDuration = (milliseconds: number): string => {
@@ -239,34 +240,47 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     </View>
   );
 
+  const handleStartRerecording = (recording: Affirmation) => {
+    setNewAffirmationText(recording.text);
+    setSelectedTagForRecording(recording.tag || '');
+    setShowRecordingModal(true);
+    // Store the ID of the recording to be replaced
+    setRerecordingId(recording.id);
+  };
+
   const renderItem = ({ item, drag, isActive }: RenderItemParams<Affirmation>) => {
     const isBeingPlayed = playingId === item.id && isPlaying;
     const isLooping = loopingId === item.id;
 
     return (
       <ScaleDecorator>
-        <TouchableOpacity
-          onPressIn={isEditMode ? drag : undefined}
-          disabled={!isEditMode && isBeingPlayed}
-          style={[
-            styles.recordingItem,
-            isEditMode && styles.recordingItemEdit,
-            isBeingPlayed && !isEditMode && styles.recordingItemPlaying,
-            isActive && styles.draggingItem,
-          ]}
-        >
+        <View style={[
+          styles.recordingItem,
+          isEditMode && styles.recordingItemEdit,
+          isBeingPlayed && !isEditMode && styles.recordingItemPlaying,
+          isActive && styles.draggingItem,
+        ]}>
           <View style={styles.recordingContent}>
             {isEditMode ? (
-              <TouchableOpacity 
-                style={styles.deleteButton}
-                onPress={() => handleDeleteRecording(item.id)}
-              >
-                <MaterialCommunityIcons name="minus-circle" size={24} color="#FF4444" />
-              </TouchableOpacity>
+              <View style={styles.editButtons}>
+                <TouchableOpacity 
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteRecording(item.id)}
+                >
+                  <MaterialCommunityIcons name="minus-circle" size={24} color="#FF4444" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.rerecordButton}
+                  onPress={() => handleStartRerecording(item)}
+                >
+                  <MaterialCommunityIcons name="microphone" size={24} color="#FFD700" />
+                </TouchableOpacity>
+              </View>
             ) : (
-              <TouchableOpacity
+              // Play button (green zone)
+              <TouchableOpacity 
                 style={styles.playButton}
-                onPress={() => handlePlayRecording(item)}
+                onPress={() => handlePlaybackControl(item)}
               >
                 <MaterialCommunityIcons
                   name={isBeingPlayed ? "pause" : "play"}
@@ -276,12 +290,18 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </TouchableOpacity>
             )}
 
-            <View style={styles.recordingInfo}>
+            {/* Recording info (red zone) */}
+            <TouchableOpacity 
+              style={styles.recordingInfo}
+              onPress={() => !isEditMode && handlePlayRecording(item)}
+              onPressIn={isEditMode ? drag : undefined}
+              disabled={isEditMode}
+            >
               <Text style={styles.recordingText}>{item.text || `Recording ${recordings.findIndex(r => r.id === item.id) + 1}`}</Text>
               <Text style={styles.recordingDuration}>
                 {formatDuration(item.duration)}
               </Text>
-            </View>
+            </TouchableOpacity>
 
             {!isEditMode && (
               <TouchableOpacity
@@ -305,7 +325,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               />
             )}
           </View>
-        </TouchableOpacity>
+        </View>
       </ScaleDecorator>
     );
   };
@@ -406,21 +426,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       [...filteredRecordings];
 
     const playNext = async () => {
-      // Reset UI state from previous playback
-      setIsPlaying(false);
-      setPlayingId(null);
-
-      // Stop any currently playing audio
-      try {
-        await audioRecorderPlayer.current.stopPlayer();
-      } catch (error) {
-        // No active player to stop
-      }
-      
-      audioRecorderPlayer.current.removePlayBackListener();
-
       if (currentIndex >= recordingsToPlay.length) {
-        // Ensure UI is reset after the last recording
         setIsPlaying(false);
         setPlayingId(null);
         return;
@@ -429,10 +435,14 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       const recording = recordingsToPlay[currentIndex];
       
       try {
+        // Stop any currently playing audio
+        if (isPlaying) {
+          await audioRecorderPlayer.current.stopPlayer();
+          audioRecorderPlayer.current.removePlayBackListener();
+        }
+
         await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
         await audioRecorderPlayer.current.setVolume(affirmationsVolume);
-        
-        // Update UI to show current playing state
         setIsPlaying(true);
         setPlayingId(recording.id);
         
@@ -440,15 +450,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           if (e.currentPosition >= e.duration) {
             audioRecorderPlayer.current.stopPlayer();
             audioRecorderPlayer.current.removePlayBackListener();
-            
-            // Reset UI state for current recording
             setIsPlaying(false);
             setPlayingId(null);
-            
-            // Schedule next recording
-            const delay = intervalBetweenAffirmations * 1000;
             currentIndex++;
-            setTimeout(playNext, delay);
+            setTimeout(playNext, intervalBetweenAffirmations * 1000);
           }
         });
       } catch (error) {
@@ -522,7 +527,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setIsRecording(false);
 
       const newAffirmation: Affirmation = {
-        id: Date.now().toString(),
+        id: rerecordingId || Date.now().toString(),
         text: newAffirmationText,
         audioUrl: uri,
         duration: recordingDuration,
@@ -531,13 +536,37 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       };
 
       // Update local state
-      setRecordings(prev => [newAffirmation, ...prev]);
+      setRecordings(prev => {
+        if (rerecordingId) {
+          // Replace the old recording
+          const oldRecording = prev.find(r => r.id === rerecordingId);
+          if (oldRecording?.audioUrl) {
+            // Delete the old audio file
+            RNFS.unlink(oldRecording.audioUrl).catch(error => 
+              console.error('Error deleting old audio file:', error)
+            );
+          }
+          return prev.map(r => r.id === rerecordingId ? newAffirmation : r);
+        }
+        // Add new recording
+        return [newAffirmation, ...prev];
+      });
       
       // Save to AsyncStorage
       try {
         const existingRecordings = await AsyncStorage.getItem(STORAGE_KEYS.AFFIRMATIONS);
-        const currentRecordings = existingRecordings ? JSON.parse(existingRecordings) : [];
-        currentRecordings.unshift(newAffirmation);
+        let currentRecordings = existingRecordings ? JSON.parse(existingRecordings) : [];
+        
+        if (rerecordingId) {
+          // Replace the old recording
+          currentRecordings = currentRecordings.map((r: Affirmation) => 
+            r.id === rerecordingId ? newAffirmation : r
+          );
+        } else {
+          // Add new recording
+          currentRecordings.unshift(newAffirmation);
+        }
+        
         await AsyncStorage.setItem(STORAGE_KEYS.AFFIRMATIONS, JSON.stringify(currentRecordings));
       } catch (error) {
         console.error('Error saving to AsyncStorage:', error);
@@ -550,6 +579,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setRecordingPath('');
       setRecordingDuration(0);
       setSelectedTagForRecording('');
+      setRerecordingId(null);
     } catch (error) {
       console.error('Failed to stop recording:', error);
       Alert.alert('Error', 'Failed to save recording. Please try again.');
@@ -630,99 +660,419 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       visible={showRecordingModal}
       animationType="slide"
       transparent={true}
+      onRequestClose={() => setShowRecordingModal(false)}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Record Affirmation</Text>
-          <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
-          
-          <View style={styles.tagSelectionContainer}>
-            <Text style={styles.tagSelectionTitle}>Select or Create Tag</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.tagScrollContent}
-            >
-              {tags.map((tag) => (
-                <TouchableOpacity
-                  key={tag}
-                  style={[
-                    styles.tagButton,
-                    selectedTagForRecording === tag && styles.tagButtonActive
-                  ]}
-                  onPress={() => setSelectedTagForRecording(tag)}
+      <TouchableWithoutFeedback onPress={() => setShowRecordingModal(false)}>
+        <View style={styles.modalContainer}>
+          <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Record Affirmation</Text>
+              <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
+              
+              <View style={styles.tagSelectionContainer}>
+                <Text style={styles.tagSelectionTitle}>Select or Create Tag</Text>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.tagScrollContent}
                 >
-                  <Text style={[
-                    styles.tagText,
-                    selectedTagForRecording === tag && styles.tagTextActive
-                  ]}>{tag}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                style={styles.addTagButton}
-                onPress={() => setShowRecordingTagInput(true)}
-              >
-                <MaterialCommunityIcons name="plus" size={20} color="#FFD700" />
-              </TouchableOpacity>
-            </ScrollView>
+                  {tags.map((tag) => (
+                    <TouchableOpacity
+                      key={tag}
+                      style={[
+                        styles.tagButton,
+                        selectedTagForRecording === tag && styles.tagButtonActive
+                      ]}
+                      onPress={() => setSelectedTagForRecording(tag)}
+                    >
+                      <Text style={[
+                        styles.tagText,
+                        selectedTagForRecording === tag && styles.tagTextActive
+                      ]}>{tag}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.addTagButton}
+                    onPress={() => setShowRecordingTagInput(true)}
+                  >
+                    <MaterialCommunityIcons name="plus" size={20} color="#FFD700" />
+                  </TouchableOpacity>
+                </ScrollView>
 
-            {showRecordingTagInput && (
-              <View style={styles.tagInputContainer}>
-                <TextInput
-                  style={styles.tagInput}
-                  value={newTag}
-                  onChangeText={setNewTag}
-                  placeholder="New tag..."
-                  placeholderTextColor="#666"
-                  autoFocus
-                />
-                <TouchableOpacity 
-                  style={styles.tagInputButton}
-                  onPress={handleAddTagRecordingPress}
-                >
-                  <Text style={styles.tagInputButtonText}>Add</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.tagInputButton}
-                  onPress={() => {
-                    setNewTag('');
-                    setShowRecordingTagInput(false);
-                  }}
-                >
-                  <Text style={styles.tagInputButtonText}>Cancel</Text>
-                </TouchableOpacity>
+                {showRecordingTagInput && (
+                  <View style={styles.tagInputContainer}>
+                    <TextInput
+                      style={styles.tagInput}
+                      value={newTag}
+                      onChangeText={setNewTag}
+                      placeholder="New tag..."
+                      placeholderTextColor="#666"
+                      autoFocus
+                    />
+                    <TouchableOpacity 
+                      style={styles.tagInputButton}
+                      onPress={handleAddTagRecordingPress}
+                    >
+                      <Text style={styles.tagInputButtonText}>Add</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.tagInputButton}
+                      onPress={() => {
+                        setNewTag('');
+                        setShowRecordingTagInput(false);
+                      }}
+                    >
+                      <Text style={styles.tagInputButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
 
-          <TouchableOpacity 
-            style={[
-              styles.recordButton,
-              isRecording && styles.recordingActive
-            ]}
-            onPress={isRecording ? handleStopRecording : handleStartRecording}
-          >
-            <MaterialCommunityIcons 
-              name={isRecording ? "stop" : "microphone"} 
-              size={32} 
-              color="#FFFFFF" 
-            />
-          </TouchableOpacity>
-          <Text style={styles.recordingInstructions}>
-            {isRecording ? "Recording... Tap to stop" : "Tap to start recording"}
-          </Text>
+              <TouchableOpacity 
+                style={[
+                  styles.recordButton,
+                  isRecording && styles.recordingActive
+                ]}
+                onPress={isRecording ? handleStopRecording : handleStartRecording}
+              >
+                <MaterialCommunityIcons 
+                  name={isRecording ? "stop" : "microphone"} 
+                  size={32} 
+                  color="#FFFFFF" 
+                />
+              </TouchableOpacity>
+              <Text style={styles.recordingInstructions}>
+                {isRecording ? "Recording... Tap to stop" : "Tap to start recording"}
+              </Text>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
+
+  const handlePlaybackTagSelect = (tag: string) => {
+    setSelectedTag(tag);
+    setShowPlaybackTagModal(false);
+  };
+
+  const renderPlaybackScreen = () => (
+    <>
+      <Modal
+        visible={showPlaybackScreen}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.playbackScreenContainer}>
+          <Animated.View 
+            style={[
+              styles.playbackBackground,
+              {
+                transform: [{
+                  translateX: backgroundPosition
+                }]
+              }
+            ]}
+            {...panResponder.panHandlers}
+          >
+            {/* Previous Image */}
+            <Animated.View
+              style={[
+                styles.backgroundImageContainer,
+                {
+                  opacity: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
+                  }),
+                },
+              ]}
+            >
+              <Image
+                source={backgroundImages[previousIndex]}
+                style={styles.backgroundImage}
+              />
+            </Animated.View>
+
+            {/* Current Image */}
+            <Animated.View
+              style={[
+                styles.backgroundImageContainer,
+                {
+                  opacity: fadeAnim,
+                },
+              ]}
+            >
+              <Image
+                source={backgroundImages[currentBackgroundIndex]}
+                style={styles.backgroundImage}
+              />
+            </Animated.View>
+          </Animated.View>
+
+          <View style={styles.playbackOverlay}>
+            {/* Top Tag - Now Tappable */}
+            <TouchableOpacity 
+              style={styles.playbackTagContainer}
+              onPress={() => setShowPlaybackTagModal(true)}
+            >
+              <Text style={styles.playbackTagLabel}>FILTER</Text>
+              <View style={styles.playbackTag}>
+                <View style={styles.playbackTagContent}>
+                  <Text style={styles.playbackTagText}>
+                    {selectedTag}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-down" size={20} color="#FFFFFF" />
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* Play Button */}
+            <View style={styles.playbackPlayButtonContainer}>
+              <View style={styles.circlePattern}>
+                <View style={[styles.circle, styles.circle1]} />
+                <View style={[styles.circle, styles.circle2]} />
+                <View style={[styles.circle, styles.circleOuter1]} />
+                <View style={[styles.circle, styles.circleOuter2]} />
+                <TickMarks />
+                <View style={[styles.circle, styles.circle3]} />
+              </View>
+              <TouchableOpacity 
+                style={styles.playbackPlayButton}
+                onPress={() => {
+                  if (selectedRecording) {
+                    handlePlaybackControl(selectedRecording);
+                  }
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={isPlaying ? "pause" : "play"}
+                  size={48}
+                  color="#4F46E5"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Bottom Toolbar */}
+            <View style={styles.playbackToolbar}>
+              <TouchableOpacity style={styles.playbackToolbarButton}>
+                <MaterialCommunityIcons name="timer" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.playbackToolbarButton}>
+                <MaterialCommunityIcons name="music-note" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.playbackToolbarButton}
+                onPress={() => {
+                  console.log('Settings button clicked');
+                  setShowAudioSettings(true);
+                }}
+              >
+                <MaterialCommunityIcons name="tune-vertical" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Close Button */}
+            <TouchableOpacity 
+              style={styles.playbackCloseButton}
+              onPress={() => {
+                // Stop any playing audio
+                if (isPlaying) {
+                  audioRecorderPlayer.current.stopPlayer();
+                  setIsPlaying(false);
+                  setPlayingId(null);
+                }
+                // Reset all playback related states
+                setShowPlaybackScreen(false);
+                setSelectedRecording(null);
+                setShowPlaybackTagModal(false);
+                setShowAudioSettings(false);
+              }}
+            >
+              <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Tag Selection Modal */}
+            <Modal
+              visible={showPlaybackTagModal}
+              transparent={true}
+              animationType="fade"
+            >
+              <TouchableWithoutFeedback onPress={() => setShowPlaybackTagModal(false)}>
+                <View style={styles.tagModalOverlay}>
+                  <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                    <View style={styles.tagModalContent}>
+                      <TouchableOpacity
+                        style={[
+                          styles.tagModalButton,
+                          selectedTag === 'All Affirmations' && styles.tagModalButtonActive
+                        ]}
+                        onPress={() => handlePlaybackTagSelect('All Affirmations')}
+                      >
+                        <Text style={[
+                          styles.tagModalButtonText,
+                          selectedTag === 'All Affirmations' && styles.tagModalButtonTextActive
+                        ]}>All Affirmations</Text>
+                      </TouchableOpacity>
+                      {tags.map((tag) => (
+                        <TouchableOpacity
+                          key={tag}
+                          style={[
+                            styles.tagModalButton,
+                            selectedTag === tag && styles.tagModalButtonActive
+                          ]}
+                          onPress={() => handlePlaybackTagSelect(tag)}
+                        >
+                          <Text style={[
+                            styles.tagModalButtonText,
+                            selectedTag === tag && styles.tagModalButtonTextActive
+                          ]}>{tag}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </TouchableWithoutFeedback>
+                </View>
+              </TouchableWithoutFeedback>
+            </Modal>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showAudioSettings}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAudioSettings(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowAudioSettings(false)}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+              <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Voice & Music Options</Text>
+                  <TouchableOpacity onPress={() => setShowAudioSettings(false)}>
+                    <Text style={styles.doneButton}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.settingsLabel}>Background Volume</Text>
+                <Slider
+                  style={styles.slider}
+                  value={backgroundVolume}
+                  onValueChange={setBackgroundVolume}
+                  minimumValue={0}
+                  maximumValue={1}
+                  minimumTrackTintColor="#6366F1"
+                  maximumTrackTintColor="#2A3744"
+                  thumbTintColor="#6366F1"
+                />
+
+                <Text style={styles.settingsLabel}>Affirmations Volume</Text>
+                <Slider
+                  style={styles.slider}
+                  value={affirmationsVolume}
+                  onValueChange={setAffirmationsVolume}
+                  minimumValue={0}
+                  maximumValue={1}
+                  minimumTrackTintColor="#6366F1"
+                  maximumTrackTintColor="#2A3744"
+                  thumbTintColor="#6366F1"
+                />
+
+                <Text style={styles.settingsLabel}>Delay Between Affirmations (seconds)</Text>
+                <View style={styles.intervalContainer}>
+                  <Slider
+                    style={styles.slider}
+                    value={intervalBetweenAffirmations}
+                    onValueChange={setIntervalBetweenAffirmations}
+                    minimumValue={1}
+                    maximumValue={10}
+                    step={1}
+                    minimumTrackTintColor="#6366F1"
+                    maximumTrackTintColor="#2A3744"
+                    thumbTintColor="#6366F1"
+                  />
+                  <Text style={styles.intervalValue}>{intervalBetweenAffirmations}s</Text>
+                </View>
+
+                <View style={styles.shuffleContainer}>
+                  <Text style={styles.settingsLabel}>Shuffle Affirmations</Text>
+                  <Switch
+                    value={shuffleAffirmations}
+                    onValueChange={setShuffleAffirmations}
+                    trackColor={{ false: "#2A3744", true: "#6366F1" }}
+                    thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
+                  />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </>
+  );
+
+  const handlePlaybackControl = async (recording: Affirmation) => {
+    try {
+      if (isPlaying && playingId === recording.id) {
+        await audioRecorderPlayer.current.stopPlayer();
+        audioRecorderPlayer.current.removePlayBackListener();
+        setIsPlaying(false);
+        setPlayingId(null);
+      } else {
+        if (isPlaying) {
+          await audioRecorderPlayer.current.stopPlayer();
+          audioRecorderPlayer.current.removePlayBackListener();
+        }
+        
+        await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+        setIsPlaying(true);
+        setPlayingId(recording.id);
+        
+        audioRecorderPlayer.current.addPlayBackListener((e) => {
+          if (e.currentPosition >= e.duration) {
+            audioRecorderPlayer.current.stopPlayer();
+            audioRecorderPlayer.current.removePlayBackListener();
+            setIsPlaying(false);
+            setPlayingId(null);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to play recording:', error);
+      Alert.alert('Error', 'Failed to play recording. Please try again.');
+    }
+  };
+
+  const TickMarks = () => {
+    const marks = Array.from({ length: 60 }, (_, i) => i);
+    return (
+      <View style={styles.tickContainer}>
+        {marks.map((i) => (
+          <View
+            key={i}
+            style={[
+              styles.tick,
+              {
+                transform: [
+                  { rotate: `${i * 6}deg` },
+                  { translateY: -100 }, // Half of circle2's width
+                ],
+              },
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         {renderTagList()}
-        {renderAudioSettingsModal()}
         {renderRecordingModal()}
+        {renderPlaybackScreen()}
 
         <View style={{ flex: 1 }}>
           <DraggableFlatList<Affirmation>
@@ -1159,6 +1509,203 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     paddingHorizontal: 16,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginRight: 8,
+  },
+  rerecordButton: {
+    marginRight: 8,
+  },
+  playbackScreenContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  playbackBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.5,
+  },
+  playbackOverlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+    padding: 20,
+    alignItems: 'center',
+  },
+  playbackTagContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  playbackTagLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  playbackTag: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  playbackTagContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  playbackTagText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  playbackPlayButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  playbackToolbar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 40,
+    paddingBottom: 40,
+  },
+  playbackToolbarButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(42, 55, 68, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playbackCloseButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tagModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tagModalContent: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 16,
+    width: '80%',
+    maxHeight: '70%',
+  },
+  tagModalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginVertical: 4,
+    backgroundColor: 'rgba(42, 55, 68, 0.8)',
+  },
+  tagModalButtonActive: {
+    backgroundColor: '#FFD700',
+  },
+  tagModalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  tagModalButtonTextActive: {
+    color: '#000000',
+    fontWeight: '600',
+  },
+  backgroundImageContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  tickContainer: {
+    position: 'absolute',
+    width: 200,  // Same as circle2
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tick: {
+    position: 'absolute',
+    width: 1,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    top: '50%',
+    left: '50%',
+  },
+  circle: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  circle1: {
+    width: 200,
+    height: 200,
+    borderWidth: 0.3,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  circle2: {
+    width: 200,
+    height: 200,
+    borderWidth: 0.3,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  circleOuter1: {
+    width: 260,
+    height: 260,
+    borderWidth: 0.3,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  circleOuter2: {
+    width: 300,
+    height: 300,
+    borderWidth: 0.3,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  circle3: {
+    width: 100,
+    height: 100,
+    borderWidth: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  circlePattern: {
+    position: 'absolute',
+    width: 300,  // Increased to accommodate outer circles
+    height: 300,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playbackPlayButtonContainer: {
+    position: 'absolute',
+    left: '57%',
+    top: '50%',
+    width: 300,  // Match circlePattern size
+    height: 300,
+    transform: [{ translateX: -150 }, { translateY: -150 }],  // Half of new width/height
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
