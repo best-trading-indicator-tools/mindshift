@@ -78,6 +78,11 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const backgroundRotationInterval = useRef<NodeJS.Timeout | null>(null);
   const [progressAnimation] = useState(new Animated.Value(0));
   const [currentRecordingText, setCurrentRecordingText] = useState<string>('');
+  const [showPracticeFlowModal, setShowPracticeFlowModal] = useState(false);
+  const [numberOfLoops, setNumberOfLoops] = useState(3);
+  const [timerDuration, setTimerDuration] = useState(0); // 0 means no timer
+  const [practiceMode, setPracticeMode] = useState<'loop' | 'timer'>('loop');
+  const [currentLoopCount, setCurrentLoopCount] = useState(0);
 
   const backgroundImages = [
     require('../assets/illustrations/zen1.jpg'),
@@ -158,7 +163,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   useEffect(() => {
     if (presentationMode && showPlaybackScreen) {
-      // Start rotating backgrounds every 5 seconds
+      // Start rotating backgrounds every 3 seconds (changed from 5)
       backgroundRotationInterval.current = setInterval(() => {
         // Start fade out
         Animated.timing(fadeAnim, {
@@ -177,7 +182,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             useNativeDriver: true,
           }).start();
         });
-      }, 5000);
+      }, 3000); // Changed from 5000 to 3000
     } else {
       // Clear interval when presentation mode is disabled
       if (backgroundRotationInterval.current) {
@@ -532,107 +537,70 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const handleListenAll = async () => {
-    if (filteredRecordings.length === 0) {
-      return;
-    }
+    if (filteredRecordings.length === 0) return;
 
     const recordingsToPlay = shuffleAffirmations ? 
       [...filteredRecordings].sort(() => Math.random() - 0.5) : 
       [...filteredRecordings];
 
-    for (const recording of recordingsToPlay) {
-      try {
-        // Verify file exists
-        try {
-          const fileExists = await RNFS.exists(recording.audioUrl);
-          if (!fileExists) {
-            continue;
-          }
+    playRecordingSequence(recordingsToPlay);
+  };
 
-          const fileStats = await RNFS.stat(recording.audioUrl);
-          if (fileStats.size === 0) {
-            continue;
-          }
-        } catch (error) {
-          continue;
-        }
-        
-        // Stop any current playback
-        if (isPlaying) {
-          try {
-            await audioRecorderPlayer.current.stopPlayer();
-          } catch (error) {
-            console.error('Error stopping player:', error);
-          }
-          audioRecorderPlayer.current.removePlayBackListener();
-        }
+  // New function for practice flow playback in zen mode
+  const handlePracticeFlowPlayback = async (recording: Affirmation) => {
+    if (practiceMode === 'loop') {
+      // Reset loop count and start loop playback
+      setCurrentLoopCount(0);
+      playLoop(recording);
+    } else {
+      // Single playback for timer mode
+      await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+      await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+      setIsPlaying(true);
+      setPlayingId(recording.id);
+      setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+    }
+  };
 
-        // Play this recording
-        try {
+  // Update the playback control to use practice flow in zen mode
+  const handlePlaybackControl = async (recording: Affirmation) => {
+    try {
+      if (isPlaying) {
+        await audioRecorderPlayer.current.stopPlayer();
+        audioRecorderPlayer.current.removePlayBackListener();
+        setIsPlaying(false);
+        setPlayingId(null);
+        setCurrentRecordingText('');
+        progressAnimation.setValue(0);
+        setCurrentLoopCount(0);
+      } else {
+        // Use practice flow settings when in zen mode
+        if (showPlaybackScreen) {
+          // Get all recordings for the current tag
+          const tagRecordings = selectedTag === 'All Affirmations' ? 
+            recordings : 
+            recordings.filter(rec => rec.tags?.includes(selectedTag));
+          
+          // Sort them so the selected recording plays first
+          const sortedRecordings = [
+            recording,
+            ...tagRecordings.filter(rec => rec.id !== recording.id)
+          ];
+          
+          // Play all recordings for this tag
+          playRecordingSequence(sortedRecordings);
+        } else {
+          // Regular playback for single recording in list view
           await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
           await audioRecorderPlayer.current.setVolume(affirmationsVolume);
-        } catch (error) {
-          console.error('Error starting player:', error);
-          continue;
+          setIsPlaying(true);
+          setPlayingId(recording.id);
+          setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
         }
-
-        setIsPlaying(true);
-        setPlayingId(recording.id);
-        setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
-
-        // Wait for this recording to finish
-        await new Promise<void>((resolve, reject) => {
-          let hasResolved = false;
-          
-          const handlePlaybackComplete = (e: any) => {
-            if (hasResolved) return;
-            
-            const progress = e.currentPosition / e.duration;
-            progressAnimation.setValue(progress);
-
-            if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
-              hasResolved = true;
-              
-              try {
-                audioRecorderPlayer.current.stopPlayer().catch(console.error);
-                audioRecorderPlayer.current.removePlayBackListener();
-                setIsPlaying(false);
-                setPlayingId(null);
-                setCurrentRecordingText('');
-                progressAnimation.setValue(0);
-                resolve();
-              } catch (error) {
-                console.error('Error in cleanup:', error);
-                reject(error);
-              }
-            }
-          };
-
-          audioRecorderPlayer.current.addPlayBackListener(handlePlaybackComplete);
-
-          // Add timeout to prevent hanging
-          setTimeout(() => {
-            if (!hasResolved) {
-              hasResolved = true;
-              audioRecorderPlayer.current.stopPlayer().catch(console.error);
-              audioRecorderPlayer.current.removePlayBackListener();
-              setIsPlaying(false);
-              setPlayingId(null);
-              setCurrentRecordingText('');
-              progressAnimation.setValue(0);
-              resolve();
-            }
-          }, 30000); // 30 second timeout
-        });
-
-        // Wait for interval before next recording (unless it's the last one)
-        if (recording !== recordingsToPlay[recordingsToPlay.length - 1]) {
-          await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
-        }
-      } catch (error) {
-        console.error('Error in playback loop:', error);
-        // Continue to next recording even if this one failed
       }
+    } catch (error) {
+      console.error('Failed to play recording:', error);
+      Alert.alert('Error', 'Failed to play recording. Please try again.');
     }
   };
 
@@ -934,6 +902,108 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const handlePlaybackTagSelect = (tag: string) => {
     setSelectedTag(tag);
     setShowPlaybackTagModal(false);
+    
+    // Get recordings for selected tag
+    const tagRecordings = tag === 'All Affirmations' ? 
+      recordings : 
+      recordings.filter(recording => recording.tags?.includes(tag));
+    
+    // Start playing the filtered recordings
+    if (tagRecordings.length > 0) {
+      playRecordingSequence(tagRecordings);
+    }
+  };
+
+  const playRecordingSequence = async (recordingsToPlay: Affirmation[]) => {
+    // Stop any current playback
+    if (isPlaying) {
+      await audioRecorderPlayer.current.stopPlayer();
+      audioRecorderPlayer.current.removePlayBackListener();
+    }
+
+    setIsPlaying(true);
+    
+    // Function to play one complete sequence of recordings
+    const playOneSequence = async () => {
+      for (let i = 0; i < recordingsToPlay.length; i++) {
+        const recording = recordingsToPlay[i];
+        
+        try {
+          // Verify file exists
+          const fileExists = await RNFS.exists(recording.audioUrl);
+          if (!fileExists) continue;
+
+          const fileStats = await RNFS.stat(recording.audioUrl);
+          if (fileStats.size === 0) continue;
+
+          // Play current recording
+          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+          setPlayingId(recording.id);
+          setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+
+          // Wait for recording to finish
+          await new Promise<void>((resolve) => {
+            const handlePlaybackComplete = (e: any) => {
+              const progress = e.currentPosition / e.duration;
+              progressAnimation.setValue(progress);
+
+              if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
+                audioRecorderPlayer.current.removePlayBackListener();
+                resolve();
+              }
+            };
+
+            audioRecorderPlayer.current.addPlayBackListener(handlePlaybackComplete);
+          });
+
+          // If this isn't the last recording, wait for the interval
+          if (i < recordingsToPlay.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
+          }
+        } catch (error) {
+          console.error('Error playing recording:', error);
+        }
+      }
+    };
+
+    // Handle different playback modes when in zen mode
+    if (showPlaybackScreen) {
+      if (practiceMode === 'loop') {
+        // Play the sequence numberOfLoops times
+        for (let loop = 0; loop < numberOfLoops; loop++) {
+          setCurrentLoopCount(loop);
+          await playOneSequence();
+          
+          // If this isn't the last loop, wait for the interval
+          if (loop < numberOfLoops - 1) {
+            await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
+          }
+        }
+      } else if (practiceMode === 'timer' && timerDuration > 0) {
+        // Play sequences until timer runs out
+        const startTime = Date.now();
+        const endTime = startTime + (timerDuration * 60 * 1000); // Convert minutes to milliseconds
+        
+        while (Date.now() < endTime) {
+          await playOneSequence();
+          await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
+        }
+      } else {
+        // Default behavior - play sequence once
+        await playOneSequence();
+      }
+    } else {
+      // Regular playback for list view - play sequence once
+      await playOneSequence();
+    }
+
+    // Reset state after all playback is done
+    setIsPlaying(false);
+    setPlayingId(null);
+    setCurrentRecordingText('');
+    progressAnimation.setValue(0);
+    setCurrentLoopCount(0);
   };
 
   const renderBackgroundImages = () => {
@@ -1067,23 +1137,11 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             </View>
 
             {/* Bottom Toolbar */}
-            <View style={styles.playbackToolbar}>
-              <TouchableOpacity style={styles.playbackToolbarButton}>
-                <MaterialCommunityIcons name="timer" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.playbackToolbarButton}>
-                <MaterialCommunityIcons name="music-note" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.playbackToolbarButton}
-                onPress={() => setShowAudioSettings(true)}
-              >
-                <MaterialCommunityIcons name="tune-vertical" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+            {renderPlaybackToolbar()}
 
-            {/* Voice & Music Settings Modal */}
+            {/* Settings Modals */}
             {showAudioSettings && renderSettingsModal(true)}
+            {showPracticeFlowModal && renderPracticeFlowModal()}
 
             {/* Close Button */}
             <TouchableOpacity 
@@ -1098,6 +1156,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 setSelectedRecording(null);
                 setShowPlaybackTagModal(false);
                 setShowAudioSettings(false);
+                setShowPracticeFlowModal(false);
                 // Stop presentation mode when closing
                 setPresentationMode(false);
                 if (backgroundRotationInterval.current) {
@@ -1156,45 +1215,43 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     </>
   );
 
-  const handlePlaybackControl = async (recording: Affirmation) => {
+  const playLoop = async (recording: Affirmation) => {
     try {
-      if (isPlaying) {
-        await audioRecorderPlayer.current.stopPlayer();
-        audioRecorderPlayer.current.removePlayBackListener();
-        setIsPlaying(false);
-        setPlayingId(null);
-        setCurrentRecordingText('');
-        progressAnimation.setValue(0);
-      } else {
-        // If in playback screen, play all recordings
-        if (showPlaybackScreen) {
-          handleListenAll();
-        } else {
-          // Single recording playback
-          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
-          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
-          setIsPlaying(true);
-          setPlayingId(recording.id);
-          setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+      // Start the recording
+      await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+      await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+      setIsPlaying(true);
+      setPlayingId(recording.id);
+      setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+
+      // Add listener for completion
+      audioRecorderPlayer.current.addPlayBackListener((e) => {
+        const progress = e.currentPosition / e.duration;
+        progressAnimation.setValue(progress);
+
+        if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
+          audioRecorderPlayer.current.removePlayBackListener();
           
-          audioRecorderPlayer.current.addPlayBackListener((e) => {
-            const progress = e.currentPosition / e.duration;
-            progressAnimation.setValue(progress);
-            
-            if (e.currentPosition >= e.duration) {
-              audioRecorderPlayer.current.stopPlayer();
-              audioRecorderPlayer.current.removePlayBackListener();
-              setIsPlaying(false);
-              setPlayingId(null);
-              setCurrentRecordingText('');
-              progressAnimation.setValue(0);
-            }
-          });
+          // Check if we should continue looping
+          if (practiceMode === 'loop' && currentLoopCount < numberOfLoops - 1) {
+            setCurrentLoopCount(prev => prev + 1);
+            // Start next loop after interval
+            setTimeout(() => {
+              playLoop(recording);
+            }, intervalBetweenAffirmations * 1000);
+          } else {
+            // Stop playback after all loops are done
+            audioRecorderPlayer.current.stopPlayer();
+            setIsPlaying(false);
+            setPlayingId(null);
+            setCurrentRecordingText('');
+            progressAnimation.setValue(0);
+            setCurrentLoopCount(0);
+          }
         }
-      }
+      });
     } catch (error) {
-      console.error('Failed to play recording:', error);
-      Alert.alert('Error', 'Failed to play recording. Please try again.');
+      console.error('Error in playLoop:', error);
     }
   };
 
@@ -1232,6 +1289,135 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       </View>
     );
   };
+
+  const renderPracticeFlowModal = () => (
+    <Modal
+      visible={showPracticeFlowModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowPracticeFlowModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, styles.practiceFlowModalContent]}>
+          <View style={styles.practiceFlowHeader}>
+            <Text style={styles.practiceFlowTitle}>Current practice flow</Text>
+            <Text style={styles.practiceFlowSubtitle}>For all playlists</Text>
+            <TouchableOpacity 
+              style={styles.practiceFlowClose}
+              onPress={() => setShowPracticeFlowModal(false)}
+            >
+              <Text style={styles.practiceFlowCloseText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.practiceFlowBody}>
+            {/* Mode Selector */}
+            <View style={styles.practiceFlowItem}>
+              <Text style={styles.practiceFlowLabel}>Practice Mode</Text>
+              <View style={styles.modeSelector}>
+                <TouchableOpacity 
+                  style={[
+                    styles.modeButton,
+                    practiceMode === 'loop' && styles.modeButtonActive
+                  ]}
+                  onPress={() => setPracticeMode('loop')}
+                >
+                  <MaterialCommunityIcons 
+                    name="repeat" 
+                    size={24} 
+                    color={practiceMode === 'loop' ? '#FFFFFF' : '#9CA3AF'} 
+                  />
+                  <Text style={[
+                    styles.modeButtonText,
+                    practiceMode === 'loop' && styles.modeButtonTextActive
+                  ]}>Loop</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.modeButton,
+                    practiceMode === 'timer' && styles.modeButtonActive
+                  ]}
+                  onPress={() => setPracticeMode('timer')}
+                >
+                  <MaterialCommunityIcons 
+                    name="timer-outline" 
+                    size={24} 
+                    color={practiceMode === 'timer' ? '#FFFFFF' : '#9CA3AF'} 
+                  />
+                  <Text style={[
+                    styles.modeButtonText,
+                    practiceMode === 'timer' && styles.modeButtonTextActive
+                  ]}>Timer</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Show relevant option based on selected mode */}
+            {practiceMode === 'loop' ? (
+              <View style={styles.practiceFlowItem}>
+                <Text style={styles.practiceFlowLabel}>Number of loops to play</Text>
+                <View style={styles.loopSelector}>
+                  <TouchableOpacity 
+                    onPress={() => setNumberOfLoops(Math.max(1, numberOfLoops - 1))}
+                    style={styles.practiceFlowLoopButton}
+                  >
+                    <Text style={styles.loopButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.loopCount}>{numberOfLoops}</Text>
+                  <TouchableOpacity 
+                    onPress={() => setNumberOfLoops(numberOfLoops + 1)}
+                    style={styles.practiceFlowLoopButton}
+                  >
+                    <Text style={styles.loopButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.practiceFlowItem}>
+                <View style={styles.timerHeader}>
+                  <Text style={styles.practiceFlowLabel}>Set timer to stop in</Text>
+                  <Text style={styles.timerValue}>
+                    {timerDuration === 0 ? 'no timer' : `${timerDuration} min`}
+                  </Text>
+                </View>
+                <Slider
+                  style={styles.timerSlider}
+                  value={timerDuration}
+                  onValueChange={setTimerDuration}
+                  minimumValue={0}
+                  maximumValue={60}
+                  step={1}
+                  minimumTrackTintColor="#6366F1"
+                  maximumTrackTintColor="#E5E7EB"
+                  thumbTintColor="#6366F1"
+                />
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderPlaybackToolbar = () => (
+    <View style={styles.playbackToolbar}>
+      <TouchableOpacity 
+        style={styles.playbackToolbarButton}
+        onPress={() => setShowPracticeFlowModal(true)}
+      >
+        <MaterialCommunityIcons name="timer" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.playbackToolbarButton}>
+        <MaterialCommunityIcons name="music-note" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.playbackToolbarButton}
+        onPress={() => setShowAudioSettings(true)}
+      >
+        <MaterialCommunityIcons name="tune-vertical" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -1589,7 +1775,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A3744',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
   },
   loopButtonActive: {
     backgroundColor: '#6366F1',
@@ -1976,6 +2161,119 @@ const styles = StyleSheet.create({
   recordingTag: {
     color: '#9CA3AF',
     fontSize: 12,
+  },
+  practiceFlowModalContent: {
+    backgroundColor: '#001F2D',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 0,
+  },
+  practiceFlowHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1F2937',
+  },
+  practiceFlowTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  practiceFlowSubtitle: {
+    fontSize: 16,
+    color: '#FFB800',
+    marginBottom: 8,
+  },
+  practiceFlowClose: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  practiceFlowCloseText: {
+    color: '#FFB800',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  practiceFlowBody: {
+    padding: 20,
+  },
+  practiceFlowItem: {
+    marginBottom: 24,
+  },
+  practiceFlowLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  loopSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    padding: 8,
+  },
+  practiceFlowLoopButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2A3744',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loopButtonText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  loopCount: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '600',
+    marginHorizontal: 24,
+  },
+  timerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timerValue: {
+    color: '#6366F1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  timerSlider: {
+    width: '100%',
+    height: 40,
+  },
+  modeSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 24,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+    borderRadius: 8,
+  },
+  modeButtonActive: {
+    backgroundColor: '#6366F1',
+  },
+  modeButtonText: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modeButtonTextActive: {
+    color: '#FFFFFF',
   },
 });
 
