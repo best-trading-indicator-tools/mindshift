@@ -22,6 +22,7 @@ import VisionBoardScreen from '../screens/VisionBoardScreen';
 import VisionBoardSectionsScreen from '../screens/VisionBoardSectionsScreen';
 import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
 import MusicSelectionScreen from '../screens/MusicSelectionScreen';
+import NewVisionBoardSection from '../screens/NewVisionBoardSection';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -44,7 +45,8 @@ export type RootStackParamList = {
   GoldenChecklist: undefined;
   VisionBoard: undefined;
   VisionBoardSections: { boardId: string };
-  VisionBoardSection: { boardId: string; sectionId: string };
+  VisionBoardSection: { boardId: string; sectionId: string; sectionName: string };
+  NewVisionBoardSection: { boardId: string };
   MusicSelection: {
     exerciseName: string;
   };
@@ -109,16 +111,33 @@ const MainTabNavigator = () => {
   );
 };
 
-const AppNavigator = () => {
+interface AppNavigatorProps {
+  initialRoute?: 'Login' | 'MainTabs';
+}
+
+const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) => {
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
         }}
+        initialRouteName={initialRoute}
       >
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen}
+          options={{
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen 
+          name="MainTabs" 
+          component={MainTabNavigator}
+          options={{
+            gestureEnabled: false,
+          }}
+        />
         <Stack.Screen name="AiCoach" component={AiCoachScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Course" component={CourseStackScreen} />
@@ -131,6 +150,7 @@ const AppNavigator = () => {
         <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
         <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
         <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />
+        <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
         <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>

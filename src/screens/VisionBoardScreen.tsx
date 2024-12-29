@@ -145,7 +145,13 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             key={board.id}
             style={styles.boardCard}
-            onPress={() => navigation.navigate('VisionBoardSections', { boardId: board.id })}
+            onPress={() => {
+              if (board.sections.length === 0) {
+                navigation.navigate('NewVisionBoardSection', { boardId: board.id });
+              } else {
+                navigation.navigate('VisionBoardSections', { boardId: board.id });
+              }
+            }}
           >
             <View style={styles.boardHeader}>
               <Text style={styles.boardName}>{board.name}</Text>
