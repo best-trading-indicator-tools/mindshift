@@ -13,6 +13,7 @@ import CircularProgress from '../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
 import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress } from '../services/exerciseService';
+import { clearNotifications } from '../services/notificationService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -34,6 +35,12 @@ const renderIcon = (name: string, size: string | number, color: string) => {
 };
 
 const challenges = [
+  {
+    title: 'Vision Board',
+    subtitle: 'Visualize your goals and dreams',
+    icon: 'image-multiple',
+    colors: ['#FF6B6B', '#4ECDC4'],
+  },
   {
     title: 'Mood Tracker',
     subtitle: 'Track your daily emotional well-being',
@@ -287,21 +294,33 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return <View style={styles.paginationContainer}>{dots}</View>;
   };
 
+  const handleReset = async () => {
+    await resetAllDailyExercises();
+    await clearNotifications();
+    // Refresh the UI
+    checkExerciseCompletions();
+    loadStreak();
+    updateProgress();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>Bonjour {userName}!</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
+              {renderIcon('refresh', 24, '#FF4444')}
+            </TouchableOpacity>
             <View style={styles.streakContainer}>
               {renderIcon('fire', 24, '#FFD700')}
               <Text style={styles.streakText}>{streak}</Text>
-              {renderIcon('ghost', 24, '#A78BFA')}
-              <Text style={styles.streakText}>0</Text>
             </View>
-          </View>
-          <View style={styles.headerRight}>
-            <NotificationBell />
+            <View style={styles.bellContainer}>
+              <NotificationBell />
+            </View>
           </View>
         </View>
 
@@ -328,6 +347,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   marginRight: index === challenges.length - 1 ? 20 : cardSpacing
                 }
               ]}
+              onPress={() => {
+                if (challenge.title === 'Vision Board') {
+                  navigation.getParent()?.navigate('VisionBoard');
+                }
+                // Add other navigation handlers for other challenges here
+              }}
             >
               <View
                 style={[styles.card, { 
@@ -476,7 +501,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: 8,
   },
   greeting: {
     fontSize: 24,
@@ -487,13 +512,14 @@ const styles = StyleSheet.create({
   streakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
+    marginRight: 4,
   },
   streakText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    marginRight: 12,
+    marginRight: 0,
   },
   signOutButton: {
     padding: 8,
@@ -744,6 +770,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  resetButton: {
+    marginRight: 8,
+  },
+  bellContainer: {
+    marginLeft: 0,
   },
 });
 

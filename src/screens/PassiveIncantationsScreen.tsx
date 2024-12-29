@@ -19,6 +19,9 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  ImageStyle,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -1024,7 +1027,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         >
           <Image
             source={backgroundImages[currentBackgroundIndex]}
-            style={styles.backgroundImage}
+            style={{
+              width: '100%',
+              height: '100%',
+              opacity: 0.5,
+              resizeMode: 'cover'
+            }}
           />
         </Animated.View>
 
@@ -1044,7 +1052,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         >
           <Image
             source={backgroundImages[nextBackgroundIndex]}
-            style={styles.backgroundImage}
+            style={{
+              width: '100%',
+              height: '100%',
+              opacity: 0.5,
+              resizeMode: 'cover'
+            }}
           />
         </Animated.View>
 
@@ -1064,7 +1077,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         >
           <Image
             source={backgroundImages[currentBackgroundIndex === 0 ? backgroundImages.length - 1 : currentBackgroundIndex - 1]}
-            style={styles.backgroundImage}
+            style={{
+              width: '100%',
+              height: '100%',
+              opacity: 0.5,
+              resizeMode: 'cover'
+            }}
           />
         </Animated.View>
       </View>
@@ -1407,7 +1425,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       >
         <MaterialCommunityIcons name="timer" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.playbackToolbarButton}>
+      <TouchableOpacity 
+        style={styles.playbackToolbarButton}
+        onPress={() => navigation.navigate('MusicSelection', { exerciseName: 'Passive Incantations' })}
+      >
         <MaterialCommunityIcons name="music-note" size={24} color="#FFFFFF" />
       </TouchableOpacity>
       <TouchableOpacity 
@@ -1883,13 +1904,14 @@ const styles = StyleSheet.create({
   },
   backgroundImageContainer: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-  },
+    overflow: 'hidden' as const,
+  } as ViewStyle,
   backgroundImage: {
     width: '100%',
     height: '100%',
     opacity: 0.5,
-  },
+    resizeMode: 'cover',
+  } as ImageStyle,
   playbackOverlay: {
     flex: 1,
     justifyContent: 'space-between',

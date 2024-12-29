@@ -12,16 +12,16 @@ export const NotificationBell: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [hasUnread, setHasUnread] = useState(false);
 
-  useEffect(() => {
-    const checkNotifications = async () => {
-      const notifications = await getNotifications();
-      setHasUnread(notifications.some(notification => !notification.isRead));
-    };
+  const checkNotifications = async () => {
+    const notifications = await getNotifications();
+    setHasUnread(notifications.some(notification => !notification.isRead));
+  };
 
+  useEffect(() => {
     checkNotifications();
     
-    // Check for new notifications every minute
-    const interval = setInterval(checkNotifications, 60000);
+    // Check for new notifications every second (more frequent than before)
+    const interval = setInterval(checkNotifications, 1000);
     return () => clearInterval(interval);
   }, []);
 

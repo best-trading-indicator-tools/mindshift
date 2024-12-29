@@ -16,6 +16,8 @@ import ActiveIncantationsScreen from '../screens/ActiveIncantationsScreen';
 import PassiveIncantationsScreen from '../screens/PassiveIncantationsScreen';
 import GratitudeScreen from '../screens/GratitudeScreen';
 import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
+import VisionBoardScreen from '../screens/VisionBoardScreen';
+import MusicSelectionScreen from '../screens/MusicSelectionScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -36,6 +38,10 @@ export type RootStackParamList = {
   PassiveIncantations: undefined;
   Gratitude: undefined;
   GoldenChecklist: undefined;
+  VisionBoard: undefined;
+  MusicSelection: {
+    exerciseName: string;
+  };
   Lesson: {
     lessonId: number;
   };
@@ -179,6 +185,19 @@ function AppNavigator({ initialRoute }: AppNavigatorProps) {
           name="GoldenChecklist"
           component={GoldenChecklistScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VisionBoard"
+          component={VisionBoardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MusicSelection"
+          component={MusicSelectionScreen}
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

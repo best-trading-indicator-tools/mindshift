@@ -84,5 +84,11 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>music</string>
+		<string>spotify</string>
+		<string>soundcloud</string>
+	</array>
 </dict>
 </plist>
