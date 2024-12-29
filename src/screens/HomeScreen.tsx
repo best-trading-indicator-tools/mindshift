@@ -9,9 +9,10 @@ import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator
 import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../components/Illustrations';
 import ProgressBar from '../components/ProgressBar';
 import { NotificationBell } from '../components/NotificationBell';
+import CircularProgress from '../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
-import { isExerciseCompletedToday, getStreak, resetAllDailyExercises } from '../services/exerciseService';
+import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress } from '../services/exerciseService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -125,11 +126,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userName, setUserName] = useState('User');
   const [streak, setStreak] = useState(0);
+  const [progressPercentage, setProgressPercentage] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const windowWidth = Dimensions.get('window').width;
-  const cardWidth = windowWidth * 0.7; // Make cards 70% of screen width
-  const cardSpacing = 12; // Space between cards
-  const [hasNotifications, setHasNotifications] = useState(true); // You can control this with your notification logic
+  const cardWidth = windowWidth * 0.7;
+  const cardSpacing = 12;
+  const [hasNotifications, setHasNotifications] = useState(true);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const isCheckingRef = useRef(false);
 
@@ -152,21 +154,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     getCurrentUser();
   }, []);
 
-  // Initial load
+  // Update initial load useEffect
   useEffect(() => {
     checkExerciseCompletions();
     loadStreak();
-  }, []); // Empty dependency array for initial load
+    updateProgress();
+  }, []);
 
-  // Focus listener
+  // Update focus listener useEffect
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      // Only check completions if we have a user and if we haven't checked recently
       if (auth().currentUser && !isCheckingRef.current) {
         isCheckingRef.current = true;
         Promise.all([
           checkExerciseCompletions(),
-          loadStreak()
+          loadStreak(),
+          updateProgress()
         ]).finally(() => {
           isCheckingRef.current = false;
         });
@@ -227,6 +230,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const updateProgress = async () => {
+    try {
+      const progress = await checkDailyProgress();
+      setProgressPercentage(progress.progressPercentage);
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
+  };
+
   const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const newIndex = Math.round(contentOffset / (cardWidth + cardSpacing));
@@ -279,37 +291,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Welcome back</Text>
-            <View style={styles.nameContainer}>
-              <Text style={styles.name}>{userName}</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>Bonjour {userName}!</Text>
+            <View style={styles.streakContainer}>
+              {renderIcon('fire', 24, '#FFD700')}
+              <Text style={styles.streakText}>{streak}</Text>
+              {renderIcon('ghost', 24, '#A78BFA')}
+              <Text style={styles.streakText}>0</Text>
             </View>
           </View>
           <View style={styles.headerRight}>
-            <View style={styles.streakContainer}>
-              <MaterialCommunityIcons name="fire" size={24} color="#FFD700" />
-              <Text style={styles.streakText}>{streak}</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={async () => {
-                await resetAllDailyExercises();
-                checkExerciseCompletions();
-              }} 
-              style={[styles.signOutButton, { marginRight: 8 }]}
-            >
-              {renderIcon("refresh", 24, "#FFFFFF")}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleDevLogout} style={styles.signOutButton}>
-              {renderIcon("logout", 24, "#FFFFFF")}
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.getParent()?.navigate('Notifications');
-              }}
-              style={styles.notificationButton}
-            >
-              <NotificationBell />
-            </TouchableOpacity>
+            <NotificationBell />
           </View>
         </View>
 
@@ -387,11 +379,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.missionsContainer}>
           <View style={styles.missionsHeader}>
             <Text style={styles.missionsTitle}>Daily Missions</Text>
-            <View style={styles.progressCircle}>
+            <View style={styles.progressContainer}>
               <Text style={styles.progressText}>Progress</Text>
-              <Text style={styles.progressPercentage}>
-                {Math.round((completedExercises.length / DAILY_MISSIONS.length) * 100)}%
-              </Text>
+              <View style={styles.progressRow}>
+                <CircularProgress
+                  size={24}
+                  strokeWidth={2}
+                  progress={progressPercentage}
+                />
+                <Text style={styles.progressPercentage}>
+                  {progressPercentage}%
+                </Text>
+              </View>
             </View>
           </View>
           <View style={styles.missionsContent}>
@@ -447,26 +446,39 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: '#151932',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingVertical: 10,
   },
-  greeting: {
-    fontSize: 18,
-    color: '#fff',
-  },
-  name: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
+  headerLeft: {
+    flex: 1,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 15,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 5,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  streakText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 12,
   },
   signOutButton: {
     padding: 8,
@@ -618,15 +630,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  progressCircle: {
+  progressContainer: {
     alignItems: 'flex-end',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   progressText: {
     color: '#666',
     fontSize: 14,
+    marginBottom: 4,
   },
   progressPercentage: {
-    color: '#4CAF50',
+    color: '#10B981',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -709,17 +727,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginRight: 12,
-  },
-  streakText: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

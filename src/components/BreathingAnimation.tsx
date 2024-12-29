@@ -22,6 +22,7 @@ const BreathingAnimation: React.FC<{
   const [countdown, setCountdown] = useState(5);
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
+  const completionSound = useRef<Sound | null>(null);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isFirstRender = useRef(true);
@@ -199,17 +200,27 @@ const BreathingAnimation: React.FC<{
     }
   };
 
-  const handleCompletion = async () => {
-    // Clean up gong sound first
+  const cleanupAllAudio = () => {
+    // Stop and release gong sound
     if (gongSound.current) {
       gongSound.current.stop();
       gongSound.current.release();
       gongSound.current = null;
     }
+    // Stop and release completion sound
+    if (completionSound.current) {
+      completionSound.current.stop();
+      completionSound.current.release();
+      completionSound.current = null;
+    }
+  };
+
+  const handleCompletion = async () => {
+    cleanupAllAudio();
 
     try {
       // Mark the exercise as completed in Firestore
-      await markExerciseAsCompleted('deep-breathing');
+      await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
     } catch (error) {
       console.error('Failed to mark exercise as completed:', error);
     }
@@ -221,13 +232,43 @@ const BreathingAnimation: React.FC<{
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (gongSound.current) {
-        gongSound.current.stop();
-        gongSound.current.release();
-        gongSound.current = null;
-      }
+      cleanupAllAudio();
     };
   }, []);
+
+  // Handle completion phase
+  useEffect(() => {
+    if (phase === 'complete') {
+      // Load and play the completion sound
+      const sound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+        if (error) {
+          console.log('Failed to load completion sound', error);
+          return;
+        }
+        if (sound) {
+          completionSound.current = sound;
+          sound.play((success) => {
+            if (!success) {
+              console.log('Sound playback failed');
+            }
+          });
+        }
+      });
+
+      const timer = setTimeout(() => {
+        handleCompletion();
+      }, 3000);
+      
+      return () => {
+        clearTimeout(timer);
+        if (completionSound.current) {
+          completionSound.current.stop();
+          completionSound.current.release();
+          completionSound.current = null;
+        }
+      };
+    }
+  }, [phase, handleCompletion]);
 
   if (phase === 'complete') {
     return (
