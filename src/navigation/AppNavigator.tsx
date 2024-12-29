@@ -19,9 +19,9 @@ import PassiveIncantationsScreen from '../screens/PassiveIncantationsScreen';
 import GratitudeScreen from '../screens/GratitudeScreen';
 import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/VisionBoardScreen';
-import MusicSelectionScreen from '../screens/MusicSelectionScreen';
-import NewVisionBoardSectionScreen from '../screens/NewVisionBoardSectionScreen';
+import VisionBoardSectionsScreen from '../screens/VisionBoardSectionsScreen';
 import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
+import MusicSelectionScreen from '../screens/MusicSelectionScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -43,8 +43,8 @@ export type RootStackParamList = {
   Gratitude: undefined;
   GoldenChecklist: undefined;
   VisionBoard: undefined;
-  NewVisionBoardSection: undefined;
-  VisionBoardSection: { sectionId: string };
+  VisionBoardSections: { boardId: string };
+  VisionBoardSection: { boardId: string; sectionId: string };
   MusicSelection: {
     exerciseName: string;
   };
@@ -56,168 +56,85 @@ export type RootStackParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function TabNavigator() {
+const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarStyle: {
-          backgroundColor: '#121212',
-          borderTopColor: '#2A2A2A',
-        },
         tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#666666',
-        headerStyle: {
-          backgroundColor: '#121212',
+        tabBarInactiveTintColor: '#9ca3af',
+        tabBarStyle: {
+          backgroundColor: '#18181b',
+          borderTopColor: '#27272a',
         },
-        headerTintColor: '#FFFFFF',
+        headerShown: false,
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color, size }) => {
-            const Icon = MaterialCommunityIcons as any;
-            return <Icon name="home" size={size} color={color} />;
-          },
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Courses"
         component={CourseTabScreen}
         options={{
-          tabBarIcon: ({ color, size }) => {
-            const Icon = MaterialCommunityIcons as any;
-            return <Icon name="book-open-variant" size={size} color={color} />;
-          },
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="book-open-variant" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Challenges"
         component={ChallengesScreen}
         options={{
-          tabBarIcon: ({ color, size }) => {
-            const Icon = MaterialCommunityIcons as any;
-            return <Icon name="trophy" size={size} color={color} />;
-          },
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="trophy" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size }) => {
-            const Icon = MaterialCommunityIcons as any;
-            return <Icon name="account" size={size} color={color} />;
-          },
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account" color={color} size={size} />
+          ),
         }}
       />
     </Tab.Navigator>
   );
-}
+};
 
-interface AppNavigatorProps {
-  initialRoute: keyof RootStackParamList;
-}
-
-function AppNavigator({ initialRoute }: AppNavigatorProps) {
+const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={initialRoute}
         screenOptions={{
-          headerStyle: {
-            backgroundColor: '#121212',
-          },
-          headerTintColor: '#FFFFFF',
+          headerShown: false,
         }}
       >
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={TabNavigator}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AiCoach"
-          component={AiCoachScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Support"
-          component={SupportScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Course"
-          component={CourseStackScreen}
-          options={{ title: 'Course Details' }}
-        />
-        <Stack.Screen
-          name="Notifications"
-          component={NotificationsScreen}
-          options={{
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="DeepBreathing"
-          component={DeepBreathingScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal'
-          }}
-        />
-        <Stack.Screen
-          name="ActiveIncantations"
-          component={ActiveIncantationsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PassiveIncantations"
-          component={PassiveIncantationsScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Gratitude"
-          component={GratitudeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="GoldenChecklist"
-          component={GoldenChecklistScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="VisionBoard"
-          component={VisionBoardScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="NewVisionBoardSection"
-          component={NewVisionBoardSectionScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="VisionBoardSection"
-          component={VisionBoardSectionScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MusicSelection"
-          component={MusicSelectionScreen}
-          options={{ 
-            headerShown: false,
-            presentation: 'modal'
-          }}
-        />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+        <Stack.Screen name="AiCoach" component={AiCoachScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="Course" component={CourseStackScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="DeepBreathing" component={DeepBreathingScreen} />
+        <Stack.Screen name="ActiveIncantations" component={ActiveIncantationsScreen} />
+        <Stack.Screen name="PassiveIncantations" component={PassiveIncantationsScreen} />
+        <Stack.Screen name="Gratitude" component={GratitudeScreen} />
+        <Stack.Screen name="GoldenChecklist" component={GoldenChecklistScreen} />
+        <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
+        <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
+        <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />
+        <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
 
 export default AppNavigator;
