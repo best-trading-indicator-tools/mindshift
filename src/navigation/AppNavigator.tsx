@@ -3,6 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+// Screen imports
 import HomeScreen from '../screens/HomeScreen';
 import AiCoachScreen from '../screens/AiCoachScreen';
 import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
@@ -18,6 +20,8 @@ import GratitudeScreen from '../screens/GratitudeScreen';
 import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/VisionBoardScreen';
 import MusicSelectionScreen from '../screens/MusicSelectionScreen';
+import NewVisionBoardSectionScreen from '../screens/NewVisionBoardSectionScreen';
+import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -39,6 +43,8 @@ export type RootStackParamList = {
   Gratitude: undefined;
   GoldenChecklist: undefined;
   VisionBoard: undefined;
+  NewVisionBoardSection: undefined;
+  VisionBoardSection: { sectionId: string };
   MusicSelection: {
     exerciseName: string;
   };
@@ -189,6 +195,16 @@ function AppNavigator({ initialRoute }: AppNavigatorProps) {
         <Stack.Screen
           name="VisionBoard"
           component={VisionBoardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="NewVisionBoardSection"
+          component={NewVisionBoardSectionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VisionBoardSection"
+          component={VisionBoardSectionScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

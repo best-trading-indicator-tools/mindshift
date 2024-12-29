@@ -398,8 +398,14 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={() => handleItemPress(item)}
               >
                 <View style={styles.itemText}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                  <Text style={[
+                    styles.itemTitle,
+                    checkedItems.includes(item.id) && styles.checkedItemTitle
+                  ]}>{item.title}</Text>
+                  <Text style={[
+                    styles.itemSubtitle,
+                    checkedItems.includes(item.id) && styles.checkedItemSubtitle
+                  ]}>{item.subtitle}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -510,9 +516,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 4,
   },
+  checkedItemTitle: {
+    textDecorationLine: 'line-through',
+    opacity: 0.7,
+  },
   itemSubtitle: {
     fontSize: 14,
     color: '#888',
+  },
+  checkedItemSubtitle: {
+    opacity: 0.5,
   },
   modalContainer: {
     flex: 1,
