@@ -63,7 +63,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [selectedTag, setSelectedTag] = useState<string>('All Affirmations');
   const [newTag, setNewTag] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
-  const [selectedTagForRecording, setSelectedTagForRecording] = useState<string>('');
+  const [selectedTagForRecording, setSelectedTagForRecording] = useState<string[]>([]);
   const [showRecordingTagInput, setShowRecordingTagInput] = useState(false);
   const [rerecordingId, setRerecordingId] = useState<string | null>(null);
   const [showPlaybackScreen, setShowPlaybackScreen] = useState(false);
@@ -76,6 +76,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [presentationMode, setPresentationMode] = useState(false);
   const backgroundRotationInterval = useRef<NodeJS.Timeout | null>(null);
+  const [progressAnimation] = useState(new Animated.Value(0));
+  const [currentRecordingText, setCurrentRecordingText] = useState<string>('');
 
   const backgroundImages = [
     require('../assets/illustrations/zen1.jpg'),
@@ -216,7 +218,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setTags(updatedTags);
       await saveTags(updatedTags);
       if (fromRecordingModal) {
-        setSelectedTagForRecording(newTag.trim());
+        setSelectedTagForRecording(prev => [...prev, newTag.trim()]);
         setShowRecordingTagInput(false);
       } else {
         setShowTagInput(false);
@@ -235,7 +237,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const filteredRecordings = useMemo(() => {
     if (selectedTag === 'All Affirmations') return recordings;
-    return recordings.filter(recording => recording.tag === selectedTag);
+    return recordings.filter(recording => recording.tags?.includes(selectedTag));
   }, [recordings, selectedTag]);
 
   const saveNewOrder = async (recordingsToSave: Affirmation[]) => {
@@ -285,7 +287,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         <TouchableOpacity onPress={() => setShowNewAffirmationModal(true)} style={styles.headerButton}>
           <MaterialCommunityIcons name="plus" size={24} color="#6366F1" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowAudioSettings(true)} style={styles.headerButton}>
+        <TouchableOpacity 
+          onPress={() => setShowAudioSettings(true)} 
+          style={styles.headerButton}
+        >
           <MaterialCommunityIcons name="tune-vertical" size={24} color="#6366F1" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
@@ -299,7 +304,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handleStartRerecording = (recording: Affirmation) => {
     setNewAffirmationText(recording.text);
-    setSelectedTagForRecording(recording.tag || '');
+    setSelectedTagForRecording(recording.tags || []);
     setShowRecordingModal(true);
     // Store the ID of the recording to be replaced
     setRerecordingId(recording.id);
@@ -357,6 +362,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               disabled={isEditMode || isActive}
             >
               <Text style={styles.recordingText}>{item.text || `Recording ${recordings.findIndex(r => r.id === item.id) + 1}`}</Text>
+              <View style={styles.recordingTagsContainer}>
+                {item.tags?.map((tag, index) => (
+                  <Text key={index} style={styles.recordingTag}>
+                    {tag}{index < (item.tags?.length || 0) - 1 ? ', ' : ''}
+                  </Text>
+                ))}
+              </View>
               <Text style={styles.recordingDuration}>
                 {formatDuration(item.duration)}
               </Text>
@@ -389,87 +401,117 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     );
   };
 
-  const renderAudioSettingsModal = () => (
+  const renderSettingsModal = (isPlaybackScreen: boolean) => (
     <Modal
       visible={showAudioSettings}
       animationType="slide"
       transparent={true}
+      onRequestClose={() => setShowAudioSettings(false)}
     >
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Voice & Music Options</Text>
-            <TouchableOpacity onPress={() => setShowAudioSettings(false)}>
-              <Text style={styles.doneButton}>Done</Text>
+        <View style={[styles.modalContent, styles.settingsModalContent]}>
+          <View style={styles.settingsModalHeader}>
+            <Text style={styles.settingsModalTitle}>Voice & Music Options</Text>
+            <Text style={styles.settingsModalSubtitle}>For playlist: {selectedTag}</Text>
+            <TouchableOpacity 
+              style={styles.settingsModalClose}
+              onPress={() => setShowAudioSettings(false)}
+            >
+              <Text style={styles.settingsModalCloseText}>Done</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.settingsLabel}>Background Volume</Text>
-          <Slider
-            style={styles.slider}
-            value={backgroundVolume}
-            onValueChange={setBackgroundVolume}
-            minimumValue={0}
-            maximumValue={1}
-            minimumTrackTintColor="#6366F1"
-            maximumTrackTintColor="#2A3744"
-            thumbTintColor="#6366F1"
-          />
-
-          <Text style={styles.settingsLabel}>Affirmations Volume</Text>
-          <Slider
-            style={styles.slider}
-            value={affirmationsVolume}
-            onValueChange={setAffirmationsVolume}
-            minimumValue={0}
-            maximumValue={1}
-            minimumTrackTintColor="#6366F1"
-            maximumTrackTintColor="#2A3744"
-            thumbTintColor="#6366F1"
-          />
-
-          <Text style={styles.settingsLabel}>Delay Between Affirmations (seconds)</Text>
-          <View style={styles.intervalContainer}>
-            <Slider
-              style={styles.slider}
-              value={intervalBetweenAffirmations}
-              onValueChange={setIntervalBetweenAffirmations}
-              minimumValue={1}
-              maximumValue={10}
-              step={1}
-              minimumTrackTintColor="#6366F1"
-              maximumTrackTintColor="#2A3744"
-              thumbTintColor="#6366F1"
-            />
-            <Text style={styles.intervalValue}>{intervalBetweenAffirmations}s</Text>
-          </View>
-
-          <View style={styles.shuffleContainer}>
-            <Text style={styles.settingsLabel}>Shuffle Affirmations</Text>
-            <Switch
-              value={shuffleAffirmations}
-              onValueChange={setShuffleAffirmations}
-              trackColor={{ false: "#2A3744", true: "#6366F1" }}
-              thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
-            />
-          </View>
-
-          <View style={styles.settingsItem}>
-            <MaterialCommunityIcons name="presentation" size={24} color="#666" />
-            <View style={styles.settingsToggleContainer}>
-              <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
-              <Switch
-                value={presentationMode}
-                onValueChange={setPresentationMode}
-                trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
-                thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
-              />
+          <View style={styles.settingsModalBody}>
+            <View style={styles.settingsItem}>
+              <MaterialCommunityIcons name="volume-high" size={24} color="#666" />
+              <View style={styles.settingsSliderContainer}>
+                <Text style={styles.settingsItemLabel}>Background Volume</Text>
+                <Slider
+                  style={styles.settingsSlider}
+                  value={backgroundVolume}
+                  onValueChange={setBackgroundVolume}
+                  minimumValue={0}
+                  maximumValue={1}
+                  minimumTrackTintColor="#6366F1"
+                  maximumTrackTintColor="#E5E7EB"
+                  thumbTintColor="#6366F1"
+                />
+              </View>
             </View>
+
+            <View style={styles.settingsItem}>
+              <MaterialCommunityIcons name="account-voice" size={24} color="#666" />
+              <View style={styles.settingsSliderContainer}>
+                <Text style={styles.settingsItemLabel}>Affirmations Volume</Text>
+                <Slider
+                  style={styles.settingsSlider}
+                  value={affirmationsVolume}
+                  onValueChange={setAffirmationsVolume}
+                  minimumValue={0}
+                  maximumValue={1}
+                  minimumTrackTintColor="#6366F1"
+                  maximumTrackTintColor="#E5E7EB"
+                  thumbTintColor="#6366F1"
+                />
+              </View>
+            </View>
+
+            <View style={styles.settingsItem}>
+              <MaterialCommunityIcons name="timer-outline" size={24} color="#666" />
+              <View style={styles.settingsSliderContainer}>
+                <Text style={styles.settingsItemLabel}>Interval Between Affirmations</Text>
+                <View style={styles.intervalSliderContainer}>
+                  <Slider
+                    style={styles.settingsSlider}
+                    value={intervalBetweenAffirmations}
+                    onValueChange={setIntervalBetweenAffirmations}
+                    minimumValue={1}
+                    maximumValue={10}
+                    step={1}
+                    minimumTrackTintColor="#6366F1"
+                    maximumTrackTintColor="#E5E7EB"
+                    thumbTintColor="#6366F1"
+                  />
+                  <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.settingsItem}>
+              <MaterialCommunityIcons name="shuffle-variant" size={24} color="#666" />
+              <View style={styles.settingsToggleContainer}>
+                <Text style={styles.settingsItemLabel}>Shuffle Affirmations</Text>
+                <Switch
+                  value={shuffleAffirmations}
+                  onValueChange={setShuffleAffirmations}
+                  trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
+                  thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
+                />
+              </View>
+            </View>
+
+            {isPlaybackScreen && (
+              <View style={styles.settingsItem}>
+                <MaterialCommunityIcons name="presentation" size={24} color="#666" />
+                <View style={styles.settingsToggleContainer}>
+                  <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
+                  <Switch
+                    value={presentationMode}
+                    onValueChange={setPresentationMode}
+                    trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
+                    thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
+                  />
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </View>
     </Modal>
   );
+
+  // Update the main screen settings modal
+  const renderAudioSettingsModal = () => renderSettingsModal(false);
 
   const handleComplete = async () => {
     try {
@@ -490,52 +532,108 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const handleListenAll = async () => {
-    if (filteredRecordings.length === 0) return;
-    
-    let currentIndex = 0;
+    if (filteredRecordings.length === 0) {
+      return;
+    }
+
     const recordingsToPlay = shuffleAffirmations ? 
       [...filteredRecordings].sort(() => Math.random() - 0.5) : 
       [...filteredRecordings];
 
-    const playNext = async () => {
-      if (currentIndex >= recordingsToPlay.length) {
-        setIsPlaying(false);
-        setPlayingId(null);
-        return;
-      }
-
-      const recording = recordingsToPlay[currentIndex];
-      
+    for (const recording of recordingsToPlay) {
       try {
-        // Stop any currently playing audio
+        // Verify file exists
+        try {
+          const fileExists = await RNFS.exists(recording.audioUrl);
+          if (!fileExists) {
+            continue;
+          }
+
+          const fileStats = await RNFS.stat(recording.audioUrl);
+          if (fileStats.size === 0) {
+            continue;
+          }
+        } catch (error) {
+          continue;
+        }
+        
+        // Stop any current playback
         if (isPlaying) {
-          await audioRecorderPlayer.current.stopPlayer();
+          try {
+            await audioRecorderPlayer.current.stopPlayer();
+          } catch (error) {
+            console.error('Error stopping player:', error);
+          }
           audioRecorderPlayer.current.removePlayBackListener();
         }
 
-        await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
-        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+        // Play this recording
+        try {
+          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+        } catch (error) {
+          console.error('Error starting player:', error);
+          continue;
+        }
+
         setIsPlaying(true);
         setPlayingId(recording.id);
-        
-        audioRecorderPlayer.current.addPlayBackListener((e) => {
-          if (e.currentPosition >= e.duration) {
-            audioRecorderPlayer.current.stopPlayer();
-            audioRecorderPlayer.current.removePlayBackListener();
-            setIsPlaying(false);
-            setPlayingId(null);
-            currentIndex++;
-            setTimeout(playNext, intervalBetweenAffirmations * 1000);
-          }
+        setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+
+        // Wait for this recording to finish
+        await new Promise<void>((resolve, reject) => {
+          let hasResolved = false;
+          
+          const handlePlaybackComplete = (e: any) => {
+            if (hasResolved) return;
+            
+            const progress = e.currentPosition / e.duration;
+            progressAnimation.setValue(progress);
+
+            if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
+              hasResolved = true;
+              
+              try {
+                audioRecorderPlayer.current.stopPlayer().catch(console.error);
+                audioRecorderPlayer.current.removePlayBackListener();
+                setIsPlaying(false);
+                setPlayingId(null);
+                setCurrentRecordingText('');
+                progressAnimation.setValue(0);
+                resolve();
+              } catch (error) {
+                console.error('Error in cleanup:', error);
+                reject(error);
+              }
+            }
+          };
+
+          audioRecorderPlayer.current.addPlayBackListener(handlePlaybackComplete);
+
+          // Add timeout to prevent hanging
+          setTimeout(() => {
+            if (!hasResolved) {
+              hasResolved = true;
+              audioRecorderPlayer.current.stopPlayer().catch(console.error);
+              audioRecorderPlayer.current.removePlayBackListener();
+              setIsPlaying(false);
+              setPlayingId(null);
+              setCurrentRecordingText('');
+              progressAnimation.setValue(0);
+              resolve();
+            }
+          }, 30000); // 30 second timeout
         });
+
+        // Wait for interval before next recording (unless it's the last one)
+        if (recording !== recordingsToPlay[recordingsToPlay.length - 1]) {
+          await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
+        }
       } catch (error) {
-        console.error('Error playing recording:', error);
-        currentIndex++;
-        setTimeout(playNext, 1000);
+        console.error('Error in playback loop:', error);
+        // Continue to next recording even if this one failed
       }
-    };
-    
-    playNext();
+    }
   };
 
   const requestPermissions = async () => {
@@ -604,7 +702,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         audioUrl: uri,
         duration: recordingDuration,
         createdAt: new Date(),
-        tag: selectedTagForRecording
+        tags: selectedTagForRecording
       };
 
       // Update local state
@@ -650,12 +748,22 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setNewAffirmationText('');
       setRecordingPath('');
       setRecordingDuration(0);
-      setSelectedTagForRecording('');
+      setSelectedTagForRecording([]);
       setRerecordingId(null);
     } catch (error) {
       console.error('Failed to stop recording:', error);
       Alert.alert('Error', 'Failed to save recording. Please try again.');
     }
+  };
+
+  const handleTagSelection = (tag: string) => {
+    setSelectedTagForRecording(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag);
+      } else {
+        return [...prev, tag];
+      }
+    });
   };
 
   const renderTagList = () => (
@@ -742,7 +850,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
               
               <View style={styles.tagSelectionContainer}>
-                <Text style={styles.tagSelectionTitle}>Select or Create Tag</Text>
+                <Text style={styles.tagSelectionTitle}>Select Tags</Text>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
@@ -753,13 +861,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                       key={tag}
                       style={[
                         styles.tagButton,
-                        selectedTagForRecording === tag && styles.tagButtonActive
+                        selectedTagForRecording.includes(tag) && styles.tagButtonActive
                       ]}
-                      onPress={() => setSelectedTagForRecording(tag)}
+                      onPress={() => handleTagSelection(tag)}
                     >
                       <Text style={[
                         styles.tagText,
-                        selectedTagForRecording === tag && styles.tagTextActive
+                        selectedTagForRecording.includes(tag) && styles.tagTextActive
                       ]}>{tag}</Text>
                     </TouchableOpacity>
                   ))}
@@ -925,7 +1033,14 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </View>
             </TouchableOpacity>
 
-            {/* Play Button */}
+            {/* Recording Text Display */}
+            {currentRecordingText ? (
+              <View style={styles.recordingTextContainer}>
+                <Text style={styles.recordingTextDisplay}>{currentRecordingText}</Text>
+              </View>
+            ) : null}
+
+            {/* Play Button and Progress */}
             <View style={styles.playbackPlayButtonContainer}>
               <View style={styles.circlePattern}>
                 <View style={[styles.circle, styles.circle1]} />
@@ -968,109 +1083,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             </View>
 
             {/* Voice & Music Settings Modal */}
-            <Modal
-              visible={showAudioSettings}
-              animationType="slide"
-              transparent={true}
-            >
-              <View style={styles.modalContainer}>
-                <View style={[styles.modalContent, styles.settingsModalContent]}>
-                  <View style={styles.settingsModalHeader}>
-                    <Text style={styles.settingsModalTitle}>Voice & Music Options</Text>
-                    <Text style={styles.settingsModalSubtitle}>For playlist: {selectedTag}</Text>
-                    <TouchableOpacity 
-                      style={styles.settingsModalClose}
-                      onPress={() => setShowAudioSettings(false)}
-                    >
-                      <Text style={styles.settingsModalCloseText}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.settingsModalBody}>
-                    <View style={styles.settingsItem}>
-                      <MaterialCommunityIcons name="volume-high" size={24} color="#666" />
-                      <View style={styles.settingsSliderContainer}>
-                        <Text style={styles.settingsItemLabel}>Background Volume</Text>
-                        <Slider
-                          style={styles.settingsSlider}
-                          value={backgroundVolume}
-                          onValueChange={setBackgroundVolume}
-                          minimumValue={0}
-                          maximumValue={1}
-                          minimumTrackTintColor="#6366F1"
-                          maximumTrackTintColor="#E5E7EB"
-                          thumbTintColor="#6366F1"
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.settingsItem}>
-                      <MaterialCommunityIcons name="account-voice" size={24} color="#666" />
-                      <View style={styles.settingsSliderContainer}>
-                        <Text style={styles.settingsItemLabel}>Affirmations Volume</Text>
-                        <Slider
-                          style={styles.settingsSlider}
-                          value={affirmationsVolume}
-                          onValueChange={setAffirmationsVolume}
-                          minimumValue={0}
-                          maximumValue={1}
-                          minimumTrackTintColor="#6366F1"
-                          maximumTrackTintColor="#E5E7EB"
-                          thumbTintColor="#6366F1"
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.settingsItem}>
-                      <MaterialCommunityIcons name="timer-outline" size={24} color="#666" />
-                      <View style={styles.settingsSliderContainer}>
-                        <Text style={styles.settingsItemLabel}>Interval Between Affirmations</Text>
-                        <View style={styles.intervalSliderContainer}>
-                          <Slider
-                            style={styles.settingsSlider}
-                            value={intervalBetweenAffirmations}
-                            onValueChange={setIntervalBetweenAffirmations}
-                            minimumValue={1}
-                            maximumValue={10}
-                            step={1}
-                            minimumTrackTintColor="#6366F1"
-                            maximumTrackTintColor="#E5E7EB"
-                            thumbTintColor="#6366F1"
-                          />
-                          <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View style={styles.settingsItem}>
-                      <MaterialCommunityIcons name="shuffle-variant" size={24} color="#666" />
-                      <View style={styles.settingsToggleContainer}>
-                        <Text style={styles.settingsItemLabel}>Shuffle Affirmations</Text>
-                        <Switch
-                          value={shuffleAffirmations}
-                          onValueChange={setShuffleAffirmations}
-                          trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
-                          thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.settingsItem}>
-                      <MaterialCommunityIcons name="presentation" size={24} color="#666" />
-                      <View style={styles.settingsToggleContainer}>
-                        <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
-                        <Switch
-                          value={presentationMode}
-                          onValueChange={setPresentationMode}
-                          trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
-                          thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
-                        />
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </Modal>
+            {showAudioSettings && renderSettingsModal(true)}
 
             {/* Close Button */}
             <TouchableOpacity 
@@ -1145,30 +1158,39 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handlePlaybackControl = async (recording: Affirmation) => {
     try {
-      if (isPlaying && playingId === recording.id) {
+      if (isPlaying) {
         await audioRecorderPlayer.current.stopPlayer();
         audioRecorderPlayer.current.removePlayBackListener();
         setIsPlaying(false);
         setPlayingId(null);
+        setCurrentRecordingText('');
+        progressAnimation.setValue(0);
       } else {
-        if (isPlaying) {
-          await audioRecorderPlayer.current.stopPlayer();
-          audioRecorderPlayer.current.removePlayBackListener();
+        // If in playback screen, play all recordings
+        if (showPlaybackScreen) {
+          handleListenAll();
+        } else {
+          // Single recording playback
+          await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+          await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+          setIsPlaying(true);
+          setPlayingId(recording.id);
+          setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+          
+          audioRecorderPlayer.current.addPlayBackListener((e) => {
+            const progress = e.currentPosition / e.duration;
+            progressAnimation.setValue(progress);
+            
+            if (e.currentPosition >= e.duration) {
+              audioRecorderPlayer.current.stopPlayer();
+              audioRecorderPlayer.current.removePlayBackListener();
+              setIsPlaying(false);
+              setPlayingId(null);
+              setCurrentRecordingText('');
+              progressAnimation.setValue(0);
+            }
+          });
         }
-        
-        await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
-        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
-        setIsPlaying(true);
-        setPlayingId(recording.id);
-        
-        audioRecorderPlayer.current.addPlayBackListener((e) => {
-          if (e.currentPosition >= e.duration) {
-            audioRecorderPlayer.current.stopPlayer();
-            audioRecorderPlayer.current.removePlayBackListener();
-            setIsPlaying(false);
-            setPlayingId(null);
-          }
-        });
       }
     } catch (error) {
       console.error('Failed to play recording:', error);
@@ -1178,6 +1200,11 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const TickMarks = () => {
     const marks = Array.from({ length: 60 }, (_, i) => i);
+    const progressRotation = progressAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg']
+    });
+    
     return (
       <View style={styles.tickContainer}>
         {marks.map((i) => (
@@ -1188,12 +1215,20 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               {
                 transform: [
                   { rotate: `${i * 6}deg` },
-                  { translateY: -100 }, // Half of circle2's width
+                  { translateY: -100 },
                 ],
               },
             ]}
           />
         ))}
+        <Animated.View
+          style={[
+            styles.progressArc,
+            {
+              transform: [{ rotate: progressRotation }]
+            }
+          ]}
+        />
       </View>
     );
   };
@@ -1205,6 +1240,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         {renderTagList()}
         {renderRecordingModal()}
         {renderPlaybackScreen()}
+        {renderAudioSettingsModal()}
 
         <View style={{ flex: 1 }}>
           <DraggableFlatList<Affirmation>
@@ -1904,6 +1940,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginLeft: 16,
+  },
+  progressArc: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    borderLeftColor: 'transparent',
+    borderBottomColor: 'transparent',
+    transform: [{ rotate: '0deg' }],
+  },
+  recordingTextContainer: {
+    position: 'absolute',
+    bottom: '30%',
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  recordingTextDisplay: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  recordingTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  recordingTag: {
+    color: '#9CA3AF',
+    fontSize: 12,
   },
 });
 

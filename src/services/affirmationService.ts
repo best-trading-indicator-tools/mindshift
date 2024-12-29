@@ -6,7 +6,7 @@ export interface Affirmation {
   audioUrl: string;
   duration: number;
   createdAt: Date;
-  tag?: string;  // Optional tag for the affirmation
+  tags?: string[];  // Array of tags for the affirmation
 }
 
 // No need for these functions anymore since we're handling storage in the component
