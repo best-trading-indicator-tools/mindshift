@@ -396,7 +396,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.missionsContent}>
             <ProgressBar 
               totalSteps={DAILY_MISSIONS.length}
-              completedSteps={completedExercises.length} 
+              completedSteps={completedExercises.length}
+              completedMissions={completedExercises}
+              missions={DAILY_MISSIONS.map(mission => ({
+                title: mission.title,
+                id: mission.title === 'Deep Breathing' 
+                  ? 'deep-breathing'
+                  : mission.title === 'Active Incantations'
+                  ? 'active-incantations'
+                  : mission.title === 'Passive Incantations'
+                  ? 'passive-incantations'
+                  : mission.title === 'Daily Gratitude'
+                  ? 'gratitude'
+                  : mission.title === 'Golden Checklist'
+                  ? 'golden-checklist'
+                  : ''
+              }))}
             />
             <View style={styles.missionsList}>
               {DAILY_MISSIONS.map((mission, index) => (
