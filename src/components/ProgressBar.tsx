@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface ProgressBarProps {
   totalSteps: number;
@@ -24,6 +25,27 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           const isCompleted = completedMissions.includes(mission.id);
           const stepHeight = 100 / totalSteps;
           const top = index * stepHeight;
+          const isTransitionSegment = index > 0 && 
+            completedMissions.includes(missions[index - 1].id) && 
+            !completedMissions.includes(mission.id);
+          
+          if (isTransitionSegment) {
+            return (
+              <LinearGradient
+                key={mission.id}
+                colors={['#10B981', '#FFD700']}
+                style={[
+                  styles.missionLine,
+                  {
+                    top: `${top}%`,
+                    height: `${stepHeight}%`,
+                  },
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+              />
+            );
+          }
           
           return (
             <View
@@ -54,10 +76,10 @@ const styles = StyleSheet.create({
   progressLine: {
     position: 'absolute',
     left: '0%',
-    width: 2,
+    width: 4,
     height: '100%',
     backgroundColor: '#2A2E3B',
-    transform: [{ translateX: -1 }],
+    transform: [{ translateX: -2 }],
   },
   missionLine: {
     width: '100%',

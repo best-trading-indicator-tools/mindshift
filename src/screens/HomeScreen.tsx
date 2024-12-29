@@ -457,11 +457,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#000000',
   },
   container: {
     flex: 1,
-    backgroundColor: '#151932',
+    backgroundColor: '#000000',
   },
   header: {
     flexDirection: 'row',
@@ -592,6 +592,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   aiCoachIcon: {
     width: 40,

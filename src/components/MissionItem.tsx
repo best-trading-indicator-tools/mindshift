@@ -82,6 +82,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     flex: 1,
     marginLeft: -40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   content: {
     flex: 1,
