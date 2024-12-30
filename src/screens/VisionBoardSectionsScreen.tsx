@@ -20,6 +20,8 @@ import { VisionBoard } from './VisionBoardScreen';
 import { useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { LayoutTile, RowConfig } from '../types/layout';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardSections'>;
 
@@ -195,6 +197,7 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedSection, setSelectedSection] = React.useState<{ id: string, name: string } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isReorderMode, setIsReorderMode] = React.useState(false);
 
   const loadBoard = React.useCallback(async () => {
     try {
@@ -251,6 +254,80 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
   React.useEffect(() => {
     loadBoard();
   }, [loadBoard, route.params?.refresh]);
+
+  const saveNewOrder = async (newSections: Section[]) => {
+    try {
+      const storedBoards = await AsyncStorage.getItem('vision_boards');
+      if (storedBoards) {
+        const boards: VisionBoard[] = JSON.parse(storedBoards);
+        const updatedBoards = boards.map(b => {
+          if (b.id === boardId) {
+            return { ...b, sections: newSections };
+          }
+          return b;
+        });
+        await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
+      }
+    } catch (error) {
+      console.error('Error saving new order:', error);
+    }
+  };
+
+  const renderSectionItem = ({ item, drag, isActive }: RenderItemParams<Section>) => (
+    <ScaleDecorator>
+      <TouchableOpacity
+        onLongPress={isReorderMode ? drag : undefined}
+        disabled={!isReorderMode}
+        delayLongPress={200}
+        style={[
+          styles.sectionWrapper,
+          isActive && styles.draggingSection,
+          isReorderMode && styles.reorderSection
+        ]}
+      >
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeaderContent}>
+            <Text style={styles.sectionName}>{item.name}</Text>
+            {isReorderMode ? (
+              <MaterialCommunityIcons 
+                name="drag" 
+                size={24} 
+                color="#666666"
+                style={styles.dragHandle}
+              />
+            ) : (
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => {
+                  setSelectedSection(item);
+                  setShowMenu(true);
+                }}
+              >
+                <MaterialCommunityIcons name="dots-horizontal" size={18} color="#666666" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.divider} />
+        </View>
+        <View style={styles.sectionContent}>
+          {item.photos.length > 0 ? (
+            renderCollageLayout(item.photos, item)
+          ) : (
+            <View style={styles.emptyCollageContainer}>
+              <PhotoPlaceholder 
+                color={PLACEHOLDER_COLORS.mint}
+                onPress={() => navigation.navigate('VisionBoardSectionPhotos', { 
+                  boardId: boardId,
+                  sectionId: item.id,
+                  sectionName: item.name,
+                })}
+              />
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    </ScaleDecorator>
+  );
 
   if (loading) {
     return (
@@ -323,86 +400,6 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
       ]
     );
   };
-
-  const renderSectionHeader = (section: { id: string, name: string }) => (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionHeaderContent}>
-        <Text style={styles.sectionName}>{section.name}</Text>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => {
-            setSelectedSection(section);
-            setShowMenu(true);
-          }}
-        >
-          <MaterialCommunityIcons name="dots-horizontal" size={18} color="#666666" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.divider} />
-    </View>
-  );
-
-  const renderMenu = () => (
-    <Modal
-      visible={showMenu}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowMenu(false)}
-    >
-      <TouchableOpacity 
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setShowMenu(false)}
-      >
-        <View style={styles.menuContainer}>
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => {
-              setShowMenu(false);
-              if (selectedSection?.id && selectedSection?.name) {
-                navigation.navigate('EditSectionName', { 
-                  boardId,
-                  sectionId: selectedSection.id,
-                  currentName: selectedSection.name
-                });
-              }
-            }}
-          >
-            <Text style={styles.menuItemText}>Edit Section's Name</Text>
-            <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
-          </TouchableOpacity>
-          
-          <View style={styles.menuDivider} />
-          
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => {
-              setShowMenu(false);
-              // Handle move section
-            }}
-          >
-            <Text style={styles.menuItemText}>Move Section</Text>
-            <MaterialCommunityIcons name="arrow-all" size={20} color="#000000" />
-          </TouchableOpacity>
-          
-          <View style={styles.menuDivider} />
-          
-          <TouchableOpacity 
-            style={[styles.menuItem, styles.deleteItem]}
-            onPress={() => {
-              setShowMenu(false);
-              if (selectedSection) {
-                handleDeleteSection(selectedSection.id);
-              }
-            }}
-          >
-            <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
-            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
 
   const renderCollageLayout = (photos: string[], section: Section) => {
     if (!photos || photos.length === 0) {
@@ -494,80 +491,138 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#FF4B8C" />
-        </TouchableOpacity>
-        <Text style={styles.title}>{board.name}</Text>
-        <View style={styles.headerRight}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity 
-            style={styles.exitButton}
+            style={styles.backButton}
             onPress={() => {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs' }],
-              });
+              if (isReorderMode) {
+                setIsReorderMode(false);
+              } else {
+                navigation.goBack();
+              }
             }}
           >
-            <Text style={styles.exitText}>Exit</Text>
+            <MaterialCommunityIcons 
+              name={isReorderMode ? "close" : "chevron-left"} 
+              size={32} 
+              color="#FF4B8C" 
+            />
           </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.boardInfo}>
-          <View style={styles.photoInfo}>
-            <Text style={styles.totalPhotos}>
-              {board.sections.reduce((total, section) => 
-                Math.min(total + section.photos.length, MAX_PHOTOS_PER_SECTION), 0)
-              } Photos
-            </Text>
-            <Text style={styles.seeAll}>See All</Text>
+          <Text style={styles.title}>
+            {isReorderMode ? "Reorder Sections" : board?.name}
+          </Text>
+          <View style={styles.headerRight}>
+            {isReorderMode ? (
+              <TouchableOpacity 
+                style={styles.doneButton}
+                onPress={() => setIsReorderMode(false)}
+              >
+                <Text style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.exitButton}
+                onPress={() => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs' }],
+                  });
+                }}
+              >
+                <Text style={styles.exitText}>Exit</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
-        {board.sections.map((section, index) => (
-          <View 
-            key={section.id} 
-            style={[
-              styles.sectionWrapper,
-              index === board.sections.length - 1 && { marginBottom: 0 } // Remove margin for last section
-            ]}
+        {board && (
+          <DraggableFlatList
+            data={board.sections}
+            onDragEnd={({ data }) => {
+              setBoard(prev => prev ? { ...prev, sections: data } : null);
+              saveNewOrder(data);
+            }}
+            keyExtractor={(item) => item.id}
+            renderItem={renderSectionItem}
+            dragItemOverflow={true}
+            activationDistance={20}
+            contentContainerStyle={styles.sectionsContainer}
+          />
+        )}
+
+        {!isReorderMode && (
+          <TouchableOpacity 
+            style={styles.newSectionButton}
+            onPress={() => navigation.navigate('NewVisionBoardSection', { boardId: board?.id })}
           >
-            {renderSectionHeader(section)}
-            <View style={styles.sectionContent}>
-              {section.photos.length > 0 ? (
-                renderCollageLayout(section.photos, section)
-              ) : (
-                <View style={styles.emptyCollageContainer}>
-                  <PhotoPlaceholder 
-                    color={PLACEHOLDER_COLORS.mint}
-                    onPress={() => navigation.navigate('VisionBoardSectionPhotos', { 
-                      boardId: boardId,
-                      sectionId: section.id,
-                      sectionName: section.name,
-                    })}
-                  />
-                </View>
-              )}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+            <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+            <Text style={styles.newSectionText}>New Section</Text>
+          </TouchableOpacity>
+        )}
 
-      <TouchableOpacity 
-        style={styles.newSectionButton}
-        onPress={() => navigation.navigate('NewVisionBoardSection', { boardId: board.id })}
-      >
-        <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
-        <Text style={styles.newSectionText}>New Section</Text>
-      </TouchableOpacity>
-      {renderMenu()}
-    </SafeAreaView>
+        <Modal
+          visible={showMenu}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowMenu(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          >
+            <View style={styles.menuContainer}>
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => {
+                  setShowMenu(false);
+                  if (selectedSection?.id && selectedSection?.name) {
+                    navigation.navigate('EditSectionName', { 
+                      boardId,
+                      sectionId: selectedSection.id,
+                      currentName: selectedSection.name
+                    });
+                  }
+                }}
+              >
+                <Text style={styles.menuItemText}>Edit Section's Name</Text>
+                <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
+              </TouchableOpacity>
+              
+              <View style={styles.menuDivider} />
+              
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => {
+                  setShowMenu(false);
+                  setIsReorderMode(true);
+                }}
+              >
+                <Text style={styles.menuItemText}>Move Section</Text>
+                <MaterialCommunityIcons name="drag" size={20} color="#000000" />
+              </TouchableOpacity>
+              
+              <View style={styles.menuDivider} />
+              
+              <TouchableOpacity 
+                style={[styles.menuItem, styles.deleteItem]}
+                onPress={() => {
+                  setShowMenu(false);
+                  if (selectedSection) {
+                    handleDeleteSection(selectedSection.id);
+                  }
+                }}
+              >
+                <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
+                <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
@@ -795,10 +850,17 @@ const styles = StyleSheet.create({
     height: '20%',
   },
   sectionWrapper: {
-    marginBottom: 8,
+    marginBottom: 16,
     borderRadius: 12,
-    backgroundColor: '#fff',
-    padding: SECTION_PADDING,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
     paddingHorizontal: 16,
   },
   sectionContent: {
@@ -934,6 +996,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginTop: 8,
+  },
+  draggingSection: {
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    transform: [{ scale: 1.02 }],
+  },
+  reorderSection: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  dragHandle: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  doneButton: {
+    backgroundColor: '#E31837',
+    borderRadius: 100,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  doneText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sectionsContainer: {
+    padding: 16,
+    paddingTop: 8,
+    backgroundColor: '#F5F5F5',
   },
 });
 

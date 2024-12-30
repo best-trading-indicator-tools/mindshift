@@ -32,10 +32,14 @@ export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: 
     
     // Check if already completed today before doing anything
     if (completions[exerciseId]?.date === today) {
-      return true; // Already completed today, just return success
+      return true; // Already completed today, just return success without sending notification
     }
 
-    // If not completed today, add notification and update completion
+    // Update completion status first
+    completions[exerciseId] = { date: today };
+    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify(completions));
+    
+    // Send completion notification if this is the first completion today
     await addNotification({
       id: `completion-${exerciseId}-${Date.now()}`,
       title: 'Well Done!',
@@ -43,11 +47,7 @@ export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: 
       type: 'success'
     });
 
-    // Update completion status
-    completions[exerciseId] = { date: today };
-    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify(completions));
-    
-    // Check overall daily progress after marking exercise as complete
+    // Check overall daily progress after both storage update and completion notification
     await checkDailyProgress();
     
     return true;
@@ -151,32 +151,48 @@ export const checkDailyProgress = async () => {
       { key: 'golden-checklist', name: 'Golden Checklist' }
     ];
 
+    console.log('Checking daily progress...');
     const results = await Promise.all(
       missions.map(mission => isExerciseCompletedToday(mission.key))
     );
+    console.log('Exercise completion results:', results);
 
     const completedCount = results.filter(Boolean).length;
     const totalMissions = missions.length;
     const remainingMissions = totalMissions - completedCount;
     const progressPercentage = Math.round((completedCount / totalMissions) * 100);
 
-    // Only send reminder if there are completed missions but some are still remaining
-    if (completedCount > 0 && remainingMissions > 0) {
+    // Get the last known completed count
+    const lastCompletedJson = await AsyncStorage.getItem('last_completed_count');
+    const lastCompleted = lastCompletedJson ? parseInt(lastCompletedJson) : 0;
+
+    console.log(`Completed: ${completedCount}/${totalMissions} (${progressPercentage}%)`);
+    console.log('Last completed count:', lastCompleted);
+
+    // Only send progress notification if we have more completed exercises than before
+    if (completedCount > lastCompleted && remainingMissions > 0) {
+      console.log('Sending progress notification...');
       await addNotification({
         id: `daily-reminder-${Date.now()}`,
         title: 'Daily Progress',
         message: `You've completed ${completedCount} out of ${totalMissions} missions today. Keep going!`,
         type: 'reminder'
       });
+      console.log('Progress notification sent');
+      
+      // Update the last completed count
+      await AsyncStorage.setItem('last_completed_count', completedCount.toString());
     }
 
-    if (completedCount === totalMissions) {
+    // Send completion notification if all missions are completed for the first time today
+    if (completedCount === totalMissions && lastCompleted < totalMissions) {
       await addNotification({
         id: `all-complete-${Date.now()}`,
         title: 'Outstanding!',
         message: "You've completed all your daily missions! Your dedication is inspiring. Keep up the great work!",
         type: 'success'
       });
+      await AsyncStorage.setItem('last_completed_count', completedCount.toString());
     }
 
     // Store the progress percentage for UI updates
@@ -191,9 +207,11 @@ export const checkDailyProgress = async () => {
 
 export const resetAllDailyExercises = async () => {
   try {
-    const today = new Date().toDateString();
     // Reset exercise completions
     await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify({}));
+    
+    // Reset completion count
+    await AsyncStorage.setItem('last_completed_count', '0');
     
     // Reset golden checklist items
     const todayISOString = new Date().toISOString().split('T')[0];

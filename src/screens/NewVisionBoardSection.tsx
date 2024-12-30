@@ -13,6 +13,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
 import PexelsImagePicker from '../components/PexelsImagePicker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisionBoardSection'>;
 
@@ -117,6 +118,14 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <MaterialCommunityIcons name="chevron-left" size={32} color="#E31837" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.content}>
         <Text style={styles.title}>Great! Let's give a name to your{'\n'}new section.</Text>
         
@@ -166,6 +175,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

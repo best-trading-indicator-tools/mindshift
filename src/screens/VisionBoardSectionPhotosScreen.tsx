@@ -236,19 +236,6 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
           <View style={styles.menuDivider} />
           
           <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => {
-              setShowMenu(false);
-              // Handle move section
-            }}
-          >
-            <Text style={styles.menuItemText}>Move Section</Text>
-            <MaterialCommunityIcons name="arrow-all" size={20} color="#000000" />
-          </TouchableOpacity>
-          
-          <View style={styles.menuDivider} />
-          
-          <TouchableOpacity 
             style={[styles.menuItem, styles.deleteItem]}
             onPress={() => {
               setShowMenu(false);

@@ -173,7 +173,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
                 <MaterialCommunityIcons name="pencil" size={24} color="#6366f1" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => handleDeleteBoard(board)}>
-                <MaterialCommunityIcons name="delete" size={24} color="#FF4B8C" />
+                <MaterialCommunityIcons name="delete" size={24} color="#E31837" />
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -259,7 +259,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -270,12 +270,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000000',
   },
   addButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#E31837',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -283,24 +283,33 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#F5F5F5',
   },
   boardCard: {
-    backgroundColor: '#1E1E3D',
+    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   boardHeader: {
     marginBottom: 12,
   },
   boardName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#000000',
   },
   sectionCount: {
     fontSize: 16,
-    color: '#888888',
+    color: '#666666',
     marginTop: 4,
   },
   boardActions: {
@@ -318,16 +327,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalContent: {
-    backgroundColor: '#1E1E3D',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     paddingTop: 12,
     margin: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#000000',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 16,
@@ -336,19 +353,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#151932',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 24,
   },
   createButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#E31837',
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
