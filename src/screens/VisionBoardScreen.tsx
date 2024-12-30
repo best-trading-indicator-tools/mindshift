@@ -15,11 +15,15 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
+import { LayoutTile } from '../types/layout';
 
 export interface VisionBoardSection {
   id: string;
   name: string;
   photos: string[];
+  description?: string;
+  captions?: { [key: string]: string };
+  layout?: LayoutTile[];
 }
 
 export interface VisionBoard {

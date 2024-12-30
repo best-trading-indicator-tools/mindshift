@@ -57,7 +57,12 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
           );
 
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
-          navigation.goBack();
+          
+          navigation.replace('VisionBoardSectionPhotos', {
+            boardId: route.params.boardId,
+            sectionId: newSection.id,
+            sectionName: newSection.name,
+          });
         }
       }
     } catch (error) {

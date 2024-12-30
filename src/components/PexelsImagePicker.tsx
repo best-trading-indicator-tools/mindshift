@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PEXELS_API_KEY } from '@env';
@@ -26,7 +27,7 @@ interface PexelsPhoto {
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSelectPhotos: (photos: string[]) => void;
+  onSelectPhotos: (photos: PexelsPhoto[]) => void;
   initialSearchTerm: string;
 }
 
@@ -87,6 +88,12 @@ const PexelsImagePicker: React.FC<Props> = ({
     }
   };
 
+  const handleTagPress = (tag: string) => {
+    console.log('Tag pressed:', tag);
+    setSearchTerm(tag);
+    searchPhotos(tag);
+  };
+
   useEffect(() => {
     if (visible && initialSearchTerm) {
       setSearchTerm(initialSearchTerm);
@@ -99,32 +106,56 @@ const PexelsImagePicker: React.FC<Props> = ({
       if (prev.includes(photoUrl)) {
         return prev.filter(url => url !== photoUrl);
       }
+      // Check if adding would exceed the limit
+      if (prev.length >= 10) {
+        Alert.alert(
+          'Photo Limit Reached',
+          'You can only add up to 10 photos per section.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return prev;
+      }
       return [...prev, photoUrl];
     });
   };
 
   const handleAddPhotos = () => {
-    onSelectPhotos(selectedPhotos);
+    const selectedPexelsPhotos = photos.filter(photo => 
+      selectedPhotos.includes(photo.src.original)
+    );
+    onSelectPhotos(selectedPexelsPhotos);
     setSelectedPhotos([]);
     onClose();
   };
 
-  const renderPhoto = ({ item }: { item: PexelsPhoto }) => (
-    <TouchableOpacity
-      style={[
-        styles.photoItem,
-        selectedPhotos.includes(item.src.original) && styles.selectedPhotoItem,
-      ]}
-      onPress={() => togglePhotoSelection(item.src.original)}
-    >
-      <Image source={{ uri: item.src.medium }} style={styles.photo} />
-      {selectedPhotos.includes(item.src.original) && (
-        <View style={styles.checkmark}>
-          <MaterialCommunityIcons name="check-circle" size={24} color="#FFD700" />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const renderPhoto = ({ item }: { item: PexelsPhoto }) => {
+    const isSelected = selectedPhotos.includes(item.src.original);
+    const isDisabled = !isSelected && selectedPhotos.length >= 10;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.photoItem,
+          isSelected && styles.selectedPhotoItem,
+          isDisabled && styles.disabledPhotoItem,
+        ]}
+        onPress={() => togglePhotoSelection(item.src.original)}
+        disabled={isDisabled}
+      >
+        <Image source={{ uri: item.src.medium }} style={styles.photo} />
+        {isSelected && (
+          <View style={styles.checkmark}>
+            <MaterialCommunityIcons name="check-circle" size={24} color="#FFD700" />
+          </View>
+        )}
+        {isDisabled && (
+          <View style={styles.disabledOverlay}>
+            <Text style={styles.disabledText}>Limit Reached</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderSelectedThumbnail = (uri: string, index: number) => (
     <View key={uri} style={styles.thumbnailContainer}>
@@ -176,20 +207,30 @@ const PexelsImagePicker: React.FC<Props> = ({
           </View>
         </View>
 
-        <ScrollView horizontal style={styles.tagsContainer} showsHorizontalScrollIndicator={false}>
-          {relatedSearches.map((tag) => (
-            <TouchableOpacity
-              key={tag}
-              style={styles.tagButton}
-              onPress={() => {
-                setSearchTerm(tag);
-                searchPhotos(tag);
-              }}
-            >
-              <Text style={styles.tagText}>{tag}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={styles.tagsSection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagScrollContent}
+          >
+            {relatedSearches.map((tag) => (
+              <TouchableOpacity
+                key={tag}
+                style={[
+                  styles.tagButton,
+                  searchTerm === tag && styles.tagButtonActive
+                ]}
+                onPress={() => handleTagPress(tag)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.tagText,
+                  searchTerm === tag && styles.tagTextActive
+                ]}>{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         <View style={styles.poweredByContainer}>
           <Text style={styles.poweredByText}>Powered by Pexels™</Text>
@@ -274,26 +315,39 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
   },
-  tagsContainer: {
-    paddingVertical: 8,
-    paddingBottom: 26,
-    marginBottom: 16,
+  tagsSection: {
+    height: 60,
+    marginBottom: 24,
   },
   tagButton: {
     backgroundColor: '#F5F5F5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginHorizontal: 4,
-    marginLeft: 16,
+    marginRight: 8,
     minWidth: 80,
     alignItems: 'center',
-    height: 36,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tagButtonActive: {
+    backgroundColor: '#FF4B8C',
   },
   tagText: {
     fontSize: 15,
     color: '#000000',
     fontWeight: '500',
+  },
+  tagTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   poweredByContainer: {
     flexDirection: 'row',
@@ -385,6 +439,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
+  },
+  tagScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  disabledPhotoItem: {
+    opacity: 0.5,
+  },
+  disabledOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

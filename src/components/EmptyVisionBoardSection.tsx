@@ -22,17 +22,11 @@ const EmptyVisionBoardSection: React.FC<Props> = ({
   return (
     <View style={styles.container}>
       <View style={styles.illustration}>
-        <View style={styles.handContainer}>
-          <View style={styles.hand}>
-            <View style={styles.palm} />
-            <View style={styles.thumb} />
-          </View>
-          <View style={styles.frameContainer}>
-            <View style={styles.frame}>
-              <View style={styles.zigzag} />
-            </View>
-          </View>
-        </View>
+        <Image 
+          source={require('../assets/illustrations/visionboard-handup-icon.png')}
+          style={styles.illustrationImage}
+          resizeMode="contain"
+        />
       </View>
 
       <Text style={styles.title}>Start manifesting your {sectionName}</Text>
@@ -65,67 +59,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 32,
   },
-  handContainer: {
-    position: 'relative',
-    width: 120,
-    height: 120,
-  },
-  hand: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#FF4B8C',
-    borderRadius: 40,
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    transform: [{ translateX: -40 }],
-  },
-  palm: {
-    position: 'absolute',
-    bottom: -15,
-    left: '50%',
-    width: 30,
-    height: 40,
-    backgroundColor: '#FF4B8C',
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    transform: [{ translateX: -15 }],
-  },
-  
-  thumb: {
-    position: 'absolute',
-    top: '50%',
-    right: -15,
-    width: 20,
-    height: 35,
-    backgroundColor: '#FF4B8C',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    transform: [{ translateY: -15 }],
-  },
-  frameContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-  },
-  frame: {
-    width: 40,
-    height: 32,
-    backgroundColor: '#F5E6D3',
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#D4B595',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ rotate: '10deg' }],
-  },
-  zigzag: {
-    width: 20,
-    height: 12,
-    borderColor: '#000000',
-    borderTopWidth: 2,
-    borderTopColor: '#000000',
-    backgroundColor: 'transparent',
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 24,
@@ -135,15 +71,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    backgroundColor: '#FF4B8C',
+    backgroundColor: '#FF4B6A',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 100,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
     marginBottom: 24,
-    width: '100%',
+    width: 'auto',
     gap: 8,
   },
   addButtonText: {

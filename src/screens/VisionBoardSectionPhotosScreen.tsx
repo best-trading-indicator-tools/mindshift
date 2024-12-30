@@ -5,23 +5,22 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Text,
-  Modal,
   TextInput,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
+  Modal,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import EmptyVisionBoardSection from '../components/EmptyVisionBoardSection';
 import PexelsImagePicker from '../components/PexelsImagePicker';
-import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
+import { VisionBoard } from './VisionBoardScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardSection'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardSectionPhotos'>;
 
 interface PexelsPhoto {
   src: {
@@ -31,38 +30,59 @@ interface PexelsPhoto {
   };
 }
 
-const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
+const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showPexelsPicker, setShowPexelsPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showEditNameModal, setShowEditNameModal] = useState(false);
-  const [newSectionName, setNewSectionName] = useState('');
-  const [selectedPhotos, setSelectedPhotos] = useState<PexelsPhoto[]>([]);
+  const [description, setDescription] = useState('');
+  const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
+  const [captions, setCaptions] = useState<{ [key: string]: string }>({});
   const { boardId, sectionId, sectionName } = route.params;
 
   useEffect(() => {
-    setNewSectionName(sectionName);
-  }, [sectionName]);
+    loadPhotos();
+  }, []);
 
-  const handleAddPhotos = () => {
-    setShowPexelsPicker(true);
-  };
-
-  const handleSelectPhotos = async (photos: PexelsPhoto[]) => {
-    setSelectedPhotos(photos);
-    setShowPexelsPicker(false);
-  };
-
-  const handleDone = async () => {
+  const loadPhotos = async () => {
     try {
       const storedBoards = await AsyncStorage.getItem('vision_boards');
       if (storedBoards) {
         const boards: VisionBoard[] = JSON.parse(storedBoards);
         const currentBoard = boards.find(b => b.id === boardId);
-        
+        if (currentBoard) {
+          const section = currentBoard.sections.find(s => s.id === sectionId);
+          if (section) {
+            setPhotos(section.photos.map(url => ({ src: { original: url } })));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading photos:', error);
+    }
+  };
+
+  const handleAddPhotos = () => {
+    setShowPexelsPicker(true);
+  };
+
+  const handleSelectPhotos = async (newPhotos: PexelsPhoto[]) => {
+    const updatedPhotos = [...photos, ...newPhotos];
+    setPhotos(updatedPhotos);
+    setShowPexelsPicker(false);
+
+    // Immediately save to AsyncStorage
+    try {
+      const storedBoards = await AsyncStorage.getItem('vision_boards');
+      if (storedBoards) {
+        const boards: VisionBoard[] = JSON.parse(storedBoards);
+        const currentBoard = boards.find(b => b.id === boardId);
         if (currentBoard) {
           const updatedSections = currentBoard.sections.map(section =>
             section.id === sectionId 
-              ? { ...section, photos: selectedPhotos.map(p => p.src?.large || p.src?.medium || p.src?.original) }
+              ? { 
+                  ...section, 
+                  photos: updatedPhotos.map(p => p.src?.large || p.src?.medium || p.src?.original),
+                  layout: undefined // Force layout regeneration
+                }
               : section
           );
 
@@ -76,7 +96,6 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
           );
 
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
-          navigation.goBack();
         }
       }
     } catch (error) {
@@ -84,14 +103,31 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleHelpPress = () => {
-    // TODO: Implement help modal or navigation
-    console.log('Help pressed');
+  const handleRemovePhoto = (index: number) => {
+    Alert.alert(
+      'Delete Photo',
+      'Are you sure you want to delete this photo?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            setPhotos(photos.filter((_, i) => i !== index));
+            const newCaptions = { ...captions };
+            delete newCaptions[index];
+            setCaptions(newCaptions);
+          },
+          style: 'destructive',
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
-  const handleEditName = async () => {
-    if (!newSectionName.trim()) return;
-
+  const handleDone = async () => {
     try {
       const storedBoards = await AsyncStorage.getItem('vision_boards');
       if (storedBoards) {
@@ -100,7 +136,15 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
         
         if (currentBoard) {
           const updatedSections = currentBoard.sections.map(section =>
-            section.id === sectionId ? { ...section, name: newSectionName.trim() } : section
+            section.id === sectionId 
+              ? { 
+                  ...section, 
+                  photos: photos.map(p => p.src?.large || p.src?.medium || p.src?.original),
+                  description,
+                  captions,
+                  layout: undefined // Force layout regeneration
+                }
+              : section
           );
 
           const updatedBoard = {
@@ -113,27 +157,28 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
           );
 
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
-          navigation.setParams({ sectionName: newSectionName.trim() });
-          setShowEditNameModal(false);
-          setShowMenu(false);
+          
+          // Navigate back to VisionBoardSections and force a refresh
+          navigation.navigate('VisionBoardSections', { 
+            boardId,
+            refresh: Date.now() // Add a timestamp to force refresh
+          });
         }
       }
     } catch (error) {
-      console.error('Error updating section name:', error);
+      console.error('Error saving photos:', error);
     }
-  };
-
-  const handleMoveSection = () => {
-    // TODO: Implement section reordering
-    setShowMenu(false);
   };
 
   const handleDeleteSection = async () => {
     Alert.alert(
       'Delete Section',
-      `Are you sure you want to delete "${sectionName}"? This action cannot be undone.`,
+      'Are you sure you want to delete this section?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
         {
           text: 'Delete',
           style: 'destructive',
@@ -143,34 +188,80 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
               if (storedBoards) {
                 const boards: VisionBoard[] = JSON.parse(storedBoards);
                 const currentBoard = boards.find(b => b.id === boardId);
-                
                 if (currentBoard) {
-                  const updatedSections = currentBoard.sections.filter(
-                    section => section.id !== sectionId
-                  );
-
-                  const updatedBoard = {
-                    ...currentBoard,
-                    sections: updatedSections,
-                  };
-
-                  const updatedBoards = boards.map(b => 
-                    b.id === boardId ? updatedBoard : b
-                  );
-
+                  const updatedSections = currentBoard.sections.filter(s => s.id !== sectionId);
+                  const updatedBoard = { ...currentBoard, sections: updatedSections };
+                  const updatedBoards = boards.map(b => b.id === boardId ? updatedBoard : b);
                   await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
-                  navigation.goBack();
+                  navigation.navigate('VisionBoardSections', { boardId });
                 }
               }
             } catch (error) {
               console.error('Error deleting section:', error);
             }
-          },
-        },
+          }
+        }
       ]
     );
-    setShowMenu(false);
   };
+
+  const renderMenu = () => (
+    <Modal
+      visible={showMenu}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowMenu(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowMenu(false)}
+      >
+        <View style={styles.menuContainer}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              setShowMenu(false);
+              navigation.navigate('EditSectionName', { 
+                boardId,
+                sectionId,
+                currentName: sectionName
+              });
+            }}
+          >
+            <Text style={styles.menuItemText}>Edit Section's Name</Text>
+            <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
+          </TouchableOpacity>
+          
+          <View style={styles.menuDivider} />
+          
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              setShowMenu(false);
+              // Handle move section
+            }}
+          >
+            <Text style={styles.menuItemText}>Move Section</Text>
+            <MaterialCommunityIcons name="arrow-all" size={20} color="#000000" />
+          </TouchableOpacity>
+          
+          <View style={styles.menuDivider} />
+          
+          <TouchableOpacity 
+            style={[styles.menuItem, styles.deleteItem]}
+            onPress={() => {
+              setShowMenu(false);
+              handleDeleteSection();
+            }}
+          >
+            <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
+            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,7 +279,7 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.menuButton}
           onPress={() => setShowMenu(true)}
         >
-          <MaterialCommunityIcons name="dots-horizontal" size={24} color="#FF4B8C" />
+          <MaterialCommunityIcons name="dots-horizontal" size={24} color="#666666" />
         </TouchableOpacity>
       </View>
 
@@ -202,21 +293,28 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
             placeholder="Add description..."
             placeholderTextColor="#999999"
             multiline
+            value={description}
+            onChangeText={setDescription}
           />
           
-          {selectedPhotos.map((photo, index) => (
+          {photos.map((photo, index) => (
             <View key={index} style={styles.photoContainer}>
               <Image 
                 source={{ uri: photo.src.large || photo.src.medium || photo.src.original }}
                 style={styles.photo}
               />
-              <TouchableOpacity style={styles.removePhotoButton}>
-                <MaterialCommunityIcons name="close-circle" size={24} color="#FFFFFF" />
+              <TouchableOpacity 
+                style={styles.removePhotoButton}
+                onPress={() => handleRemovePhoto(index)}
+              >
+                <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
               </TouchableOpacity>
               <TextInput
                 style={styles.captionInput}
                 placeholder="Add caption..."
                 placeholderTextColor="#999999"
+                value={captions[index]}
+                onChangeText={(text) => setCaptions({ ...captions, [index]: text })}
               />
             </View>
           ))}
@@ -241,93 +339,13 @@ const VisionBoardSectionScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Section Menu Modal */}
-      <Modal
-        visible={showMenu}
-        transparent
-        animationType="none"
-        onRequestClose={() => setShowMenu(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowMenu(false)}
-        >
-          <View style={styles.modalContent}>
-            <TouchableOpacity 
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMenu(false);
-                setShowEditNameModal(true);
-              }}
-            >
-              <Text style={styles.menuItemText}>Edit Section's Name</Text>
-              <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
-            </TouchableOpacity>
-
-            <View style={styles.menuDivider} />
-
-            <TouchableOpacity 
-              style={styles.menuItem}
-              onPress={handleMoveSection}
-            >
-              <Text style={styles.menuItemText}>Move Section</Text>
-              <MaterialCommunityIcons name="arrow-all" size={20} color="#000000" />
-            </TouchableOpacity>
-
-            <View style={styles.menuDivider} />
-
-            <TouchableOpacity 
-              style={[styles.menuItem, styles.deleteItem]}
-              onPress={handleDeleteSection}
-            >
-              <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
-              <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Edit Name Modal */}
-      <Modal
-        visible={showEditNameModal}
-        transparent
-        animationType="none"
-        onRequestClose={() => setShowEditNameModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowEditNameModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.handle} />
-            <Text style={styles.modalTitle}>Edit Section's Name</Text>
-            <TextInput
-              style={styles.input}
-              value={newSectionName}
-              onChangeText={setNewSectionName}
-              placeholder="Section name"
-              placeholderTextColor="#666666"
-              autoFocus
-            />
-            <TouchableOpacity 
-              style={[styles.saveButton, !newSectionName.trim() && styles.saveButtonDisabled]}
-              onPress={handleEditName}
-              disabled={!newSectionName.trim()}
-            >
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
       <PexelsImagePicker
         visible={showPexelsPicker}
         onClose={() => setShowPexelsPicker(false)}
         onSelectPhotos={handleSelectPhotos}
         initialSearchTerm={sectionName}
       />
+      {renderMenu()}
     </SafeAreaView>
   );
 };
@@ -347,6 +365,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  headerRight: {
+    width: 40,
+  },
   title: {
     fontSize: 17,
     fontWeight: '600',
@@ -356,90 +377,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  modalContent: {
-    position: 'absolute',
-    top: 70,
-    right: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    width: 220,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#000000',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-    opacity: 0.2,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  menuItemText: {
-    fontSize: 17,
-    color: '#000000',
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#E5E5E5',
-  },
-  deleteItem: {
-    marginTop: 0,
-  },
-  deleteText: {
-    color: '#FF0000',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 16,
-  },
-  input: {
-    fontSize: 17,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FF4B8C',
-    paddingVertical: 8,
-    marginBottom: 24,
-    color: '#000000',
-  },
-  saveButton: {
-    backgroundColor: '#FF4B8C',
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: 'bold',
   },
   content: {
     flex: 1,
@@ -474,8 +411,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#000000',
+    width: 24,
+    height: 24,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   captionInput: {
     fontSize: 15,
@@ -518,6 +459,56 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    width: '80%',
+    maxWidth: 300,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#000000',
+  },
+  deleteText: {
+    color: '#FF0000',
+  },
+  deleteItem: {
+    borderTopColor: '#E5E5E5',
+    borderTopWidth: 1,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E5E5',
+    marginHorizontal: 16,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
-export default VisionBoardSectionScreen; 
+export default VisionBoardSectionPhotosScreen; 

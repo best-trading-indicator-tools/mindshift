@@ -21,8 +21,10 @@ import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/VisionBoardScreen';
 import VisionBoardSectionsScreen from '../screens/VisionBoardSectionsScreen';
 import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
+import VisionBoardSectionPhotosScreen from '../screens/VisionBoardSectionPhotosScreen';
 import MusicSelectionScreen from '../screens/MusicSelectionScreen';
 import NewVisionBoardSection from '../screens/NewVisionBoardSection';
+import { default as EditSectionNameScreen } from '../screens/EditSectionNameScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -44,9 +46,14 @@ export type RootStackParamList = {
   Gratitude: undefined;
   GoldenChecklist: undefined;
   VisionBoard: undefined;
-  VisionBoardSections: { boardId: string };
+  VisionBoardSections: {
+    boardId: string;
+    refresh?: number;
+  };
   VisionBoardSection: { boardId: string; sectionId: string; sectionName: string };
+  VisionBoardSectionPhotos: { boardId: string; sectionId: string; sectionName: string };
   NewVisionBoardSection: { boardId: string };
+  EditSectionName: { boardId: string; sectionId: string; currentName: string };
   MusicSelection: {
     exerciseName: string;
   };
@@ -150,7 +157,9 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
         <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
         <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />
+        <Stack.Screen name="VisionBoardSectionPhotos" component={VisionBoardSectionPhotosScreen} />
         <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
+        <Stack.Screen name="EditSectionName" component={EditSectionNameScreen} />
         <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
