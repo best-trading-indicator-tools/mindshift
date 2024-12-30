@@ -9,6 +9,8 @@ import {
   Modal,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -190,25 +192,30 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
           activeOpacity={1}
           onPress={() => setShowNewBoardModal(false)}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.handle} />
-            <Text style={styles.modalTitle}>Create New Vision Board</Text>
-            <TextInput
-              style={styles.input}
-              value={newBoardName}
-              onChangeText={setNewBoardName}
-              placeholder="Vision Board 2025"
-              placeholderTextColor="#666"
-              autoFocus
-            />
-            <TouchableOpacity 
-              style={[styles.createButton, !newBoardName.trim() && styles.createButtonDisabled]}
-              onPress={handleCreateBoard}
-              disabled={!newBoardName.trim()}
-            >
-              <Text style={styles.createButtonText}>Create</Text>
-            </TouchableOpacity>
-          </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.handle} />
+              <Text style={styles.modalTitle}>Create New Vision Board</Text>
+              <TextInput
+                style={styles.input}
+                value={newBoardName}
+                onChangeText={setNewBoardName}
+                placeholder="Vision Board 2025"
+                placeholderTextColor="#666"
+                autoFocus
+              />
+              <TouchableOpacity 
+                style={[styles.createButton, !newBoardName.trim() && styles.createButtonDisabled]}
+                onPress={handleCreateBoard}
+                disabled={!newBoardName.trim()}
+              >
+                <Text style={styles.createButtonText}>Create</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
         </TouchableOpacity>
       </Modal>
 
@@ -304,14 +311,18 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+  },
+  keyboardAvoidingView: {
+    width: '100%',
+    justifyContent: 'center',
   },
   modalContent: {
     backgroundColor: '#1E1E3D',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 20,
     paddingTop: 12,
+    margin: 20,
   },
   handle: {
     width: 40,

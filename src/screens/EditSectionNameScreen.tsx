@@ -38,7 +38,10 @@ const EditSectionNameScreen: React.FC<Props> = ({ navigation, route }) => {
           const updatedBoard = { ...currentBoard, sections: updatedSections };
           const updatedBoards = boards.map(b => b.id === boardId ? updatedBoard : b);
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
-          navigation.goBack();
+          navigation.navigate('VisionBoardSections', { 
+            boardId, 
+            refresh: Date.now() 
+          });
         }
       }
     } catch (error) {

@@ -637,9 +637,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionName: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#666666',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#000000',
     marginBottom: 8,
   },
   photoGrid: {
@@ -803,6 +803,7 @@ const styles = StyleSheet.create({
   },
   sectionContent: {
     marginTop: 4,
+    paddingBottom: 16,
   },
   warningBubble: {
     backgroundColor: 'rgba(255, 75, 106, 0.1)',
@@ -818,7 +819,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sectionHeader: {
-    marginBottom: 12,
+    paddingTop: 16,
+    marginBottom: 8,
   },
   divider: {
     height: 1,
@@ -897,8 +899,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
   loadingContainer: {
     flex: 1,

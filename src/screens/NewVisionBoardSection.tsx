@@ -12,6 +12,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
+import PexelsImagePicker from '../components/PexelsImagePicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisionBoardSection'>;
 
@@ -30,6 +31,8 @@ const SUGGESTED_SECTIONS = [
 
 const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
   const [sectionName, setSectionName] = useState('');
+  const [showPexelsPicker, setShowPexelsPicker] = useState(false);
+  const [currentSectionId, setCurrentSectionId] = useState<string | null>(null);
 
   const handleCreateSection = async () => {
     if (!sectionName.trim()) return;
@@ -58,15 +61,57 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
 
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
           
-          navigation.replace('VisionBoardSectionPhotos', {
-            boardId: route.params.boardId,
-            sectionId: newSection.id,
-            sectionName: newSection.name,
-          });
+          // Store the section ID and show Pexels picker
+          setCurrentSectionId(newSection.id);
+          setShowPexelsPicker(true);
         }
       }
     } catch (error) {
       console.error('Error creating section:', error);
+    }
+  };
+
+  const handleSelectPhotos = async (photos: any[]) => {
+    setShowPexelsPicker(false);
+    
+    if (!currentSectionId) return;
+
+    try {
+      const storedBoards = await AsyncStorage.getItem('vision_boards');
+      if (storedBoards) {
+        const boards: VisionBoard[] = JSON.parse(storedBoards);
+        const currentBoard = boards.find(b => b.id === route.params.boardId);
+        
+        if (currentBoard) {
+          const updatedSections = currentBoard.sections.map(section =>
+            section.id === currentSectionId
+              ? {
+                  ...section,
+                  photos: photos.map(p => p.src?.large || p.src?.medium || p.src?.original),
+                }
+              : section
+          );
+
+          const updatedBoard = {
+            ...currentBoard,
+            sections: updatedSections,
+          };
+
+          const updatedBoards = boards.map(b => 
+            b.id === currentBoard.id ? updatedBoard : b
+          );
+
+          await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
+          
+          // Navigate back to VisionBoardSections with refresh
+          navigation.navigate('VisionBoardSections', {
+            boardId: route.params.boardId,
+            refresh: Date.now()
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving photos:', error);
     }
   };
 
@@ -106,6 +151,13 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
+
+      <PexelsImagePicker
+        visible={showPexelsPicker}
+        onClose={() => setShowPexelsPicker(false)}
+        onSelectPhotos={handleSelectPhotos}
+        initialSearchTerm={sectionName}
+      />
     </SafeAreaView>
   );
 };
@@ -129,7 +181,7 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#FF4B8C',
+    borderBottomColor: '#E31837',
     paddingVertical: 8,
     marginBottom: 32,
     color: '#000000',
@@ -157,7 +209,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   continueButton: {
-    backgroundColor: '#FF4B8C',
+    backgroundColor: '#E31837',
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
