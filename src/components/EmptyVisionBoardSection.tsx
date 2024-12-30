@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     transform: [{ translateX: -15 }],
   },
+  
   thumb: {
     position: 'absolute',
     top: '50%',
