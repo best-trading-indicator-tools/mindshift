@@ -42,6 +42,12 @@ const challenges = [
     colors: ['#FF6B6B', '#4ECDC4'],
   },
   {
+    title: 'Mentor Board',
+    subtitle: 'Create your council of mentors',
+    icon: 'account-group',
+    colors: ['#9B59B6', '#3498DB'],
+  },
+  {
     title: 'Mood Tracker',
     subtitle: 'Track your daily emotional well-being',
     icon: 'chart-line',
@@ -372,6 +378,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => {
                 if (challenge.title === 'Vision Board') {
                   navigation.getParent()?.navigate('VisionBoard');
+                } else if (challenge.title === 'Mentor Board') {
+                  navigation.getParent()?.navigate('MentorBoard');
                 }
                 // Add other navigation handlers for other challenges here
               }}
