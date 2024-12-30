@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LayoutTile } from '../types/layout';
+import { markExerciseAsCompleted } from '../services/exerciseService';
 
 export interface VisionBoardSection {
   id: string;
@@ -54,7 +55,14 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const storedBoards = await AsyncStorage.getItem('vision_boards');
       if (storedBoards) {
-        setVisionBoards(JSON.parse(storedBoards));
+        const boards: VisionBoard[] = JSON.parse(storedBoards);
+        setVisionBoards(boards);
+        
+        // Check if we should mark exercise as completed
+        const hasCompletedBoard = boards.some((board: VisionBoard) => board.sections.length > 0);
+        if (hasCompletedBoard) {
+          await markExerciseAsCompleted('vision-board', 'Vision Board');
+        }
       }
     } catch (error) {
       console.error('Error loading vision boards:', error);

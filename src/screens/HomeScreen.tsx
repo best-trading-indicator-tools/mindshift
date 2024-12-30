@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Image, Alert } from 'react-native';
 import { Text, LinearProgress } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps, NavigationProp } from '@react-navigation/native';
@@ -12,7 +12,7 @@ import { NotificationBell } from '../components/NotificationBell';
 import CircularProgress from '../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
-import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress } from '../services/exerciseService';
+import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../services/exerciseService';
 import { clearNotifications } from '../services/notificationService';
 
 type Props = CompositeScreenProps<
@@ -295,12 +295,34 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleReset = async () => {
-    await resetAllDailyExercises();
-    await clearNotifications();
-    // Refresh the UI
-    checkExerciseCompletions();
-    loadStreak();
-    updateProgress();
+    Alert.alert(
+      'Reset App Data',
+      'This will clear all app data including vision boards, exercises, and settings. This action cannot be undone. Are you sure?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllAppData();
+              // Refresh the UI
+              await checkExerciseCompletions();
+              await loadStreak();
+              await updateProgress();
+              // Show success message
+              Alert.alert('Success', 'All app data has been cleared.');
+            } catch (error) {
+              console.error('Error resetting app:', error);
+              Alert.alert('Error', 'Failed to reset app data. Please try again.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (

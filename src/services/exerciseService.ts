@@ -11,7 +11,8 @@ export type ExerciseType =
   | 'voix-nasale'
   | 'fry-vocal'
   | 'gratitude'
-  | 'golden-checklist';
+  | 'golden-checklist'
+  | 'vision-board';
 
 export interface ExerciseCompletion {
   userId: string;
@@ -42,8 +43,10 @@ export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: 
     // Send completion notification if this is the first completion today
     await addNotification({
       id: `completion-${exerciseId}-${Date.now()}`,
-      title: 'Well Done!',
-      message: `You've completed your ${exerciseName} exercise. Keep up the great work!`,
+      title: exerciseId === 'vision-board' ? 'Vision Board Created!' : 'Well Done!',
+      message: exerciseId === 'vision-board' 
+        ? `Congratulations on creating your vision board! You're one step closer to manifesting your dreams.`
+        : `You've completed your ${exerciseName} exercise. Keep up the great work!`,
       type: 'success'
     });
 
@@ -202,6 +205,17 @@ export const resetAllDailyExercises = async () => {
     return true;
   } catch (error) {
     console.error('Error resetting daily exercises:', error);
+    return false;
+  }
+};
+
+export const clearAllAppData = async () => {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    await AsyncStorage.multiRemove(keys);
+    return true;
+  } catch (error) {
+    console.error('Error clearing app data:', error);
     return false;
   }
 }; 

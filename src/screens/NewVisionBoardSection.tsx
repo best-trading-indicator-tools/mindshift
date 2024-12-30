@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
 import PexelsImagePicker from '../components/PexelsImagePicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { markExerciseAsCompleted } from '../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisionBoardSection'>;
 
@@ -61,6 +62,11 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
           );
 
           await AsyncStorage.setItem('vision_boards', JSON.stringify(updatedBoards));
+          
+          // Mark vision board as completed when first section is created
+          if (currentBoard.sections.length === 0) {
+            await markExerciseAsCompleted('vision-board', 'Vision Board');
+          }
           
           // Store the section ID and show Pexels picker
           setCurrentSectionId(newSection.id);
