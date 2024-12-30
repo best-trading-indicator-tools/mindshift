@@ -22,6 +22,7 @@ import {
   ImageStyle,
   ViewStyle,
   TextStyle,
+  Linking,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -86,6 +87,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [timerDuration, setTimerDuration] = useState(0); // 0 means no timer
   const [practiceMode, setPracticeMode] = useState<'loop' | 'timer'>('loop');
   const [currentLoopCount, setCurrentLoopCount] = useState(0);
+  const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
 
   const backgroundImages = [
     require('../assets/illustrations/zen1.jpg'),
@@ -1160,6 +1162,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             {/* Settings Modals */}
             {showAudioSettings && renderSettingsModal(true)}
             {showPracticeFlowModal && renderPracticeFlowModal()}
+            {showMusicSelectionModal && renderMusicSelectionModal()}
 
             {/* Close Button */}
             <TouchableOpacity 
@@ -1417,6 +1420,92 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     </Modal>
   );
 
+  const renderMusicSelectionModal = () => (
+    <Modal
+      visible={showMusicSelectionModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowMusicSelectionModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, styles.musicModalContent]}>
+          <View style={styles.musicModalHeader}>
+            <Text style={styles.musicModalTitle}>Background Music</Text>
+            <Text style={styles.musicModalSubtitle}>Choose your music app</Text>
+            <TouchableOpacity 
+              style={styles.musicModalClose}
+              onPress={() => setShowMusicSelectionModal(false)}
+            >
+              <Text style={styles.musicModalCloseText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.musicModalBody}>
+            <TouchableOpacity
+              style={styles.musicAppButton}
+              onPress={() => {
+                handleOpenApp(
+                  'spotify://',
+                  Platform.select({
+                    ios: 'https://apps.apple.com/app/spotify/id324684580',
+                    android: 'market://details?id=com.spotify.music',
+                  }) || ''
+                );
+                setShowMusicSelectionModal(false);
+              }}
+            >
+              <Image
+                source={require('../assets/illustrations/icons/spotify.png')}
+                style={styles.musicAppIcon}
+              />
+              <Text style={styles.musicAppName}>Spotify</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.musicAppButton}
+              onPress={() => {
+                handleOpenApp(
+                  'music://',
+                  Platform.select({
+                    ios: 'https://music.apple.com',
+                    android: 'market://details?id=com.apple.android.music',
+                  }) || ''
+                );
+                setShowMusicSelectionModal(false);
+              }}
+            >
+              <Image
+                source={require('../assets/illustrations/icons/applemusic.png')}
+                style={styles.musicAppIcon}
+              />
+              <Text style={styles.musicAppName}>Apple Music</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.musicAppButton}
+              onPress={() => {
+                handleOpenApp(
+                  'soundcloud://',
+                  Platform.select({
+                    ios: 'https://apps.apple.com/app/soundcloud/id336353151',
+                    android: 'market://details?id=com.soundcloud.android',
+                  }) || ''
+                );
+                setShowMusicSelectionModal(false);
+              }}
+            >
+              <Image
+                source={require('../assets/illustrations/icons/soundcloud.png')}
+                style={styles.musicAppIcon}
+              />
+              <Text style={styles.musicAppName}>SoundCloud</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   const renderPlaybackToolbar = () => (
     <View style={styles.playbackToolbar}>
       <TouchableOpacity 
@@ -1427,7 +1516,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.playbackToolbarButton}
-        onPress={() => navigation.navigate('MusicSelection', { exerciseName: 'Passive Incantations' })}
+        onPress={() => setShowMusicSelectionModal(true)}
       >
         <MaterialCommunityIcons name="music-note" size={24} color="#FFFFFF" />
       </TouchableOpacity>
@@ -1439,6 +1528,18 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       </TouchableOpacity>
     </View>
   );
+
+  const handleOpenApp = async (appScheme: string, appStoreUrl: string) => {
+    try {
+      await Linking.openURL(appScheme);
+    } catch (error) {
+      try {
+        await Linking.openURL(appStoreUrl);
+      } catch (storeError) {
+        console.error('Error opening app:', error);
+      }
+    }
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -2312,6 +2413,60 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modeButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  musicModalContent: {
+    backgroundColor: '#1F2937',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 0,
+  },
+  musicModalHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3744',
+  },
+  musicModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  musicModalSubtitle: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginBottom: 8,
+  },
+  musicModalClose: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  musicModalCloseText: {
+    color: '#6366F1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  musicModalBody: {
+    padding: 20,
+    gap: 16,
+  },
+  musicAppButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A3744',
+    padding: 16,
+    borderRadius: 12,
+    gap: 16,
+  },
+  musicAppIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+  musicAppName: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

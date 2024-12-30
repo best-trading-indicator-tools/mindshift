@@ -83,17 +83,12 @@ export const updateStreak = async () => {
       isExerciseCompletedToday('golden-checklist'),
     ]);
 
-    console.log('Exercise completion results:', results);
     const allCompleted = results.every(result => result);
-    console.log('All exercises completed?', allCompleted);
     if (!allCompleted) return;
 
     // Get the current streak and last completion date
     const streakStr = await AsyncStorage.getItem(STREAK_KEY);
     const lastCompletionStr = await AsyncStorage.getItem(LAST_COMPLETION_KEY);
-    
-    console.log('Current streak from storage:', streakStr);
-    console.log('Last completion date:', lastCompletionStr);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -104,7 +99,6 @@ export const updateStreak = async () => {
     if (!lastCompletion) {
       // First time completing all exercises
       streak = 1;
-      console.log('First time completion, setting streak to:', streak);
     } else {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -112,20 +106,15 @@ export const updateStreak = async () => {
       if (lastCompletion.getTime() === yesterday.getTime()) {
         // Completed yesterday, increment streak
         streak += 1;
-        console.log('Completed yesterday, incrementing streak to:', streak);
       } else if (lastCompletion.getTime() < yesterday.getTime()) {
         // Missed a day, reset streak
         streak = 1;
-        console.log('Missed a day, resetting streak to:', streak);
-      } else {
-        console.log('Already completed today, keeping streak at:', streak);
       }
     }
 
     // Save the new streak and completion date
     await AsyncStorage.setItem(STREAK_KEY, streak.toString());
     await AsyncStorage.setItem(LAST_COMPLETION_KEY, today.toISOString());
-    console.log('Saved new streak:', streak);
   } catch (error) {
     console.error('Error updating streak:', error);
   }
@@ -151,11 +140,9 @@ export const checkDailyProgress = async () => {
       { key: 'golden-checklist', name: 'Golden Checklist' }
     ];
 
-    console.log('Checking daily progress...');
     const results = await Promise.all(
       missions.map(mission => isExerciseCompletedToday(mission.key))
     );
-    console.log('Exercise completion results:', results);
 
     const completedCount = results.filter(Boolean).length;
     const totalMissions = missions.length;
@@ -166,19 +153,14 @@ export const checkDailyProgress = async () => {
     const lastCompletedJson = await AsyncStorage.getItem('last_completed_count');
     const lastCompleted = lastCompletedJson ? parseInt(lastCompletedJson) : 0;
 
-    console.log(`Completed: ${completedCount}/${totalMissions} (${progressPercentage}%)`);
-    console.log('Last completed count:', lastCompleted);
-
     // Only send progress notification if we have more completed exercises than before
     if (completedCount > lastCompleted && remainingMissions > 0) {
-      console.log('Sending progress notification...');
       await addNotification({
         id: `daily-reminder-${Date.now()}`,
         title: 'Daily Progress',
         message: `You've completed ${completedCount} out of ${totalMissions} missions today. Keep going!`,
         type: 'reminder'
       });
-      console.log('Progress notification sent');
       
       // Update the last completed count
       await AsyncStorage.setItem('last_completed_count', completedCount.toString());
@@ -217,7 +199,6 @@ export const resetAllDailyExercises = async () => {
     const todayISOString = new Date().toISOString().split('T')[0];
     await AsyncStorage.removeItem(`checklist_${todayISOString}`);
     
-    console.log('Successfully reset all daily exercises');
     return true;
   } catch (error) {
     console.error('Error resetting daily exercises:', error);
