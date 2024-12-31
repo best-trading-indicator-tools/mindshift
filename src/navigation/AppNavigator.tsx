@@ -26,6 +26,7 @@ import MusicSelectionScreen from '../screens/MusicSelectionScreen';
 import NewVisionBoardSection from '../screens/NewVisionBoardSection';
 import { default as EditSectionNameScreen } from '../screens/EditSectionNameScreen';
 import MentorBoardScreen from '../screens/MentorBoardScreen';
+import MentorBoardDetailsScreen from '../screens/MentorBoardDetailsScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -62,6 +63,7 @@ export type RootStackParamList = {
   Lesson: {
     lessonId: number;
   };
+  MentorBoardDetails: { boardId: string };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -164,6 +166,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
         <Stack.Screen name="EditSectionName" component={EditSectionNameScreen} />
         <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
+        <Stack.Screen name="MentorBoardDetails" component={MentorBoardDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

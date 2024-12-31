@@ -90,13 +90,19 @@ const DraggableImage: React.FC<{
     zIndex: zIndex.value,
   }));
 
+  const animatedImageStyle = useAnimatedStyle(() => ({
+    shadowOpacity: activeImageId.value === item.id ? 0.5 : 0.25,
+    shadowRadius: activeImageId.value === item.id ? 6.84 : 3.84,
+    elevation: activeImageId.value === item.id ? 8 : 5,
+  }));
+
   return (
     <PanGestureHandler onGestureEvent={gestureHandler}>
       <Animated.View style={animatedStyle}>
-        <View 
+        <Animated.View 
           style={[
             styles.imageWrapper,
-            activeImageId.value === item.id && styles.draggingImage
+            animatedImageStyle,
           ]}
         >
           <Image
@@ -104,7 +110,7 @@ const DraggableImage: React.FC<{
             style={styles.image}
             resizeMode="cover"
           />
-        </View>
+        </Animated.View>
       </Animated.View>
     </PanGestureHandler>
   );
@@ -145,7 +151,8 @@ const DraggableCollage: React.FC<Props> = ({
   const activeImageId = useSharedValue<string | null>(null);
 
   const handleUpdatePosition = (id: string, x: number, y: number) => {
-    setPositions(prev => ({
+    'worklet';
+    runOnJS(setPositions)(prev => ({
       ...prev,
       [id]: {
         ...prev[id],

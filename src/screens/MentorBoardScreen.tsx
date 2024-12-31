@@ -181,8 +181,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
             key={board.id}
             style={styles.boardCard}
             onPress={() => {
-              setSelectedBoard(board);
-              setShowImagePicker(true);
+              navigation.navigate('MentorBoardDetails', { boardId: board.id });
             }}
           >
             <View style={styles.boardHeader}>
@@ -224,7 +223,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
                 <DraggableCollage 
                   key={`${board.id}-${board.mentors.length}`}
                   mentors={board.mentors} 
-                  containerHeight={300}
+                  containerHeight={500}
                   backgroundColor={selectedColor}
                   onReorder={async (newOrder) => {
                     const updatedBoard = {
@@ -245,7 +244,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
                 />
               ) : (
                 <TouchableOpacity 
-                  style={[styles.emptyPreview, { backgroundColor: selectedColor }]}
+                  style={[styles.emptyPreview, { backgroundColor: selectedColor, height: 500 }]}
                   onPress={() => {
                     setSelectedBoard(board);
                     setShowImagePicker(true);
@@ -353,6 +352,15 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
               
               if (!currentBoard) {
                 throw new Error('Board not found');
+              }
+
+              // Check if adding these mentors would exceed the limit
+              if (currentBoard.mentors.length + mentors.length > 15) {
+                Alert.alert(
+                  'Mentor Limit Reached',
+                  `You can only have up to 15 mentors per board. You currently have ${currentBoard.mentors.length} mentors and are trying to add ${mentors.length} more.`
+                );
+                return;
               }
               
               const updatedBoard = {
