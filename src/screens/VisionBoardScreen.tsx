@@ -218,12 +218,6 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
                           }
                         },
                         {
-                          text: 'Add as Widget',
-                          onPress: () => {
-                            // TODO: Implement widget functionality
-                          }
-                        },
-                        {
                           text: 'Delete Board',
                           style: 'destructive',
                           onPress: () => handleDeleteBoard(board)

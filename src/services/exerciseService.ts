@@ -25,8 +25,15 @@ const getStorageKey = (exerciseType: string, date: Date) => {
   return `exercise_${userId}_${exerciseType}_${date.toISOString().split('T')[0]}`;
 };
 
-export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string) => {
+export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string, validationData?: { hasRecordings?: boolean; hasListened?: boolean }) => {
   try {
+    // For passive-incantations, validate the required conditions
+    if (exerciseId === 'passive-incantations') {
+      if (!validationData?.hasRecordings || !validationData?.hasListened) {
+        return false; // Return false instead of throwing error
+      }
+    }
+
     const today = new Date().toDateString();
     const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
     const completions = completionsJson ? JSON.parse(completionsJson) : {};

@@ -86,6 +86,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [practiceMode, setPracticeMode] = useState<'loop' | 'timer'>('loop');
   const [currentLoopCount, setCurrentLoopCount] = useState(0);
   const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
+  const [hasListenedToAny, setHasListenedToAny] = useState(false);
 
   const backgroundImages = [
     require('../assets/illustrations/zen1.jpg'),
@@ -523,8 +524,40 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
   const handleComplete = async () => {
     try {
-      // Mark exercise as completed
-      await markExerciseAsCompleted('passive-incantations', 'Passive Incantations');
+      // First check if there are any recordings
+      if (!recordings || recordings.length === 0) {
+        Alert.alert('Cannot Complete', 'You need to record at least one affirmation before completing the exercise.');
+        return;
+      }
+
+      // Then check if user has listened to any recording
+      if (!hasListenedToAny) {
+        Alert.alert('Cannot Complete', 'You need to listen to at least one affirmation before completing the exercise.');
+        return;
+      }
+
+      // Only if both conditions are met, try to mark exercise as completed
+      const validationData = {
+        hasRecordings: recordings.length > 0,
+        hasListened: hasListenedToAny
+      };
+
+      // Double check validation data
+      if (!validationData.hasRecordings || !validationData.hasListened) {
+        Alert.alert('Cannot Complete', 'You need to record and listen to at least one affirmation before completing the exercise.');
+        return;
+      }
+
+      const success = await markExerciseAsCompleted(
+        'passive-incantations', 
+        'Passive Incantations',
+        validationData
+      );
+
+      if (!success) {
+        Alert.alert('Cannot Complete', 'You need to record and listen to at least one affirmation before completing the exercise.');
+        return;
+      }
       
       // Clean up audio player
       if (isPlaying) {
@@ -604,6 +637,21 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           setIsPlaying(true);
           setPlayingId(recording.id);
           setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+          setHasListenedToAny(true); // Set flag when playing a single recording
+          
+          // Add listener for completion
+          audioRecorderPlayer.current.addPlayBackListener((e) => {
+            const progress = e.currentPosition / e.duration;
+            progressAnimation.setValue(progress);
+
+            if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
+              audioRecorderPlayer.current.removePlayBackListener();
+              setIsPlaying(false);
+              setPlayingId(null);
+              setCurrentRecordingText('');
+              progressAnimation.setValue(0);
+            }
+          });
         }
       }
     } catch (error) {
@@ -949,6 +997,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           await audioRecorderPlayer.current.setVolume(affirmationsVolume);
           setPlayingId(recording.id);
           setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+          setHasListenedToAny(true); // Set flag when a recording starts playing
 
           // Wait for recording to finish
           await new Promise<void>((resolve) => {
@@ -1247,6 +1296,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setIsPlaying(true);
       setPlayingId(recording.id);
       setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+      setHasListenedToAny(true); // Set flag when a recording starts playing
 
       // Add listener for completion
       audioRecorderPlayer.current.addPlayBackListener((e) => {
