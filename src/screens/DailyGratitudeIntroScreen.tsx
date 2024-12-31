@@ -10,17 +10,21 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitudeIntro'>;
 const introContent = [
   {
     title: "The Power of Gratitude",
-    content: "Science has shown that practicing gratitude can significantly boost happiness and reduce stress. This simple yet powerful practice rewires your brain to focus on the positive aspects of life, leading to improved mental well-being and stronger relationships."
+    content: "Science has shown that practicing gratitude can significantly boost happiness and reduce stress. This simple yet powerful practice rewires your brain to focus on the positive aspects of life."
   },
   {
-    title: "Your Daily Journey",
-    content: "Take a moment each day to reflect on 5 things you're truly grateful for. They can be as simple as a morning coffee, a friend's message, or a moment of peace. This daily practice will gradually transform your perspective on life."
+    title: "The Magic of 'Because'",
+    content: "When expressing gratitude, adding 'because' makes it more meaningful. Instead of just saying what you're grateful for, explaining why deepens the emotional impact and helps you truly appreciate the value it brings to your life."
+  },
+  {
+    title: "Example",
+    content: "Instead of \"I'm grateful for my friend\", try \"I'm grateful for my friend because they always listen and support me without judgment.\" Notice how much more powerful and specific this feels."
   }
 ];
 
 const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 2; // We have 2 intro screens
+  const totalSteps = introContent.length;
 
   const handleNext = async () => {
     if (currentStep < totalSteps) {
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   nextButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#B91C1C',
     marginHorizontal: 24,
     marginBottom: 40,
     paddingVertical: 16,

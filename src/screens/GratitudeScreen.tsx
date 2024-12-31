@@ -13,33 +13,40 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
 
 const MIN_ENTRIES = 5;
 
+interface GratitudeEntry {
+  what: string;
+  why: string;
+}
+
 const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
   const [showPostExercise, setShowPostExercise] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [entries, setEntries] = useState<string[]>(['']);
+  const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddEntry = () => {
-    setEntries([...entries, '']);
+    setEntries([...entries, { what: '', why: '' }]);
   };
 
-  const handleUpdateEntry = (text: string, index: number) => {
+  const handleUpdateEntry = (text: string, index: number, field: 'what' | 'why') => {
     const newEntries = [...entries];
-    newEntries[index] = text;
+    newEntries[index] = { ...newEntries[index], [field]: text };
     setEntries(newEntries);
   };
 
+  const isEntryComplete = (entry: GratitudeEntry) => {
+    return entry.what.trim().length > 0 && entry.why.trim().length > 0;
+  };
+
   const isComplete = () => {
-    return entries.filter(entry => entry.trim().length > 0).length >= MIN_ENTRIES;
+    return entries.filter(isEntryComplete).length >= MIN_ENTRIES;
   };
 
   const handleComplete = async () => {
@@ -63,27 +70,20 @@ const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
   if (showPostExercise) {
     return (
       <SafeAreaView style={styles.container}>
-        <LinearGradient
-          colors={['#3730A3', '#6366F1']}
-          style={styles.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        >
-          <View style={styles.postExerciseContent}>
-            <MaterialCommunityIcons name="heart" size={60} color="#FFFFFF" />
-            <Text style={styles.postExerciseTitle}>Well Done!</Text>
-            <Text style={styles.postExerciseText}>
-              How do you feel after expressing gratitude?{'\n'}
-              Take a moment to notice any positive changes in your mood.
-            </Text>
-            <TouchableOpacity 
-              style={styles.completeButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.completeButtonText}>I Feel Better</Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+        <View style={styles.postExerciseContent}>
+          <MaterialCommunityIcons name="heart" size={60} color="#B91C1C" />
+          <Text style={styles.postExerciseTitle}>Well Done!</Text>
+          <Text style={styles.postExerciseText}>
+            How do you feel after expressing gratitude?{'\n'}
+            Take a moment to notice any positive changes in your mood.
+          </Text>
+          <TouchableOpacity 
+            style={styles.completeButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.completeButtonText}>I Feel Better</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -93,59 +93,68 @@ const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient
-        colors={['#3730A3', '#6366F1']}
-        style={styles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          <TouchableOpacity 
-            style={styles.exitButton}
-            onPress={handleExit}
-          >
-            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+      <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity 
+          style={styles.exitButton}
+          onPress={handleExit}
+        >
+          <MaterialCommunityIcons name="close" size={24} color="#B91C1C" />
+        </TouchableOpacity>
 
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-            <Text style={styles.title}>What are you grateful for today?</Text>
-            
-            {entries.map((entry, index) => (
-              <View key={index} style={styles.entryContainer}>
-                <Text style={styles.entryNumber}>{index + 1}.</Text>
-                <TextInput
-                  style={styles.input}
-                  value={entry}
-                  onChangeText={(text) => handleUpdateEntry(text, index)}
-                  placeholder="I'm grateful for..."
-                  placeholderTextColor="#666"
-                  multiline
-                />
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+          <Text style={styles.title}>What are you grateful for today?</Text>
+          
+          {entries.map((entry, index) => (
+            <View key={index} style={styles.entryContainer}>
+              <Text style={styles.entryNumber}>{index + 1}.</Text>
+              <View style={styles.entryInputs}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>I am grateful for...</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={entry.what}
+                    onChangeText={(text) => handleUpdateEntry(text, index, 'what')}
+                    placeholder="what are you grateful for?"
+                    placeholderTextColor="#666"
+                    multiline
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>because...</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={entry.why}
+                    onChangeText={(text) => handleUpdateEntry(text, index, 'why')}
+                    placeholder="why are you grateful for it?"
+                    placeholderTextColor="#666"
+                    multiline
+                  />
+                </View>
               </View>
-            ))}
-            
-            <TouchableOpacity 
-              style={styles.addButton} 
-              onPress={handleAddEntry}
-            >
-              <Text style={styles.addButtonText}>+ Add Another</Text>
-            </TouchableOpacity>
-          </ScrollView>
-
+            </View>
+          ))}
+          
           <TouchableOpacity 
-            style={[
-              styles.completeButton,
-              !isComplete() && styles.completeButtonDisabled
-            ]}
-            onPress={handleComplete}
-            disabled={!isComplete()}
+            style={styles.addButton} 
+            onPress={handleAddEntry}
           >
-            <Text style={styles.completeButtonText}>
-              {isComplete() ? "I'm done" : `Add ${MIN_ENTRIES - entries.filter(e => e.trim().length > 0).length} More`}
-            </Text>
+            <Text style={styles.addButtonText}>+ Add Another</Text>
           </TouchableOpacity>
-        </SafeAreaView>
-      </LinearGradient>
+        </ScrollView>
+
+        <TouchableOpacity 
+          style={[
+            styles.completeButton,
+            !isComplete() && styles.completeButtonDisabled
+          ]}
+          onPress={handleComplete}
+          disabled={!isComplete()}
+        >
+          <Text style={styles.completeButtonText}>
+            {isComplete() ? "I'm done" : `Add ${MIN_ENTRIES - entries.filter(isEntryComplete).length} More`}
+          </Text>
+        </TouchableOpacity>
+      </SafeAreaView>
 
       <Modal
         visible={showExitModal}
@@ -181,9 +190,7 @@ const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   safeArea: {
     flex: 1,
@@ -200,7 +207,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     margin: 20,
@@ -208,24 +215,37 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 30,
     textAlign: 'center',
   },
   entryContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 15,
+    marginBottom: 24,
   },
   entryNumber: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 18,
     marginRight: 10,
     marginTop: 12,
   },
+  entryInputs: {
+    flex: 1,
+    gap: 12,
+  },
+  inputContainer: {
+    flex: 1,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 4,
+    marginLeft: 4,
+  },
   input: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
     borderRadius: 15,
     padding: 15,
     fontSize: 16,
@@ -239,12 +259,12 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: '#B91C1C',
     fontSize: 16,
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#B91C1C',
     paddingHorizontal: 50,
     paddingVertical: 20,
     borderRadius: 40,
@@ -259,10 +279,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   completeButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    opacity: 0.5,
   },
   completeButtonText: {
-    color: '#6366F1',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: '600',
   },
@@ -271,25 +291,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
+    backgroundColor: '#FFFFFF',
   },
   postExerciseTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#000000',
     marginTop: 20,
     marginBottom: 20,
     textAlign: 'center',
   },
   postExerciseText: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: '#000000',
     textAlign: 'center',
     lineHeight: 30,
     marginBottom: 40,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -329,7 +350,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalExitButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#B91C1C',
     paddingVertical: 16,
     borderRadius: 30,
     width: '100%',
