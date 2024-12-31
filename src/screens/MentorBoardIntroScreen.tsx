@@ -103,7 +103,7 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ProgressHeader
         currentStep={currentPage + 1}
         totalSteps={TOTAL_STEPS}
@@ -122,7 +122,7 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -136,14 +136,14 @@ const styles = StyleSheet.create({
   },
   pageContainer: {
     flex: 1,
-    padding: 20,
+    padding: 24,
   },
   titleText: {
-    fontSize: 22,
+    fontSize: 42,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 30,
-    marginTop: 10,
+    marginBottom: 24,
+    marginTop: 0,
     textAlign: 'left',
   },
   illustrationContainer: {

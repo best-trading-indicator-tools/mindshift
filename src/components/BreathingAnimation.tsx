@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity, Modal } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { markExerciseAsCompleted } from '../services/exerciseService';
@@ -8,6 +8,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
 const HOLD_DURATION = 5000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
+const INITIAL_DELAY = 2000;   // 2 seconds initial delay
 const TOTAL_CYCLES = 5;
 
 // Enable playback in silence mode
@@ -20,6 +21,7 @@ const BreathingAnimation: React.FC<{
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
+  const [showExitModal, setShowExitModal] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
   const completionSound = useRef<Sound | null>(null);
@@ -27,6 +29,7 @@ const BreathingAnimation: React.FC<{
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isFirstRender = useRef(true);
   const isMounted = useRef(true);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize sound
   useEffect(() => {
@@ -41,9 +44,11 @@ const BreathingAnimation: React.FC<{
       if (isMounted.current) {
         console.log('Sound loaded successfully');
         gongSound.current = sound;
-        // Start the first cycle
-        playGong();
-        startBreathingCycle();
+        // Add delay before starting
+        setTimeout(() => {
+          playGong();
+          startBreathingCycle();
+        }, INITIAL_DELAY);
       }
     });
 
@@ -80,6 +85,35 @@ const BreathingAnimation: React.FC<{
     }
   };
 
+  // Update countdown timer
+  const startCountdown = useCallback(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+
+    setCountdown(5);
+    countdownRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+          }
+          return prev;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
+
   const startBreathingCycle = useCallback(() => {
     if (!isMounted.current) return;
     
@@ -92,7 +126,7 @@ const BreathingAnimation: React.FC<{
 
     // Start with 'in' phase
     setPhase('in');
-    setCountdown(5);
+    startCountdown();
 
     // Create the animation sequence
     const sequence = Animated.sequence([
@@ -131,7 +165,7 @@ const BreathingAnimation: React.FC<{
     newTimers.push(setTimeout(() => {
       if (isMounted.current) {
         setPhase('hold-in');
-        setCountdown(5);
+        startCountdown();
       }
     }, BREATH_DURATION));
 
@@ -139,7 +173,7 @@ const BreathingAnimation: React.FC<{
     newTimers.push(setTimeout(() => {
       if (isMounted.current) {
         setPhase('out');
-        setCountdown(5);
+        startCountdown();
         playGong();
       }
     }, BREATH_DURATION + HOLD_DURATION));
@@ -148,7 +182,7 @@ const BreathingAnimation: React.FC<{
     newTimers.push(setTimeout(() => {
       if (isMounted.current) {
         setPhase('hold-out');
-        setCountdown(5);
+        startCountdown();
       }
     }, BREATH_DURATION * 2 + HOLD_DURATION));
 
@@ -166,7 +200,7 @@ const BreathingAnimation: React.FC<{
 
     timersRef.current = newTimers;
     sequence.start();
-  }, [breathsLeft, animation]);
+  }, [breathsLeft, animation, startCountdown]);
 
   const getWaveStyle = (offset: number) => ({
     transform: [
@@ -270,6 +304,15 @@ const BreathingAnimation: React.FC<{
     }
   }, [phase, handleCompletion]);
 
+  const handleExitPress = () => {
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
+    cleanupAllAudio();
+    navigation.goBack();
+  };
+
   if (phase === 'complete') {
     return (
       <TouchableOpacity 
@@ -333,6 +376,34 @@ const BreathingAnimation: React.FC<{
           {breathsLeft} {breathsLeft === 1 ? 'breath' : 'breaths'} left
         </Text>
       </View>
+
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              You're making progress! Continue practicing to maintain your results.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => setShowExitModal(false)}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exitButton}
+              onPress={handleConfirmExit}
+            >
+              <Text style={styles.exitText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -414,6 +485,59 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  exitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

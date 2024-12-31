@@ -50,9 +50,13 @@ const DraggableImage: React.FC<{
   const offsetY = useSharedValue(position.y);
   const scale = useSharedValue(position.scale);
   const zIndex = useSharedValue(position.zIndex);
+  const SAFE_PADDING = 10;
 
   const clamp = (value: number, min: number, max: number) => {
     'worklet';
+    if (isNaN(value) || isNaN(min) || isNaN(max)) {
+      return min; // Safely handle NaN cases
+    }
     return Math.min(Math.max(value, min), max);
   };
 
@@ -68,14 +72,47 @@ const DraggableImage: React.FC<{
       const newX = context.startX + event.translationX;
       const newY = context.startY + event.translationY;
       
-      offsetX.value = clamp(newX, 0, screenWidth - IMAGE_SIZE);
-      offsetY.value = clamp(newY, 0, containerHeight - IMAGE_SIZE);
+      // Add safe padding to prevent edge cases
+      const SAFE_PADDING = 10;
+      const maxX = Math.max(0, screenWidth - IMAGE_SIZE - SAFE_PADDING);
+      const maxY = Math.max(0, containerHeight - IMAGE_SIZE - SAFE_PADDING);
+      
+      // Ensure values are valid numbers
+      if (!isNaN(newX) && !isNaN(newY) && !isNaN(maxX) && !isNaN(maxY)) {
+        offsetX.value = clamp(newX, SAFE_PADDING, maxX);
+        offsetY.value = clamp(newY, SAFE_PADDING, maxY);
+      }
     },
     onEnd: () => {
-      scale.value = withSpring(position.scale);
-      zIndex.value = position.zIndex;
-      activeImageId.value = null;
-      runOnJS(onUpdatePosition)(item.id, offsetX.value, offsetY.value);
+      try {
+        scale.value = withSpring(position.scale);
+        zIndex.value = position.zIndex;
+        activeImageId.value = null;
+        
+        // Ensure final position is within bounds
+        const SAFE_PADDING = 10;
+        const maxX = Math.max(0, screenWidth - IMAGE_SIZE - SAFE_PADDING);
+        const maxY = Math.max(0, containerHeight - IMAGE_SIZE - SAFE_PADDING);
+        
+        // Ensure values are valid before clamping and updating
+        const finalX = !isNaN(offsetX.value) ? clamp(offsetX.value, SAFE_PADDING, maxX) : SAFE_PADDING;
+        const finalY = !isNaN(offsetY.value) ? clamp(offsetY.value, SAFE_PADDING, maxY) : SAFE_PADDING;
+        
+        offsetX.value = finalX;
+        offsetY.value = finalY;
+        
+        // Only update position if values are valid
+        if (!isNaN(finalX) && !isNaN(finalY)) {
+          runOnJS(onUpdatePosition)(item.id, finalX, finalY);
+        }
+      } catch (error) {
+        // If any error occurs, reset to safe values
+        offsetX.value = SAFE_PADDING;
+        offsetY.value = SAFE_PADDING;
+        scale.value = position.scale;
+        zIndex.value = position.zIndex;
+        activeImageId.value = null;
+      }
     },
   });
 
@@ -151,8 +188,10 @@ const DraggableCollage: React.FC<Props> = ({
   const activeImageId = useSharedValue<string | null>(null);
 
   const handleUpdatePosition = (id: string, x: number, y: number) => {
-    'worklet';
-    runOnJS(setPositions)(prev => ({
+    if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y)) {
+      return; // Skip update if coordinates are invalid
+    }
+    setPositions(prev => ({
       ...prev,
       [id]: {
         ...prev[id],

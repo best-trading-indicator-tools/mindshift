@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -23,12 +23,18 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
   showNext = true,
 }) => {
   const progress = currentStep / totalSteps;
+  const [showExitModal, setShowExitModal] = React.useState(false);
+
+  const handleConfirmExit = () => {
+    onExit?.();
+    setShowExitModal(false);
+  };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity 
         style={styles.navButton} 
-        onPress={onExit}
+        onPress={() => setShowExitModal(true)}
       >
         <Icon name="close" size={24} color="#FFFFFF" />
       </TouchableOpacity>
@@ -59,6 +65,34 @@ const ProgressHeader: React.FC<ProgressHeaderProps> = ({
       >
         <Icon name="chevron-right" size={24} color="#FFFFFF" />
       </TouchableOpacity>
+
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              You're making progress! Continue practicing to maintain your results.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => setShowExitModal(false)}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exitButton}
+              onPress={handleConfirmExit}
+            >
+              <Text style={styles.exitText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -69,6 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
+    paddingTop: 52,
     width: '100%',
   },
   progressContainer: {
@@ -112,6 +147,59 @@ const styles = StyleSheet.create({
   },
   hidden: {
     opacity: 0,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  exitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
   },
 });
 

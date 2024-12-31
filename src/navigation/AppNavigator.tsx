@@ -28,6 +28,9 @@ import { default as EditSectionNameScreen } from '../screens/EditSectionNameScre
 import MentorBoardScreen from '../screens/MentorBoardScreen';
 import MentorBoardDetailsScreen from '../screens/MentorBoardDetailsScreen';
 import MentorBoardIntroScreen from '../screens/MentorBoardIntroScreen';
+import VisionBoardIntroScreen from '../screens/VisionBoardIntroScreen';
+import DailyGratitudeIntroScreen from '../screens/DailyGratitudeIntroScreen';
+import DeepBreathingIntroScreen from '../screens/DeepBreathingIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -49,6 +52,7 @@ export type RootStackParamList = {
   Gratitude: undefined;
   GoldenChecklist: undefined;
   VisionBoard: undefined;
+  VisionBoardIntro: undefined;
   MentorBoard: undefined;
   MentorBoardIntro: undefined;
   VisionBoardSections: {
@@ -66,6 +70,8 @@ export type RootStackParamList = {
     lessonId: number;
   };
   MentorBoardDetails: { boardId: string };
+  DailyGratitudeIntro: undefined;
+  DeepBreathingIntro: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -155,12 +161,27 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Course" component={CourseStackScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="DeepBreathing" component={DeepBreathingScreen} />
+        <Stack.Screen 
+          name="DeepBreathing" 
+          component={DeepBreathingScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen name="ActiveIncantations" component={ActiveIncantationsScreen} />
         <Stack.Screen name="PassiveIncantations" component={PassiveIncantationsScreen} />
-        <Stack.Screen name="Gratitude" component={GratitudeScreen} />
+        <Stack.Screen 
+          name="Gratitude" 
+          component={GratitudeScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen name="GoldenChecklist" component={GoldenChecklistScreen} />
         <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
+        <Stack.Screen name="VisionBoardIntro" component={VisionBoardIntroScreen} />
         <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />
         <Stack.Screen name="MentorBoard" component={MentorBoardScreen} />
         <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
@@ -170,6 +191,22 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen name="EditSectionName" component={EditSectionNameScreen} />
         <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
         <Stack.Screen name="MentorBoardDetails" component={MentorBoardDetailsScreen} />
+        <Stack.Screen 
+          name="DailyGratitudeIntro" 
+          component={DailyGratitudeIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="DeepBreathingIntro" 
+          component={DeepBreathingIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

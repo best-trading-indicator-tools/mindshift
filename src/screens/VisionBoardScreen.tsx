@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -158,7 +159,11 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
         {visionBoards.map((board) => (
           <TouchableOpacity
             key={board.id}
-            style={styles.boardCard}
+            style={[
+              styles.boardCard,
+              styles.boardCardWithImage,
+              (!board.sections.length || !board.sections[0].photos.length) && styles.boardCardEmpty
+            ]}
             onPress={() => {
               if (board.sections.length === 0) {
                 navigation.navigate('NewVisionBoardSection', { boardId: board.id });
@@ -167,26 +172,94 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
               }
             }}
           >
-            <View style={styles.boardHeader}>
-              <Text style={styles.boardName}>{board.name}</Text>
-              <Text style={styles.sectionCount}>{board.sections.length} Sections</Text>
-            </View>
-            <View style={styles.boardActions}>
-              <TouchableOpacity
-                onPress={() => {
-                  setEditingBoard(board);
-                  setShowEditModal(true);
-                }}
-              >
-                <MaterialCommunityIcons name="pencil" size={24} color="#6366f1" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteBoard(board)}>
-                <MaterialCommunityIcons name="delete" size={24} color="#E31837" />
-              </TouchableOpacity>
+            {board.sections.length > 0 && board.sections[0].photos.length > 0 ? (
+              <Image
+                source={{ uri: board.sections[0].photos[0] }}
+                style={styles.previewImage}
+              />
+            ) : (
+              <View style={styles.placeholderContainer}>
+                <MaterialCommunityIcons name="image-area" size={120} color="#666666" />
+              </View>
+            )}
+            <View style={[
+              styles.boardHeader,
+              board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.boardHeaderOverImage
+            ]}>
+              <View style={styles.boardTitleRow}>
+                <View>
+                  <Text style={[
+                    styles.boardName,
+                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                  ]}>{board.name}</Text>
+                  <Text style={[
+                    styles.sectionCount,
+                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                  ]}>{board.sections.length} {board.sections.length <= 1 ? 'Section' : 'Sections'}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.menuButton}
+                  onPress={() => {
+                    Alert.alert(
+                      board.name,
+                      '',
+                      [
+                        {
+                          text: "Edit Board's Name",
+                          onPress: () => {
+                            setEditingBoard(board);
+                            setShowEditModal(true);
+                          }
+                        },
+                        {
+                          text: 'Share With Friends',
+                          onPress: () => {
+                            // TODO: Implement share functionality
+                          }
+                        },
+                        {
+                          text: 'Add as Widget',
+                          onPress: () => {
+                            // TODO: Implement widget functionality
+                          }
+                        },
+                        {
+                          text: 'Delete Board',
+                          style: 'destructive',
+                          onPress: () => handleDeleteBoard(board)
+                        },
+                        {
+                          text: 'Cancel',
+                          style: 'cancel'
+                        }
+                      ]
+                    );
+                  }}
+                >
+                  <View style={[
+                    styles.menuButtonCircle,
+                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.menuButtonOverImage
+                  ]}>
+                    <MaterialCommunityIcons 
+                      name="dots-horizontal" 
+                      size={20} 
+                      color={board.sections.length > 0 && board.sections[0].photos.length > 0 ? "#FFFFFF" : "#666666"} 
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <TouchableOpacity 
+        style={styles.createNewBoardButton}
+        onPress={() => setShowNewBoardModal(true)}
+      >
+        <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
+        <Text style={styles.createNewBoardText}>Create a New Board</Text>
+      </TouchableOpacity>
 
       {/* New Board Modal */}
       <Modal
@@ -295,7 +368,6 @@ const styles = StyleSheet.create({
   },
   boardCard: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -306,24 +378,83 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    overflow: 'hidden',
+    padding: 0,
+    height: 200,
+  },
+  boardCardWithImage: {
+    padding: 0,
+    height: 200,
+  },
+  previewImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   boardHeader: {
-    marginBottom: 12,
+    padding: 20,
+  },
+  boardHeaderOverImage: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    height: '100%',
+  },
+  textOverImage: {
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  menuButtonOverImage: {
+    borderColor: '#FFFFFF',
+  },
+  boardTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   boardName: {
     fontSize: 24,
     fontWeight: '600',
     color: '#000000',
+    marginBottom: 4,
   },
   sectionCount: {
     fontSize: 16,
     color: '#666666',
-    marginTop: 4,
   },
-  boardActions: {
+  menuButton: {
+    padding: 4,
+  },
+  menuButtonCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#666666',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  createNewBoardButton: {
+    backgroundColor: '#E31837',
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  createButtonIcon: {
+    marginRight: 8,
+  },
+  createNewBoardText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -398,6 +529,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  placeholderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  boardCardEmpty: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
 });
 

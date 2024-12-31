@@ -23,7 +23,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
 const MIN_ENTRIES = 5;
 
 const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
-  const [showIntro, setShowIntro] = useState(true);
   const [showPostExercise, setShowPostExercise] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<string[]>(['']);
@@ -60,22 +59,6 @@ const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
   const handleExit = () => {
     setShowExitModal(true);
   };
-
-  if (showIntro) {
-    return (
-      <ExerciseIntroScreen
-        title="Daily Gratitude"
-        description={
-          "Take a moment to reflect on the positive aspects of your life.\n\n" +
-          "You can be grateful for anything or anyone - your family, friends, a good meal, a sunny day, or even small achievements.\n\n" +
-          "The more reasons you find to be grateful, the better you'll feel. Let's begin this journey of appreciation."
-        }
-        buttonText="Start Exercise"
-        onStart={() => setShowIntro(false)}
-        onExit={() => navigation.goBack()}
-      />
-    );
-  }
 
   if (showPostExercise) {
     return (
@@ -176,17 +159,17 @@ const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.modalText}>
               You're making progress! Continue practicing gratitude to maintain your positive mindset.
             </Text>
-            <TouchableOpacity 
-              style={[styles.modalButton, styles.continueButton]}
+            <TouchableOpacity
+              style={styles.continueButton}
               onPress={() => setShowExitModal(false)}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.modalButton, styles.modalExitButton]}
-              onPress={() => navigation.goBack()}
+              style={styles.modalExitButton}
+              onPress={() => navigation.navigate('MainTabs')}
             >
-              <Text style={styles.modalExitButtonText}>Exit</Text>
+              <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -210,7 +193,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
-    paddingTop: 40,
+    paddingTop: 20,
     paddingBottom: 100,
   },
   exitButton: {
@@ -283,57 +266,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#1F2937',
-    borderRadius: 20,
-    padding: 24,
-    width: '85%',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
-  },
-  modalButton: {
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 12,
-  },
-  continueButton: {
-    backgroundColor: '#6366F1',
-  },
-  continueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  modalExitButton: {
-    backgroundColor: '#FFD700',
-  },
-  modalExitButtonText: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   postExerciseContent: {
     flex: 1,
     justifyContent: 'center',
@@ -354,6 +286,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 30,
     marginBottom: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalExitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

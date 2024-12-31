@@ -14,6 +14,7 @@ import auth from '@react-native-firebase/auth';
 import MissionItem from '../components/MissionItem';
 import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../services/exerciseService';
 import { clearNotifications } from '../services/notificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -331,6 +332,89 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
+  const handleVisionBoardNavigation = async () => {
+    try {
+      const hasSeenIntro = await AsyncStorage.getItem('vision_board_intro_seen');
+      if (!hasSeenIntro) {
+        navigation.getParent()?.navigate('VisionBoardIntro');
+      } else {
+        navigation.getParent()?.navigate('VisionBoard');
+      }
+    } catch (error) {
+      console.error('Error checking vision board intro state:', error);
+      navigation.getParent()?.navigate('VisionBoard');
+    }
+  };
+
+  const handleGratitudeNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('daily_gratitude_intro_seen');
+      navigation.getParent()?.navigate('DailyGratitudeIntro');
+    } catch (error) {
+      console.error('Error handling gratitude navigation:', error);
+      navigation.getParent()?.navigate('DailyGratitudeIntro');
+    }
+  };
+
+  const handleDeepBreathingNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('deep_breathing_intro_seen');
+      navigation.getParent()?.navigate('DeepBreathingIntro');
+    } catch (error) {
+      console.error('Error handling deep breathing navigation:', error);
+      navigation.getParent()?.navigate('DeepBreathingIntro');
+    }
+  };
+
+  const renderChallenges = () => {
+    return challenges.map((challenge, index) => (
+      <TouchableOpacity
+        key={challenge.title}
+        style={[
+          styles.cardWrapper, 
+          { 
+            width: cardWidth,
+            marginRight: index === challenges.length - 1 ? 20 : cardSpacing
+          }
+        ]}
+        onPress={() => {
+          if (challenge.title === 'Vision Board') {
+            navigation.getParent()?.navigate('VisionBoardIntro');
+          } else if (challenge.title === 'Mentor Board') {
+            navigation.getParent()?.navigate('MentorBoardIntro');
+          } else if (challenge.title === 'Daily Gratitude') {
+            handleGratitudeNavigation();
+          }
+          // Add other navigation handlers for other challenges here
+        }}
+      >
+        <View
+          style={[styles.card, { 
+            backgroundColor: challenge.colors[0],
+            overflow: 'hidden',
+          }]}
+        >
+          <View style={styles.gradientOverlay}>
+            <LinearProgress
+              style={styles.gradientProgress}
+              color={challenge.colors[1]}
+              variant="determinate"
+              value={1}
+              animation={false}
+            />
+          </View>
+          <Text style={styles.cardTitle}>{challenge.title}</Text>
+          <Text style={styles.cardSubtitle}>{challenge.subtitle}</Text>
+          <View style={styles.cardImageContainer}>
+            {renderIcon(challenge.icon, 40, "#fff")}
+          </View>
+        </View>
+      </TouchableOpacity>
+    ));
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -365,48 +449,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           snapToInterval={cardWidth + cardSpacing}
           snapToAlignment="center"
         >
-          {challenges.map((challenge, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[
-                styles.cardWrapper, 
-                { 
-                  width: cardWidth,
-                  marginRight: index === challenges.length - 1 ? 20 : cardSpacing
-                }
-              ]}
-              onPress={() => {
-                if (challenge.title === 'Vision Board') {
-                  navigation.getParent()?.navigate('VisionBoard');
-                } else if (challenge.title === 'Mentor Board') {
-                  navigation.getParent()?.navigate('MentorBoardIntro');
-                }
-                // Add other navigation handlers for other challenges here
-              }}
-            >
-              <View
-                style={[styles.card, { 
-                  backgroundColor: challenge.colors[0],
-                  overflow: 'hidden',
-                }]}
-              >
-                <View style={styles.gradientOverlay}>
-                  <LinearProgress
-                    style={styles.gradientProgress}
-                    color={challenge.colors[1]}
-                    variant="determinate"
-                    value={1}
-                    animation={false}
-                  />
-                </View>
-                <Text style={styles.cardTitle}>{challenge.title}</Text>
-                <Text style={styles.cardSubtitle}>{challenge.subtitle}</Text>
-                <View style={styles.cardImageContainer}>
-                  {renderIcon(challenge.icon, 40, "#fff")}
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {renderChallenges()}
         </ScrollView>
         {renderPaginationDots()}
 
@@ -475,13 +518,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   {...mission}
                   onPress={
                     mission.title === 'Deep Breathing' 
-                      ? () => navigation.getParent()?.navigate('DeepBreathing')
+                      ? handleDeepBreathingNavigation
                       : mission.title === 'Active Incantations'
                       ? () => navigation.getParent()?.navigate('ActiveIncantations')
                       : mission.title === 'Passive Incantations'
                       ? () => navigation.getParent()?.navigate('PassiveIncantations')
                       : mission.title === 'Daily Gratitude'
-                      ? () => navigation.getParent()?.navigate('Gratitude')
+                      ? handleGratitudeNavigation
                       : mission.title === 'Golden Checklist'
                       ? () => navigation.getParent()?.navigate('GoldenChecklist')
                       : undefined

@@ -1,27 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
-  Modal,
-  Dimensions,
   StatusBar,
   Platform,
+  Modal,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import BreathingAnimation from '../components/BreathingAnimation';
-import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import ExitExerciseButton from '../components/ExitExerciseButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
 const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
-  const [showIntro, setShowIntro] = useState(true);
-  const [showAnimation, setShowAnimation] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   useEffect(() => {
     // Save the current status bar style
@@ -36,24 +32,13 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
-  if (showIntro) {
-    return (
-      <ExerciseIntroScreen
-        title="Deep Breathing"
-        description={
-          "Take a moment to find peace and calmness.\n\n" +
-          "Follow the guided breathing exercise to reduce stress and anxiety.\n\n" +
-          "This practice will help you relax and center yourself."
-        }
-        buttonText="Start Exercise"
-        onStart={() => {
-          setShowIntro(false);
-          setShowAnimation(true);
-        }}
-        onExit={() => navigation.goBack()}
-      />
-    );
-  }
+  const handleExitPress = () => {
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,16 +48,42 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
         translucent={false}
       />
       <View style={styles.content}>
-        {showAnimation && (
-          <BreathingAnimation
-            navigation={navigation}
-            onComplete={() => navigation.goBack()}
-          />
-        )}
+        <BreathingAnimation
+          navigation={navigation}
+          onComplete={() => navigation.goBack()}
+        />
       </View>
       <View style={styles.exitButtonContainer}>
-        <ExitExerciseButton onExit={() => navigation.goBack()} />
+        <ExitExerciseButton onExit={handleExitPress} />
       </View>
+
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              You're making progress! Continue practicing to maintain your results.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => setShowExitModal(false)}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exitButton}
+              onPress={handleConfirmExit}
+            >
+              <Text style={styles.exitText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -95,6 +106,59 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  exitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
