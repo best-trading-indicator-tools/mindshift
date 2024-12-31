@@ -4,7 +4,6 @@ import { markExerciseAsCompleted } from '../services/exerciseService';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import ExitExerciseButton from '../components/ExitExerciseButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantations'>;
@@ -145,7 +144,6 @@ const INCANTATIONS = [
 const SCROLL_INTERVAL = 3000; // Increase to 3 seconds per affirmation
 
 const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
-  const [showIntro, setShowIntro] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
@@ -217,7 +215,7 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   // Update the main effect to handle scrolling
   useEffect(() => {
-    if (!showIntro && !isPaused && !hasReachedEnd && !showExitModal) {
+    if (!isPaused && !hasReachedEnd && !showExitModal) {
       startScrolling();
     } else {
       if (intervalRef.current) {
@@ -230,20 +228,13 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [showIntro, isPaused, hasReachedEnd, showExitModal]);
+  }, [isPaused, hasReachedEnd, showExitModal]);
 
-  // Remove the separate effect for initial position as it's now handled in startScrolling
+  // Initialize scroll position
   useEffect(() => {
-    if (!showIntro) {
-      setCurrentIndex(0);
-      scrollToIndex(0);
-    }
-  }, [showIntro]);
-
-  const handleStartExercise = () => {
-    setShowIntro(false);
-    setIsPaused(false);
-  };
+    setCurrentIndex(0);
+    scrollToIndex(0);
+  }, []);
 
   const handleTapScreen = () => {
     if (!showExitModal) {
@@ -288,22 +279,6 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     console.log('Modal state changed:', { showExitModal });
   }, [showExitModal]);
-
-  if (showIntro) {
-    return (
-      <ExerciseIntroScreen
-        title="Active Incantations"
-        description={
-          "Speak these affirmations with conviction.\n\n" +
-          "Tap the screen to pause/resume the auto-scroll.\n\n" +
-          "Take deep breaths between affirmations and visualize yourself embodying these statements."
-        }
-        buttonText="Start Exercise"
-        onStart={handleStartExercise}
-        onExit={handleExit}
-      />
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -384,16 +359,16 @@ const ActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
               You're making progress! Continue practicing to maintain your results.
             </Text>
             <TouchableOpacity 
-              style={[styles.modalButton, styles.continueButton]}
+              style={[styles.modalButton, { backgroundColor: '#FFD700' }]}
               onPress={handleContinue}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={{ color: '#000000', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.modalButton, { backgroundColor: '#FFD700' }]}
+              style={[styles.modalButton, { backgroundColor: '#E31837' }]}
               onPress={handleExit}
             >
-              <Text style={{ color: '#000000', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Exit</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Exit</Text>
             </TouchableOpacity>
           </View>
         </View>

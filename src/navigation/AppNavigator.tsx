@@ -31,6 +31,8 @@ import MentorBoardIntroScreen from '../screens/MentorBoardIntroScreen';
 import VisionBoardIntroScreen from '../screens/VisionBoardIntroScreen';
 import DailyGratitudeIntroScreen from '../screens/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/DeepBreathingIntroScreen';
+import ActiveIncantationsIntroScreen from '../screens/ActiveIncantationsIntroScreen';
+import PassiveIncantationsIntroScreen from '../screens/PassiveIncantationsIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -72,6 +74,8 @@ export type RootStackParamList = {
   MentorBoardDetails: { boardId: string };
   DailyGratitudeIntro: undefined;
   DeepBreathingIntro: undefined;
+  ActiveIncantationsIntro: undefined;
+  PassiveIncantationsIntro: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -169,8 +173,22 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen name="ActiveIncantations" component={ActiveIncantationsScreen} />
-        <Stack.Screen name="PassiveIncantations" component={PassiveIncantationsScreen} />
+        <Stack.Screen 
+          name="ActiveIncantations" 
+          component={ActiveIncantationsScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="PassiveIncantations" 
+          component={PassiveIncantationsScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen 
           name="Gratitude" 
           component={GratitudeScreen}
@@ -202,6 +220,22 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen 
           name="DeepBreathingIntro" 
           component={DeepBreathingIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="ActiveIncantationsIntro" 
+          component={ActiveIncantationsIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="PassiveIncantationsIntro" 
+          component={PassiveIncantationsIntroScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',

@@ -34,7 +34,6 @@ import AudioRecorderPlayer, {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
 } from 'react-native-audio-recorder-player';
-import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 import { 
@@ -46,7 +45,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
 const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const [showIntro, setShowIntro] = useState(true);
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -84,7 +82,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [currentRecordingText, setCurrentRecordingText] = useState<string>('');
   const [showPracticeFlowModal, setShowPracticeFlowModal] = useState(false);
   const [numberOfLoops, setNumberOfLoops] = useState(3);
-  const [timerDuration, setTimerDuration] = useState(0); // 0 means no timer
+  const [timerDuration, setTimerDuration] = useState(0);
   const [practiceMode, setPracticeMode] = useState<'loop' | 'timer'>('loop');
   const [currentLoopCount, setCurrentLoopCount] = useState(0);
   const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
@@ -533,8 +531,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         await audioRecorderPlayer.current.stopPlayer();
       }
       audioRecorderPlayer.current.removePlayBackListener();
+      setIsPlaying(false);
+      setPlayingId(null);
+      setCurrentRecordingText('');
+      setCurrentLoopCount(0);
       
-      navigation.goBack();
+      // Navigate to home screen
+      navigation.navigate('MainTabs');
     } catch (error) {
       console.error('Failed to mark exercise as completed:', error);
       Alert.alert('Error', 'Failed to complete exercise. Please try again.');
@@ -1544,107 +1547,93 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
-        {showIntro ? (
-          <ExerciseIntroScreen
-            title="Passive Incantations"
-            description={
-              "Record and listen to your personal affirmations.\n\n" +
-              "Create playlists of affirmations and play them back while you meditate or go about your day.\n\n" +
-              "The more you hear these affirmations, the more they become part of your mindset."
-            }
-            buttonText="Start Exercise"
-            onStart={() => setShowIntro(false)}
-            onExit={() => navigation.goBack()}
-          />
-        ) : (
-          <>
-            {renderHeader()}
-            {renderTagList()}
-            {renderRecordingModal()}
-            {renderPlaybackScreen()}
-            {renderAudioSettingsModal()}
-            {renderPracticeFlowModal()}
+        <>
+          {renderHeader()}
+          {renderTagList()}
+          {renderRecordingModal()}
+          {renderPlaybackScreen()}
+          {renderAudioSettingsModal()}
+          {renderPracticeFlowModal()}
 
-            <View style={{ flex: 1 }}>
-              <DraggableFlatList<Affirmation>
-                data={filteredRecordings}
-                onDragEnd={({ data }) => {
-                  setRecordings(data);
-                  saveNewOrder(data);
-                }}
-                keyExtractor={item => item.id}
-                renderItem={renderItem}
-                contentContainerStyle={styles.listContent}
-                dragItemOverflow={true}
-                activationDistance={5}
-              />
-            </View>
+          <View style={{ flex: 1 }}>
+            <DraggableFlatList<Affirmation>
+              data={filteredRecordings}
+              onDragEnd={({ data }) => {
+                setRecordings(data);
+                saveNewOrder(data);
+              }}
+              keyExtractor={item => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.listContent}
+              dragItemOverflow={true}
+              activationDistance={5}
+            />
+          </View>
 
-            <View style={styles.buttonContainer}>
-              {recordings.length > 0 && (
-                <TouchableOpacity 
-                  style={styles.listenAllButton}
-                  onPress={handleListenAll}
-                >
-                  <Text style={styles.listenAllButtonText}>Listen All</Text>
-                </TouchableOpacity>
-              )}
+          <View style={styles.buttonContainer}>
+            {recordings.length > 0 && (
               <TouchableOpacity 
-                style={styles.exitButton}
-                onPress={handleComplete}
+                style={styles.listenAllButton}
+                onPress={handleListenAll}
               >
-                <Text style={styles.exitButtonText}>I'm done</Text>
+                <Text style={styles.listenAllButtonText}>Listen All</Text>
               </TouchableOpacity>
-            </View>
-
-            {/* New Affirmation Modal */}
-            <Modal
-              visible={showNewAffirmationModal}
-              animationType="slide"
-              transparent={true}
+            )}
+            <TouchableOpacity 
+              style={styles.exitButton}
+              onPress={handleComplete}
             >
-              <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.modalContainer}
-              >
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>New Affirmation</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Type your affirmation..."
-                    placeholderTextColor="#666"
-                    value={newAffirmationText}
-                    onChangeText={setNewAffirmationText}
-                    multiline
-                    autoFocus
-                  />
-                  <View style={styles.modalButtons}>
-                    <TouchableOpacity 
-                      style={[styles.modalButton, styles.cancelButton]}
-                      onPress={() => {
+              <Text style={styles.exitButtonText}>I'm done</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* New Affirmation Modal */}
+          <Modal
+            visible={showNewAffirmationModal}
+            animationType="slide"
+            transparent={true}
+          >
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.modalContainer}
+            >
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>New Affirmation</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Type your affirmation..."
+                  placeholderTextColor="#666"
+                  value={newAffirmationText}
+                  onChangeText={setNewAffirmationText}
+                  multiline
+                  autoFocus
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => {
+                      setShowNewAffirmationModal(false);
+                      setNewAffirmationText('');
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.submitButton]}
+                    onPress={() => {
+                      if (newAffirmationText.trim()) {
                         setShowNewAffirmationModal(false);
-                        setNewAffirmationText('');
-                      }}
-                    >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.modalButton, styles.submitButton]}
-                      onPress={() => {
-                        if (newAffirmationText.trim()) {
-                          setShowNewAffirmationModal(false);
-                          setShowRecordingModal(true);
-                        }
-                      }}
-                    >
-                      <Text style={styles.submitButtonText}>Next</Text>
-                    </TouchableOpacity>
-                  </View>
+                        setShowRecordingModal(true);
+                      }
+                    }}
+                  >
+                    <Text style={styles.submitButtonText}>Next</Text>
+                  </TouchableOpacity>
                 </View>
-              </KeyboardAvoidingView>
-            </Modal>
-          </>
-        )}
+              </View>
+            </KeyboardAvoidingView>
+          </Modal>
+        </>
       </SafeAreaView>
     </GestureHandlerRootView>
   );

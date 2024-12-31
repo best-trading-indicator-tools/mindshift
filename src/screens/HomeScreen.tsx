@@ -368,6 +368,28 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleActiveIncantationsNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('active_incantations_intro_seen');
+      navigation.getParent()?.navigate('ActiveIncantationsIntro');
+    } catch (error) {
+      console.error('Error handling active incantations navigation:', error);
+      navigation.getParent()?.navigate('ActiveIncantationsIntro');
+    }
+  };
+
+  const handlePassiveIncantationsNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('passive_incantations_intro_seen');
+      navigation.getParent()?.navigate('PassiveIncantationsIntro');
+    } catch (error) {
+      console.error('Error handling passive incantations navigation:', error);
+      navigation.getParent()?.navigate('PassiveIncantationsIntro');
+    }
+  };
+
   const renderChallenges = () => {
     return challenges.map((challenge, index) => (
       <TouchableOpacity
@@ -520,9 +542,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     mission.title === 'Deep Breathing' 
                       ? handleDeepBreathingNavigation
                       : mission.title === 'Active Incantations'
-                      ? () => navigation.getParent()?.navigate('ActiveIncantations')
+                      ? handleActiveIncantationsNavigation
                       : mission.title === 'Passive Incantations'
-                      ? () => navigation.getParent()?.navigate('PassiveIncantations')
+                      ? handlePassiveIncantationsNavigation
                       : mission.title === 'Daily Gratitude'
                       ? handleGratitudeNavigation
                       : mission.title === 'Golden Checklist'
