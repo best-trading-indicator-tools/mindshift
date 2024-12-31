@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Modal,
+  TextInput,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,6 +16,9 @@ import { markExerciseAsCompleted } from '../services/exerciseService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;
+
+// Add type for custom items
+type ChecklistItem = typeof CHECKLIST_ITEMS[0];
 
 const CHECKLIST_ITEMS = [
   {
@@ -223,6 +227,12 @@ const CHECKLIST_ITEMS = [
   },
 ];
 
+type CustomChecklistItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+};
+
 const BenefitsModal: React.FC<{
   item: typeof CHECKLIST_ITEMS[0];
   visible: boolean;
@@ -280,12 +290,22 @@ const BenefitsModal: React.FC<{
 
 const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
-  const [selectedItem, setSelectedItem] = useState<typeof CHECKLIST_ITEMS[0] | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [customItems, setCustomItems] = useState<CustomChecklistItem[]>([]);
+  const [newItem, setNewItem] = useState<{
+    title: string;
+    subtitle: string;
+  }>({
+    title: '',
+    subtitle: '',
+  });
 
-  // Load checked items when screen opens
+  // Load both checked items and custom items when screen opens
   useEffect(() => {
     loadCheckedItems();
+    loadCustomItems();
   }, []);
 
   const handleExit = () => {
@@ -345,6 +365,58 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const loadCustomItems = async () => {
+    try {
+      const storedItems = await AsyncStorage.getItem('custom_checklist_items');
+      if (storedItems) {
+        setCustomItems(JSON.parse(storedItems));
+      }
+    } catch (error) {
+      console.error('Error loading custom items:', error);
+    }
+  };
+
+  const saveCustomItems = async (items: CustomChecklistItem[]) => {
+    try {
+      await AsyncStorage.setItem('custom_checklist_items', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving custom items:', error);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (newItem.title.trim() === '') return;
+
+    const newCustomItem: CustomChecklistItem = {
+      id: `custom_${Date.now()}`,
+      title: newItem.title,
+      subtitle: newItem.subtitle,
+    };
+
+    const updatedCustomItems = [...customItems, newCustomItem];
+    setCustomItems(updatedCustomItems);
+    await saveCustomItems(updatedCustomItems);
+    
+    setNewItem({
+      title: '',
+      subtitle: '',
+    });
+    setShowAddItemModal(false);
+  };
+
+  const handleDeleteCustomItem = async (itemId: string) => {
+    const updatedCustomItems = customItems.filter(item => item.id !== itemId);
+    setCustomItems(updatedCustomItems);
+    await saveCustomItems(updatedCustomItems);
+    
+    // Also remove from checked items if it was checked
+    if (checkedItems.includes(itemId)) {
+      const newCheckedItems = checkedItems.filter(id => id !== itemId);
+      setCheckedItems(newCheckedItems);
+      await saveCheckedItems(newCheckedItems);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -362,7 +434,50 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.subtitle}>End of day review</Text>
         <Text style={styles.instruction}>Tap on any item to learn about its benefits for your physical and mental health</Text>
 
+        <TouchableOpacity
+          style={styles.addItemButton}
+          onPress={() => setShowAddItemModal(true)}
+        >
+          <MaterialCommunityIcons name="plus-circle" size={24} color="#FFD700" />
+          <Text style={styles.addItemButtonText}>Add Custom Item</Text>
+        </TouchableOpacity>
+
         <View style={styles.checklistContainer}>
+          {/* Custom Items */}
+          {customItems.map((item) => (
+            <View key={item.id} style={styles.checklistItem}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => handleCheckboxPress(item.id)}
+              >
+                <MaterialCommunityIcons
+                  name={checkedItems.includes(item.id) ? "checkbox-marked" : "checkbox-blank-outline"}
+                  size={24}
+                  color={checkedItems.includes(item.id) ? "#FFD700" : "#666"}
+                />
+              </TouchableOpacity>
+              <View style={styles.itemTextContainer}>
+                <View style={styles.itemText}>
+                  <Text style={[
+                    styles.itemTitle,
+                    checkedItems.includes(item.id) && styles.checkedItemTitle
+                  ]}>{item.title}</Text>
+                  <Text style={[
+                    styles.itemSubtitle,
+                    checkedItems.includes(item.id) && styles.checkedItemSubtitle
+                  ]}>{item.subtitle}</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteCustomItem(item.id)}
+              >
+                <MaterialCommunityIcons name="delete-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+          ))}
+
+          {/* Default Items */}
           {CHECKLIST_ITEMS.map((item) => (
             <View key={item.id} style={styles.checklistItem}>
               <TouchableOpacity
@@ -395,6 +510,50 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </ScrollView>
 
+      {/* Add Item Modal */}
+      <Modal
+        visible={showAddItemModal}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowAddItemModal(false)}
+            >
+              <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>Add Custom Item</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Title"
+              placeholderTextColor="#666"
+              value={newItem.title}
+              onChangeText={(text) => setNewItem(prev => ({ ...prev, title: text }))}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Subtitle"
+              placeholderTextColor="#666"
+              value={newItem.subtitle}
+              onChangeText={(text) => setNewItem(prev => ({ ...prev, subtitle: text }))}
+            />
+
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.addButton]}
+              onPress={handleAddItem}
+            >
+              <Text style={styles.addButtonText}>Add Item</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Benefits Modal (only for default items) */}
       {selectedItem && (
         <BenefitsModal
           item={selectedItem}
@@ -623,6 +782,46 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+  },
+  addItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: '#151932',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    borderStyle: 'dashed',
+  },
+  addItemButtonText: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  input: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  addButton: {
+    backgroundColor: '#FFD700',
+    marginTop: 16,
+  },
+  addButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });
 
