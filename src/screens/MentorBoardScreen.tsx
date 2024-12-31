@@ -23,6 +23,7 @@ import { markExerciseAsCompleted } from '../services/exerciseService';
 import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../services/mentorBoardService';
 import WikimediaImagePicker from '../components/WikimediaImagePicker';
 import DraggableCollage from '../components/DraggableCollage';
+import { runOnJS } from 'react-native-reanimated';
 
 const DEFAULT_COLORS = [
   '#FFFFFF', // White
@@ -221,6 +222,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.mentorPreview}>
               {board.mentors.length > 0 ? (
                 <DraggableCollage 
+                  key={`${board.id}-${board.mentors.length}`}
                   mentors={board.mentors} 
                   containerHeight={300}
                   backgroundColor={selectedColor}
@@ -229,12 +231,16 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
                       ...board,
                       mentors: newOrder,
                     };
-                    await saveMentorBoard(updatedBoard);
-                    setMentorBoards(prevBoards => 
+                    
+                    // First update local state
+                    runOnJS(setMentorBoards)(prevBoards => 
                       prevBoards.map(b => 
                         b.id === board.id ? updatedBoard : b
                       )
                     );
+                    
+                    // Then save to storage
+                    await runOnJS(saveMentorBoard)(updatedBoard);
                   }}
                 />
               ) : (
@@ -341,25 +347,32 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
               console.log('Current board:', selectedBoard);
               console.log('Adding mentors:', mentors);
               
+              // Get the latest board state to ensure we have the most recent mentors
+              const boards = await loadMentorBoards();
+              const currentBoard = boards.find(b => b.id === selectedBoard.id);
+              
+              if (!currentBoard) {
+                throw new Error('Board not found');
+              }
+              
               const updatedBoard = {
-                ...selectedBoard,
-                mentors: [...selectedBoard.mentors, ...mentors],
+                ...currentBoard,
+                mentors: [...currentBoard.mentors, ...mentors],
               };
               console.log('Updated board:', updatedBoard);
               
+              // Save to storage first
               await saveMentorBoard(updatedBoard);
+              
+              // Then update local state
+              setMentorBoards(prevBoards => 
+                prevBoards.map(board => 
+                  board.id === updatedBoard.id ? updatedBoard : board
+                )
+              );
+              
               setShowImagePicker(false);
               setSelectedBoard(null);
-              // Force immediate state update
-              setMentorBoards(prevBoards => {
-                const newBoards = prevBoards.map(board => 
-                  board.id === updatedBoard.id ? updatedBoard : board
-                );
-                console.log('New boards state:', newBoards);
-                return newBoards;
-              });
-              // Also reload from storage to ensure consistency
-              await loadBoards();
             } catch (error) {
               console.error('Error adding mentors:', error);
               Alert.alert('Error', 'Failed to add mentors. Please try again.');

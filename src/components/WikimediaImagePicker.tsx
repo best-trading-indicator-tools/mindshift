@@ -115,8 +115,12 @@ const WikimediaImagePicker: React.FC<Props> = ({
       Alert.alert('Error', 'No valid images selected');
       return;
     }
+
     onSelectMentors(mentors);
-    handleClose();
+    
+    setSelectedImages([]);
+    setResults([]);
+    setSearchTerm('');
   };
 
   const handleClose = () => {
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
   searchButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FF0000',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -416,7 +420,7 @@ const styles = StyleSheet.create({
   },
   selectedImageItem: {
     borderWidth: 2,
-    borderColor: '#6366F1',
+    borderColor: '#FF0000',
   },
   thumbnail: {
     width: '100%',
@@ -424,10 +428,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   selectedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(99, 102, 241, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'transparent',
   },
   centerContainer: {
     flex: 1,
@@ -499,7 +503,7 @@ const styles = StyleSheet.create({
   nextButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FF0000',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
