@@ -22,6 +22,18 @@ import { MentorBoard } from '../types/mentorBoard';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../services/mentorBoardService';
 import WikimediaImagePicker from '../components/WikimediaImagePicker';
+import DraggableCollage from '../components/DraggableCollage';
+
+const DEFAULT_COLORS = [
+  '#FFFFFF', // White
+  '#F3F4F6', // Light Gray
+  '#E5E7EB', // Gray
+  '#FEF3C7', // Light Yellow
+  '#DBEAFE', // Light Blue
+  '#F3E8FF', // Light Purple
+  '#ECFDF5', // Light Green
+  '#FEE2E2', // Light Red
+];
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoard'>;
 
@@ -33,6 +45,8 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
   const [editingBoard, setEditingBoard] = useState<MentorBoard | null>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<MentorBoard | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('#FFFFFF');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -119,6 +133,22 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
+  const handleColorSelect = async (color: string) => {
+    setSelectedColor(color);
+    await AsyncStorage.setItem('mentor_board_background', color);
+    setShowColorPicker(false);
+  };
+
+  useEffect(() => {
+    const loadSavedColor = async () => {
+      const savedColor = await AsyncStorage.getItem('mentor_board_background');
+      if (savedColor) {
+        setSelectedColor(savedColor);
+      }
+    };
+    loadSavedColor();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -133,7 +163,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
               });
             }}
           >
-            <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
+            <Text style={styles.exitButtonText}>Exit</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.addButton}
@@ -167,7 +197,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
                     setShowEditModal(true);
                   }}
                 >
-                  <MaterialCommunityIcons name="pencil" size={24} color="#6366f1" />
+                  <MaterialCommunityIcons name="pencil" size={24} color="#666666" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={(e) => {
@@ -177,44 +207,47 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <MaterialCommunityIcons name="delete" size={24} color="#E31837" />
                 </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setShowColorPicker(true);
+                  }}
+                >
+                  <MaterialCommunityIcons name="dots-horizontal" size={24} color="#666666" />
+                </TouchableOpacity>
               </View>
             </View>
+            <View style={styles.divider} />
             <View style={styles.mentorPreview}>
-              {board.mentors.map((mentor, index) => {
-                let imageStyle;
-                const totalMentors = board.mentors.length;
-                
-                if (totalMentors === 1) {
-                  imageStyle = styles.mentorImage1;
-                } else if (totalMentors === 2) {
-                  imageStyle = styles.mentorImage2;
-                } else if (totalMentors <= 3) {
-                  imageStyle = styles.mentorImage3;
-                } else if (totalMentors <= 4) {
-                  imageStyle = styles.mentorImage4;
-                } else if (totalMentors <= 6) {
-                  imageStyle = styles.mentorImage6;
-                } else if (totalMentors <= 9) {
-                  imageStyle = styles.mentorImage9;
-                } else {
-                  imageStyle = styles.mentorImage12;
-                }
-
-                return (
-                  <Image
-                    key={mentor.id}
-                    source={{ uri: mentor.url }}
-                    style={[
-                      styles.mentorThumbnail,
-                      imageStyle,
-                      { borderWidth: 1, borderColor: '#000' }
-                    ]}
-                    resizeMode="cover"
-                    onError={(e) => console.error('Image load error:', mentor.url, e.nativeEvent.error)}
-                    onLoad={() => console.log('Image loaded successfully:', mentor.url)}
-                  />
-                );
-              })}
+              {board.mentors.length > 0 ? (
+                <DraggableCollage 
+                  mentors={board.mentors} 
+                  containerHeight={300}
+                  backgroundColor={selectedColor}
+                  onReorder={async (newOrder) => {
+                    const updatedBoard = {
+                      ...board,
+                      mentors: newOrder,
+                    };
+                    await saveMentorBoard(updatedBoard);
+                    setMentorBoards(prevBoards => 
+                      prevBoards.map(b => 
+                        b.id === board.id ? updatedBoard : b
+                      )
+                    );
+                  }}
+                />
+              ) : (
+                <TouchableOpacity 
+                  style={[styles.emptyPreview, { backgroundColor: selectedColor }]}
+                  onPress={() => {
+                    setSelectedBoard(board);
+                    setShowImagePicker(true);
+                  }}
+                >
+                  <Text style={styles.emptyText}>Tap to add mentors</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </TouchableOpacity>
         ))}
@@ -271,7 +304,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
           activeOpacity={1}
           onPress={() => setShowEditModal(false)}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.editModalContent]}>
             <View style={styles.handle} />
             <Text style={styles.modalTitle}>Edit Mentor Board</Text>
             <TextInput
@@ -334,6 +367,38 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
           }}
         />
       )}
+
+      {/* Color Picker Modal */}
+      <Modal
+        visible={showColorPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowColorPicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowColorPicker(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.handle} />
+            <Text style={styles.modalTitle}>Choose Background Color</Text>
+            <View style={styles.colorGrid}>
+              {DEFAULT_COLORS.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color },
+                    color === selectedColor && styles.selectedColor,
+                  ]}
+                  onPress={() => handleColorSelect(color)}
+                />
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -364,12 +429,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   exitButton: {
-    padding: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: '#FCD34D',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  exitButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '600',
   },
   addButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#E31837',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -416,52 +491,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   mentorPreview: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    width: '100%',
+    minHeight: 100,
     marginVertical: 8,
-    width: '100%',
-    minHeight: 100,
   },
-  mentorThumbnail: {
-    borderRadius: 8,
+  emptyPreview: {
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#F3F4F6',
-    overflow: 'hidden',
+    borderRadius: 8,
   },
-  mentorImage1: {
-    width: '100%',
-    aspectRatio: 1,
-    minHeight: 300,
-  },
-  mentorImage2: {
-    width: '48.5%',
-    aspectRatio: 1,
-    minHeight: 150,
-  },
-  mentorImage3: {
-    width: '32%',
-    aspectRatio: 1,
-    minHeight: 120,
-  },
-  mentorImage4: {
-    width: '48.5%',
-    aspectRatio: 1,
-    minHeight: 150,
-  },
-  mentorImage6: {
-    width: '32%',
-    aspectRatio: 1,
-    minHeight: 100,
-  },
-  mentorImage9: {
-    width: '32%',
-    aspectRatio: 1,
-    minHeight: 100,
-  },
-  mentorImage12: {
-    width: '23.5%',
-    aspectRatio: 1,
-    minHeight: 80,
+  emptyText: {
+    color: '#666666',
+    fontSize: 16,
   },
   boardActions: {
     flexDirection: 'row',
@@ -471,17 +514,21 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   keyboardAvoidingView: {
     width: '100%',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 20,
     minHeight: 200,
+    width: '100%',
+  },
+  editModalContent: {
+    minHeight: 0,
   },
   handle: {
     width: 40,
@@ -507,10 +554,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   createButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#E31837',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
+    alignSelf: 'center',
+    paddingHorizontal: 40,
+    marginTop: 8,
   },
   createButtonDisabled: {
     opacity: 0.5,
@@ -519,6 +569,41 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  colorButton: {
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  colorPreview: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    padding: 16,
+  },
+  colorOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  selectedColor: {
+    borderWidth: 2,
+    borderColor: '#6366F1',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginBottom: 16,
   },
 });
 
