@@ -7,30 +7,17 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import ProgressHeader from '../components/ProgressHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardIntro'>;
 
-const PaginationDots = ({ currentPage }: { currentPage: number }) => (
-  <View style={styles.paginationContainer}>
-    {[0, 1, 2].map((dot) => (
-      <View
-        key={dot}
-        style={[
-          styles.paginationDot,
-          currentPage === dot && styles.paginationDotActive,
-        ]}
-      />
-    ))}
-  </View>
-);
-
 const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const TOTAL_STEPS = 4; // Including the actual board creation step
 
   const handleNext = () => {
     if (currentPage < 2) {
@@ -38,6 +25,16 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
     } else {
       navigation.navigate('MentorBoard');
     }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleExit = () => {
+    navigation.goBack();
   };
 
   const renderPage = () => {
@@ -107,9 +104,15 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ProgressHeader
+        currentStep={currentPage + 1}
+        totalSteps={TOTAL_STEPS}
+        onNext={handleNext}
+        onExit={handleExit}
+        showNext={true}
+      />
       {renderPage()}
       <View style={styles.bottomContainer}>
-        <PaginationDots currentPage={currentPage} />
         <TouchableOpacity 
           style={styles.nextButton}
           onPress={handleNext}
@@ -137,10 +140,11 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 30,
     marginTop: 10,
+    textAlign: 'left',
   },
   illustrationContainer: {
     flex: 1,
@@ -177,21 +181,6 @@ const styles = StyleSheet.create({
   bottomContainer: {
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 20 : 40,
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 20,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#333333',
-  },
-  paginationDotActive: {
-    backgroundColor: '#FFFFFF',
   },
   nextButton: {
     backgroundColor: '#E31837',
