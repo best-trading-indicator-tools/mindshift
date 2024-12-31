@@ -19,6 +19,7 @@ const introContent = [
   }
 ];
 
+
 const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length; // Match total steps with actual content
