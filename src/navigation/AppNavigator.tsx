@@ -27,6 +27,7 @@ import NewVisionBoardSection from '../screens/NewVisionBoardSection';
 import { default as EditSectionNameScreen } from '../screens/EditSectionNameScreen';
 import MentorBoardScreen from '../screens/MentorBoardScreen';
 import MentorBoardDetailsScreen from '../screens/MentorBoardDetailsScreen';
+import MentorBoardIntroScreen from '../screens/MentorBoardIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -49,6 +50,7 @@ export type RootStackParamList = {
   GoldenChecklist: undefined;
   VisionBoard: undefined;
   MentorBoard: undefined;
+  MentorBoardIntro: undefined;
   VisionBoardSections: {
     boardId: string;
     refresh?: number;
@@ -159,6 +161,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         <Stack.Screen name="Gratitude" component={GratitudeScreen} />
         <Stack.Screen name="GoldenChecklist" component={GoldenChecklistScreen} />
         <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
+        <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />
         <Stack.Screen name="MentorBoard" component={MentorBoardScreen} />
         <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
         <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />

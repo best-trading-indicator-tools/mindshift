@@ -379,7 +379,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 if (challenge.title === 'Vision Board') {
                   navigation.getParent()?.navigate('VisionBoard');
                 } else if (challenge.title === 'Mentor Board') {
-                  navigation.getParent()?.navigate('MentorBoard');
+                  navigation.getParent()?.navigate('MentorBoardIntro');
                 }
                 // Add other navigation handlers for other challenges here
               }}
