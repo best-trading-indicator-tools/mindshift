@@ -390,6 +390,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleGoldenChecklistNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('golden_checklist_intro_seen');
+      navigation.getParent()?.navigate('GoldenChecklistIntro');
+    } catch (error) {
+      console.error('Error handling golden checklist navigation:', error);
+      navigation.getParent()?.navigate('GoldenChecklistIntro');
+    }
+  };
+
   const renderChallenges = () => {
     return challenges.map((challenge, index) => (
       <TouchableOpacity
@@ -548,7 +559,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       : mission.title === 'Daily Gratitude'
                       ? handleGratitudeNavigation
                       : mission.title === 'Golden Checklist'
-                      ? () => navigation.getParent()?.navigate('GoldenChecklist')
+                      ? handleGoldenChecklistNavigation
                       : undefined
                   }
                   isCompleted={

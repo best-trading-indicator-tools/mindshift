@@ -33,6 +33,7 @@ import DailyGratitudeIntroScreen from '../screens/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/DeepBreathingIntroScreen';
 import ActiveIncantationsIntroScreen from '../screens/ActiveIncantationsIntroScreen';
 import PassiveIncantationsIntroScreen from '../screens/PassiveIncantationsIntroScreen';
+import GoldenChecklistIntroScreen from '../screens/GoldenChecklistIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -53,6 +54,7 @@ export type RootStackParamList = {
   PassiveIncantations: undefined;
   Gratitude: undefined;
   GoldenChecklist: undefined;
+  GoldenChecklistIntro: undefined;
   VisionBoard: undefined;
   VisionBoardIntro: undefined;
   MentorBoard: undefined;
@@ -197,7 +199,22 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen name="GoldenChecklist" component={GoldenChecklistScreen} />
+        <Stack.Screen 
+          name="GoldenChecklist" 
+          component={GoldenChecklistScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="GoldenChecklistIntro" 
+          component={GoldenChecklistIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
         <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
         <Stack.Screen name="VisionBoardIntro" component={VisionBoardIntroScreen} />
         <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />

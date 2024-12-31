@@ -11,7 +11,6 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import ExerciseIntroScreen from '../components/ExerciseIntroScreen';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -280,7 +279,6 @@ const BenefitsModal: React.FC<{
 };
 
 const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
-  const [showIntro, setShowIntro] = useState(true);
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<typeof CHECKLIST_ITEMS[0] | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -346,22 +344,6 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
       navigation.goBack();
     }
   };
-
-  if (showIntro) {
-    return (
-      <ExerciseIntroScreen
-        title="Golden Checklist"
-        description={
-          "Review your daily achievements and habits.\n\n" +
-          "Check off each item you've successfully completed today.\n\n" +
-          "Be honest with yourself - this is about personal growth and accountability."
-        }
-        buttonText="Start Review"
-        onStart={() => setShowIntro(false)}
-        onExit={() => navigation.goBack()}
-      />
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -441,7 +423,7 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.modalButton, styles.exitModalButton]}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('MainTabs')}
             >
               <Text style={styles.exitModalButtonText}>Exit</Text>
             </TouchableOpacity>
@@ -618,21 +600,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   continueButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   exitModalButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#D32F2F',
   },
   exitModalButtonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   modalText: {
