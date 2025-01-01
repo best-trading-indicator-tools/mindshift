@@ -77,7 +77,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         userCredential = await auth().signInWithEmailAndPassword(email, password);
       }
       
-      navigation.replace('MainTabs');
+      navigation.replace('PostQuestionnaire');
     } catch (error) {
       handleAuthError(error);
     }
@@ -99,7 +99,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       const googleCredential = auth.GoogleAuthProvider.credential(null, accessToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
       await createUserProfile(userCredential.user);
-      navigation.replace('MainTabs');
+      navigation.replace('PostQuestionnaire');
     } catch (error) {
       handleAuthError(error);
     }
@@ -122,7 +122,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
         const userCredential = await auth().signInWithCredential(appleCredential);
         await createUserProfile(userCredential.user);
-        navigation.replace('MainTabs');
+        navigation.replace('PostQuestionnaire');
       } else {
         throw new Error('No identity token provided');
       }

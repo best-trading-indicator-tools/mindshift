@@ -4,6 +4,9 @@ export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
   MainTabs: undefined;
+  PreQuestionnaire: undefined;
+  Questionnaire: undefined;
+  PostQuestionnaire: undefined;
 };
 
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;

@@ -34,6 +34,10 @@ import DeepBreathingIntroScreen from '../screens/DeepBreathingIntroScreen';
 import ActiveIncantationsIntroScreen from '../screens/ActiveIncantationsIntroScreen';
 import PassiveIncantationsIntroScreen from '../screens/PassiveIncantationsIntroScreen';
 import GoldenChecklistIntroScreen from '../screens/GoldenChecklistIntroScreen';
+import QuestionnaireScreen from '../screens/QuestionnaireScreen';
+import TrialScreen from '../screens/TrialScreen';
+import PostQuestionnaireScreen from '../screens/PostQuestionnaireScreen';
+import PreQuestionnaireScreen from '../screens/PreQuestionnaireScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -78,6 +82,10 @@ export type RootStackParamList = {
   DeepBreathingIntro: undefined;
   ActiveIncantationsIntro: undefined;
   PassiveIncantationsIntro: undefined;
+  Questionnaire: undefined;
+  Trial: undefined;
+  PostQuestionnaire: undefined;
+  PreQuestionnaire: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -137,10 +145,10 @@ const MainTabNavigator = () => {
 };
 
 interface AppNavigatorProps {
-  initialRoute?: 'Login' | 'MainTabs';
+  initialRoute?: 'Login' | 'MainTabs' | 'PreQuestionnaire';
 }
 
-const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) => {
+const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestionnaire' }) => {
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -149,9 +157,24 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
         }}
         initialRouteName={initialRoute}
       >
+        <Stack.Screen
+          name="PreQuestionnaire"
+          component={PreQuestionnaireScreen}
+          options={{
+            headerShown: false,
+            gestureEnabled: false,
+          }}
+        />
         <Stack.Screen 
           name="Login" 
           component={LoginScreen}
+          options={{
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen 
+          name="Questionnaire" 
+          component={QuestionnaireScreen}
           options={{
             gestureEnabled: false,
           }}
@@ -256,6 +279,21 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'Login' }) =
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="Trial" 
+          component={TrialScreen}
+          options={{
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="PostQuestionnaire"
+          component={PostQuestionnaireScreen}
+          options={{
+            headerShown: false,
+            gestureEnabled: false,
           }}
         />
       </Stack.Navigator>
