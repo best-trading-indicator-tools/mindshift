@@ -37,7 +37,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleConfirmExit = () => {
-    navigation.goBack();
+    navigation.navigate('MainTabs');
   };
 
   return (

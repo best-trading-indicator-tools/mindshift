@@ -75,4 +75,4 @@ yarn-error.log
 
 # Environment variables
 # .env
-src/assets/audio/*.wav
+# src/assets/audio/*.wav

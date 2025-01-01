@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -9,32 +9,47 @@ import ConfettiOverlay from '../components/ConfettiOverlay';
 type Props = NativeStackScreenProps<RootStackParamList, 'Trial'>;
 
 const TrialScreen: React.FC<Props> = ({ navigation }) => {
+  const soundRef = useRef<Sound | null>(null);
+
   useEffect(() => {
-    // Enable playback in silence mode
+    let isMounted = true;
     Sound.setCategory('Playback');
 
-    // Play the audio
-    const audio = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
-      if (error) {
+    // Create and load the sound file
+    const sound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+      if (error || !isMounted) {
         console.error('Failed to load sound', error);
         return;
       }
+
+      // Store the sound instance in ref
+      soundRef.current = sound;
       
-      audio.play((success) => {
+      // Disable looping
+      sound.setNumberOfLoops(0);
+      
+      // Start playback
+      sound.play((success) => {
         if (!success) {
-          console.error('Failed to play sound');
+          console.log('Sound playback failed');
         }
       });
-
-      // Stop after 2 seconds
-      setTimeout(() => {
-        audio.stop();
-        audio.release();
-      }, 2000);
     });
 
+    // Cleanup function
     return () => {
-      audio.release();
+      isMounted = false;
+      
+      // Clean up sound if it exists - do it synchronously
+      if (soundRef.current) {
+        try {
+          soundRef.current.stop();
+          soundRef.current.release();
+        } catch (error) {
+          console.warn('Error during sound cleanup:', error);
+        }
+        soundRef.current = null;
+      }
     };
   }, []);
 

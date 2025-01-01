@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Text, Avatar, ListItem } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -56,17 +56,31 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleDevLogout = async () => {
     try {
-      // Reset questionnaire status
+      // First, reset questionnaire status
       await setQuestionnaireStatus('not_started');
-      // Sign out from Firebase
-      await auth().signOut();
-      // Navigate to PreQuestionnaire using parent navigator
+      
+      // Clear any stored data
+      await AsyncStorage.clear();
+
+      // Check if user is signed in before attempting to sign out
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        await auth().signOut();
+      }
+      
+      // Always navigate to PreQuestionnaire regardless of auth state
       navigation.getParent()?.reset({
         index: 0,
         routes: [{ name: 'PreQuestionnaire' }],
       });
     } catch (error) {
       console.error('Dev Logout Error:', error);
+      // Show error to user instead of forcing navigation
+      Alert.alert(
+        'Logout Error',
+        'There was an error during logout. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 

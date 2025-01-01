@@ -33,7 +33,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
     let soundInstance: Sound | null = null;
 
-    // Play audio once for 2 seconds
+    // Play audio
     Sound.setCategory('Playback');
     soundInstance = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
       if (error) {
@@ -42,16 +42,11 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
       }
 
       // Play the sound
-      soundInstance?.play();
-
-      // Stop and release after 2 seconds
-      setTimeout(() => {
-        if (soundInstance) {
-          soundInstance.stop();
-          soundInstance.release();
-          soundInstance = null;
+      soundInstance?.play((success) => {
+        if (!success) {
+          console.log('Sound playback failed');
         }
-      }, 2000);
+      });
     });
 
     // Cleanup
@@ -61,7 +56,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         soundInstance.release();
       }
     };
-  }, []); // Empty dependency array = run once on mount
+  }, []);
 
   const handleStartTrial = () => {
     navigation.reset({
@@ -164,7 +159,7 @@ const styles = StyleSheet.create({
   benefitsContainer: {
     width: '100%',
     marginBottom: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
   },
   benefitsTitle: {
     fontSize: 20,
@@ -177,14 +172,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     alignItems: 'flex-start',
-    paddingRight: 20,
+    paddingHorizontal: 24,
+    width: '100%',
   },
   bullet: {
     color: '#FFD700',
     fontSize: 24,
-    marginRight: 16,
+    marginRight: 12,
     fontWeight: 'bold',
-    width: 20,
+    width: 16,
+    alignSelf: 'flex-start',
   },
   benefitText: {
     color: '#FFFFFF',

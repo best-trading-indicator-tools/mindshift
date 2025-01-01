@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
@@ -20,30 +20,53 @@ function App(): JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'Login'>('PreQuestionnaire');
 
-  const onAuthStateChanged = useCallback(async (user: FirebaseAuthTypes.User | null) => {
-    setUser(user);
-    if (user) {
-      // If user is logged in, check if they've completed the questionnaire
-      const questionnaireStatus = await getQuestionnaireStatus();
-      if (questionnaireStatus === 'completed') {
-        setInitialRoute('MainTabs');
-      } else {
-        // Known user but hasn't completed questionnaire - send to login
-        setInitialRoute('Login');
-      }
-    } else {
-      // If no user, show pre-questionnaire
-      setInitialRoute('PreQuestionnaire');
-    }
-  }, []);
-
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(async (user) => {
-      await onAuthStateChanged(user);
-      setInitializing(false);
+    let isMounted = true;
+
+    // Store the unsubscribe function directly
+    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
+      if (!isMounted) return;
+
+      // Batch state updates together
+      const updates = async () => {
+        try {
+          if (!firebaseUser) {
+            return {
+              user: null,
+              route: 'PreQuestionnaire' as const
+            };
+          }
+
+          const questionnaireStatus = await getQuestionnaireStatus();
+          return {
+            user: firebaseUser,
+            route: questionnaireStatus === 'completed' ? 'MainTabs' : 'Login'
+          } as const;
+        } catch (error) {
+          console.error('Error checking questionnaire status:', error);
+          // If there's an error checking questionnaire status, default to Login for authenticated users
+          return {
+            user: firebaseUser,
+            route: 'Login' as const
+          };
+        }
+      };
+
+      const result = await updates();
+      
+      // Apply updates only if component is still mounted
+      if (isMounted) {
+        setUser(result.user);
+        setInitialRoute(result.route);
+        setInitializing(false);
+      }
     });
-    return subscriber;
-  }, [onAuthStateChanged]);
+
+    return () => {
+      isMounted = false;
+      unsubscribe(); // Properly call the unsubscribe function
+    };
+  }, []); // Empty dependency array as this should only run once on mount
 
   if (initializing) {
     return (
