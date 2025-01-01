@@ -25,33 +25,43 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const [message, setMessage] = React.useState<string>("");
+  const audioRef = React.useRef<Sound | null>(null);
 
   useEffect(() => {
-    // Load personalized message
+    // Load message once
     getPersonalizedMessage().then(setMessage);
 
-    // Play audio
+    let soundInstance: Sound | null = null;
+
+    // Play audio once for 2 seconds
     Sound.setCategory('Playback');
-    const audio = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+    soundInstance = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
       if (error) {
         console.error('Failed to load sound', error);
         return;
       }
-      audio.play((success) => {
-        if (!success) {
-          console.error('Failed to play sound');
-        }
-      });
-      // Stop after 2 seconds
+
+      // Play the sound
+      soundInstance?.play();
+
+      // Stop and release after 2 seconds
       setTimeout(() => {
-        audio.stop();
-        audio.release();
-      }, 2000); // Ensure it's exactly 2 seconds
+        if (soundInstance) {
+          soundInstance.stop();
+          soundInstance.release();
+          soundInstance = null;
+        }
+      }, 2000);
     });
+
+    // Cleanup
     return () => {
-      audio.release();
+      if (soundInstance) {
+        soundInstance.stop();
+        soundInstance.release();
+      }
     };
-  }, []);
+  }, []); // Empty dependency array = run once on mount
 
   const handleStartTrial = () => {
     navigation.reset({
@@ -171,10 +181,10 @@ const styles = StyleSheet.create({
   },
   bullet: {
     color: '#FFD700',
-    fontSize: 18,
-    marginRight: 12,
+    fontSize: 24,
+    marginRight: 16,
     fontWeight: 'bold',
-    width: 15,
+    width: 20,
   },
   benefitText: {
     color: '#FFFFFF',
@@ -183,6 +193,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 24,
     flexWrap: 'wrap',
+    paddingTop: 3,
   },
   joinText: {
     fontSize: 18,

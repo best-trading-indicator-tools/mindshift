@@ -22,7 +22,7 @@ const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.title}>Take the First Step Toward a Positive Mindset</Text>
             
             <Text style={styles.subtitle}>
-              Take 2 minutes to answer a few questions, and let us create your personalized journey to positivity.
+              Take <Text style={{ fontWeight: 'bold' }}>2 minutes</Text> to answer a few questions, and let us create your personalized journey to positivity.
             </Text>
 
             <View style={[styles.benefitsContainer, { marginTop: 20 }]}>

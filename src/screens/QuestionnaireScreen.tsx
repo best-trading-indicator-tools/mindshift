@@ -29,17 +29,22 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleAnswer = async (answer: number | string) => {
     const newAnswers = { ...answers, [currentQuestion.id]: answer };
-    setAnswers(newAnswers);
-
+    
     if (currentQuestionIndex < totalQuestions - 1) {
+      setAnswers(newAnswers);
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Save answers before completing
-      await saveQuestionnaireResponses(newAnswers);
-      // Mark as completed
-      await markQuestionnaireCompleted();
-      // Navigate to login screen
-      navigation.replace('Login');
+      try {
+        // Save answers and mark as completed before any navigation
+        await Promise.all([
+          saveQuestionnaireResponses(newAnswers),
+          markQuestionnaireCompleted()
+        ]);
+        // Navigate to login screen after all async operations are complete
+        navigation.replace('Login');
+      } catch (error) {
+        console.error('Error completing questionnaire:', error);
+      }
     }
   };
 
