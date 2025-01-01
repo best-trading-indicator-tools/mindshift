@@ -42,10 +42,11 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
           console.error('Failed to play sound');
         }
       });
+      // Stop after 2 seconds
       setTimeout(() => {
         audio.stop();
         audio.release();
-      }, 2000);
+      }, 2000); // Ensure it's exactly 2 seconds
     });
     return () => {
       audio.release();
@@ -153,6 +154,7 @@ const styles = StyleSheet.create({
   benefitsContainer: {
     width: '100%',
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   benefitsTitle: {
     fontSize: 20,
@@ -164,13 +166,15 @@ const styles = StyleSheet.create({
   benefitRow: {
     flexDirection: 'row',
     marginBottom: 16,
-    paddingHorizontal: 20,
+    alignItems: 'flex-start',
+    paddingRight: 20,
   },
   bullet: {
     color: '#FFD700',
     fontSize: 18,
     marginRight: 12,
     fontWeight: 'bold',
+    width: 15,
   },
   benefitText: {
     color: '#FFFFFF',
@@ -178,6 +182,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     flex: 1,
     lineHeight: 24,
+    flexWrap: 'wrap',
   },
   joinText: {
     fontSize: 18,

@@ -15,8 +15,8 @@ import {
   Alert,
 } from 'react-native';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
-import { appleAuth, AppleButton } from '@invertase/react-native-apple-authentication';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { LoginScreenProps } from '../types/auth.types';
 import { createUserProfile } from '../services/firebase';
 import Config from 'react-native-config';
@@ -48,8 +48,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const emailFocus = useSharedValue(0);
   const passwordFocus = useSharedValue(0);
-  const loadingOpacity = useSharedValue(0);
-  const loadingScale = useSharedValue(1);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -76,13 +74,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     elevation: withTiming(passwordFocus.value ? 3 : 0),
   }));
 
-  const loadingAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: loadingOpacity.value,
-    transform: [{ scale: loadingScale.value }],
-  }));
-
   const handleAuthError = (error: unknown) => {
     setLoading(false);
+    
+    // Log the full error object for debugging
+    console.log('Full error object:', error);
+
+    // Handle specific error codes including getTokens
+    if (typeof error === 'object' && error !== null && 'code' in error && 
+        (error.code === 12501 || error.code === 'getTokens')) {
+      setError(null);
+      return;
+    }
+
     const isGoogleError = (err: unknown): err is GoogleSignInError =>
       typeof err === 'object' && err !== null && 'code' in err;
 
@@ -90,61 +94,59 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       const errorCode = error.code;
       switch (errorCode) {
         case statusCodes.SIGN_IN_CANCELLED:
-          setError('Sign in was cancelled');
+        case 12501: // Android cancellation code
+        case 'getTokens': // iOS cancellation code
+          setError(null);
           break;
         case statusCodes.IN_PROGRESS:
-          setError('Sign in is already in progress');
+          setError('A sign in attempt is already in progress');
           break;
         case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-          setError('Play services are not available');
+          setError('Google Play services are not available. Please check your device settings.');
           break;
         default:
-          setError(error.message || 'An error occurred during Google sign in');
+          if (typeof error === 'object' && error !== null && 'message' in error && 
+              typeof error.message === 'string' && 
+              (error.message.toLowerCase().includes('cancel') || 
+               error.message.toLowerCase().includes('cancelled') ||
+               error.message.toLowerCase().includes('getTokens requires a user'))) {
+            setError(null);
+          } else {
+            setError('Unable to sign in with Google at the moment. Please try again later.');
+          }
       }
     } else if (error instanceof Error) {
-      setError(error.message);
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('cancel') || 
+          errorMessage.includes('cancelled') ||
+          errorMessage.includes('gettokens requires a user')) {
+        setError(null);
+      } else if (errorMessage.includes('network')) {
+        setError('Please check your internet connection and try again');
+      } else if (errorMessage.includes('timeout')) {
+        setError('The request took too long. Please check your connection and try again');
+      } else {
+        setError('Something went wrong. Please try again or use another sign in method');
+      }
     } else {
-      setError('An unexpected error occurred');
+      setError('Unable to complete sign in. Please try again or use another method');
     }
-  };
-
-  const setLoadingWithAnimation = (isLoading: boolean) => {
-    loadingOpacity.value = withTiming(isLoading ? 1 : 0, { duration: 200 });
-    if (isLoading) {
-      loadingScale.value = withRepeat(
-        withSequence(
-          withTiming(1.1, { duration: 600 }),
-          withTiming(0.9, { duration: 600 }),
-        ),
-        -1,
-        true
-      );
-    } else {
-      loadingScale.value = 1;
-    }
-    setLoading(isLoading);
   };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      setEmailError('Email is required');
-    } else if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError(null);
+    const error = !email ? 'Email is required' 
+                : !emailRegex.test(email) ? 'Please enter a valid email address'
+                : null;
+    if (error !== emailError) {
+      setEmailError(error);
     }
   };
 
   const validatePassword = (password: string) => {
-    if (!password) {
-      setPasswordError('Password is required');
-    } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-    } else if (password.startsWith(' ') || password.endsWith(' ')) {
-      setPasswordError('Password cannot start or end with spaces');
-    } else {
-      setPasswordError(null);
+    const error = !password ? 'Password is required' : null;
+    if (error !== passwordError) {
+      setPasswordError(error);
     }
   };
 
@@ -163,16 +165,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleEmailAuth = async () => {
-    setShowValidation(true);
     validateEmail(email);
     validatePassword(password);
     
-    if (emailError || passwordError || !email || !password) {
+    if (!email || !password) {
+      setError('Please fill in all fields');
       return;
     }
 
     try {
-      setLoadingWithAnimation(true);
+      setLoading(true);
       setError(null);
       
       let userCredential: FirebaseAuthTypes.UserCredential;
@@ -185,16 +187,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       }
       
       navigation.replace('PostQuestionnaire');
-    } catch (error) {
-      handleAuthError(error);
+    } catch (error: any) {
+      if (error.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address');
+      } else if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email');
+      } else if (error.code === 'auth/wrong-password') {
+        setError('Incorrect password');
+      } else {
+        handleAuthError(error);
+      }
     } finally {
-      setLoadingWithAnimation(false);
+      setLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      setLoadingWithAnimation(true);
+      setLoading(true);
       setError(null);
       
       await GoogleSignin.hasPlayServices();
@@ -210,18 +220,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       await createUserProfile(userCredential.user);
       navigation.replace('PostQuestionnaire');
     } catch (error) {
+      console.log('Google Sign-In Error:', error);  // Debug log
+      console.log('Error code:', (error as any).code);  // Debug log
+      console.log('Error message:', (error as any).message);  // Debug log
       handleAuthError(error);
     } finally {
-      setLoadingWithAnimation(false);
+      setLoading(false);
     }
   };
 
   const signInWithApple = async () => {
     try {
-      setLoadingWithAnimation(true);
+      setLoading(true);
       setError(null);
 
-      // Request credentials
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
@@ -245,7 +257,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         handleAuthError(error);
       }
     } finally {
-      setLoadingWithAnimation(false);
+      setLoading(false);
     }
   };
 
@@ -255,10 +267,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         setError('Please enter your email address first');
         return;
       }
-      setLoadingWithAnimation(true);
+      setLoading(true);
       await auth().sendPasswordResetEmail(email);
       setError(null);
-      // Show success message instead of error
       Alert.alert(
         'Reset Email Sent',
         'Check your email for instructions to reset your password.',
@@ -267,312 +278,266 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     } catch (error) {
       handleAuthError(error);
     } finally {
-      setLoadingWithAnimation(false);
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <LinearGradient
-        colors={['#121212', '#1a1a1a', '#121212']}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={[styles.gradientBackground, { paddingTop: insets.top }]}
-      >
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
-          <ScrollView 
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: insets.bottom }
-            ]}
-          >
-            <View style={styles.content}>
-              <Text style={styles.title}>MindShift</Text>
-              <Text style={styles.subtitle}>Sign {isSignUp ? 'up' : 'in'} to continue</Text>
-
-              {error && <Text style={styles.error}>{error}</Text>}
-
-              <Animated.View style={[styles.inputContainer, emailAnimatedStyle]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#666"
-                  value={email}
-                  onChangeText={handleEmailChange}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoCorrect={false}
-                  onFocus={() => (emailFocus.value = 1)}
-                  onBlur={() => {
-                    emailFocus.value = 0;
-                  }}
-                />
-                {showValidation && emailError && (
-                  <Text style={styles.inputError}>{emailError}</Text>
-                )}
-              </Animated.View>
-
-              <Animated.View style={[styles.inputContainer, passwordAnimatedStyle]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor="#666"
-                  value={password}
-                  onChangeText={handlePasswordChange}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onFocus={() => (passwordFocus.value = 1)}
-                  onBlur={() => {
-                    passwordFocus.value = 0;
-                  }}
-                />
-                {showValidation && passwordError && (
-                  <Text style={styles.inputError}>{passwordError}</Text>
-                )}
-              </Animated.View>
-
-              {!isSignUp && (
-                <TouchableOpacity 
-                  style={styles.forgotPasswordContainer}
-                  onPress={handleForgotPassword}
-                >
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.buttonContainer}
-                onPress={handleEmailAuth}
-                disabled={loading}
-              >
-                <LinearGradient
-                  colors={['#FFD700', '#FFC000', '#FFD700']}
-                  start={{x: 0, y: 0}}
-                  end={{x: 1, y: 0}}
-                  style={[styles.gradientButton, {
-                    shadowColor: '#FFD700',
-                  }]}
-                >
-                  <Text style={styles.buttonText}>
-                    {isSignUp ? 'Sign Up' : 'Sign In'} with Email
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setIsSignUp(!isSignUp)}
-                style={styles.switchAuthMode}
-              >
-                <Text style={styles.switchAuthText}>
-                  {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
+    <SafeAreaProvider>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.contentContainer}>
+            <Text style={styles.title}>Welcome to Mindshift</Text>
+            
+            {/* Error Message - Moved to top for better visibility */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorTitle}>Error</Text>
+                <Text style={styles.errorMessage}>{error}</Text>
               </View>
+            )}
 
-              <GoogleSigninButton
-                style={styles.googleButton}
-                size={GoogleSigninButton.Size.Wide}
-                color={GoogleSigninButton.Color.Light}
-                onPress={signInWithGoogle}
-                disabled={loading}
+            {/* Email Input */}
+            <Animated.View style={[styles.inputContainer, emailAnimatedStyle]}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#666666"
+                value={email}
+                onChangeText={handleEmailChange}
+                onFocus={() => emailFocus.value = 1}
+                onBlur={() => emailFocus.value = 0}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
+            </Animated.View>
+            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
-              {Platform.OS === 'ios' && (
-                <AppleButton
-                  buttonStyle={AppleButton.Style.WHITE}
-                  buttonType={AppleButton.Type.SIGN_IN}
-                  style={styles.appleButton}
-                  onPress={signInWithApple}
-                />
-              )}
+            {/* Password Input */}
+            <Animated.View style={[styles.inputContainer, passwordAnimatedStyle]}>
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#666666"
+                value={password}
+                onChangeText={handlePasswordChange}
+                onFocus={() => passwordFocus.value = 1}
+                onBlur={() => passwordFocus.value = 0}
+                secureTextEntry
+              />
+            </Animated.View>
+            {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+
+            {/* Forgot Password Link */}
+            {!isSignUp && (
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                onPress={handleForgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Email Sign In/Up Button */}
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleEmailAuth}
+              disabled={loading}>
+              <Text style={styles.buttonText}>
+                {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Toggle Sign In/Up */}
+            <TouchableOpacity
+              onPress={() => setIsSignUp(!isSignUp)}
+              style={styles.toggleButton}>
+              <Text style={styles.toggleText}>
+                {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.divider} />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
 
-        {loading && (
-          <Animated.View style={[styles.loadingContainer, loadingAnimatedStyle]}>
-            <LinearGradient
-              colors={['#FFD700', '#FFC000']}
-              style={styles.loadingIndicatorContainer}
-            >
-              <ActivityIndicator size="large" color="#000" />
-            </LinearGradient>
-          </Animated.View>
-        )}
-      </LinearGradient>
-    </View>
+            {/* Google Sign In Button */}
+            <TouchableOpacity
+              style={[styles.socialButton, styles.googleButton]}
+              onPress={signInWithGoogle}
+              disabled={loading}>
+              <Image
+                source={require('../assets/illustrations/icons/google-icon.png')}
+                style={styles.socialIcon}
+              />
+              <Text style={styles.socialButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
+
+            {/* Apple Sign In Button */}
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={[styles.socialButton, styles.appleButton]}
+                onPress={signInWithApple}
+                disabled={loading}>
+                <Image
+                  source={require('../assets/illustrations/icons/apple-icon.png')}
+                  style={styles.socialIcon}
+                />
+                <Text style={styles.socialButtonText}>Continue with Apple</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaProvider>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#1E1E1E',
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
-  },
-  content: {
-    flex: 1,
     justifyContent: 'center',
+  },
+  contentContainer: {
+    padding: 20,
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-    marginTop: -160,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-    fontFamily: Platform.select({
-      ios: 'SF Pro Display',
-      android: 'sans-serif-medium',
-    }),
-    letterSpacing: 1,
-    textShadowColor: 'rgba(255, 255, 255, 0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#888',
-    marginBottom: 32,
+    color: '#FFFFFF',
+    marginBottom: 50,
+    marginTop: 50
   },
   inputContainer: {
     width: '100%',
-    marginBottom: 16,
-    borderRadius: 12,
-    backgroundColor: '#1E1E1E',
-    overflow: 'visible',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 4,
   },
   input: {
-    width: '100%',
     padding: 15,
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    backgroundColor: 'transparent',
   },
-  buttonContainer: {
+  button: {
     width: '100%',
-    height: 50,
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  gradientButton: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
+    backgroundColor: '#FFD700',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    borderRadius: 12,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: 10,
   },
   buttonText: {
-    color: '#000',
+    color: '#000000',
     fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontWeight: 'bold',
   },
-  switchAuthMode: {
+  toggleButton: {
     marginBottom: 20,
   },
-  switchAuthText: {
+  toggleText: {
     color: '#FFD700',
     fontSize: 14,
+    marginTop: 20
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: 20,
   },
   divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#3A3A3A',
+  },
+  dividerText: {
+    color: '#FFFFFF',
+    paddingHorizontal: 10,
+  },
+  socialButton: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
-  },
-  dividerText: {
-    color: '#888',
-    paddingHorizontal: 10,
+    justifyContent: 'flex-start',
+    padding: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#2A2A2A',
+    height: 74, // Fixed height to accommodate the 50x50 icon
   },
   googleButton: {
-    width: 200,
-    height: 60,
-    alignSelf: 'center',
-    marginTop: 20,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
   },
   appleButton: {
-    width: 200,
-    height: 50,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
   },
-  error: {
-    color: '#ff6b6b',
-    marginBottom: 20,
+  socialIcon: {
+    width: 70,
+    height: 70,
+    marginRight: 20,
+  },
+  socialButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
     textAlign: 'center',
+    marginRight: 50, // To center the text accounting for the icon
   },
-  loadingContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 14,
+    marginBottom: 15,
+    alignSelf: 'flex-start',
+    paddingLeft: 4,
   },
-  loadingIndicatorContainer: {
-    padding: 20,
-    borderRadius: 15,
-    shadowColor: '#FFD700',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  forgotPasswordContainer: {
-    width: '100%',
-    alignItems: 'flex-end',
-    marginBottom: 20,
-    marginTop: -8,
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 15,
+    marginTop: 5,
   },
   forgotPasswordText: {
     color: '#FFD700',
     fontSize: 14,
-    fontWeight: '600',
+    marginTop: 10,
+    marginBottom: 10,
   },
-  inputError: {
-    color: '#ff6b6b',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-    marginBottom: -8,
+  errorContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
+  },
+  errorTitle: {
+    color: '#FF6B6B',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  errorMessage: {
+    color: '#FF6B6B',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
 
