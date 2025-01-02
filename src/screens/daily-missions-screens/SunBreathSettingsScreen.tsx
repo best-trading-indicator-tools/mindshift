@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
 import { getBreathSettings, saveBreathSettings, resetBreathSettings, BreathSettings } from '../../services/breathSettingsService';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathSettings'>;
 
 const SunBreathSettingsScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const [settings, setSettings] = useState<BreathSettings>({
     inhaleSeconds: 4,
     holdSeconds: 1,
@@ -27,7 +31,7 @@ const SunBreathSettingsScreen: React.FC = () => {
   const handleSave = async () => {
     await saveBreathSettings(settings);
     setHasChanges(false);
-    navigation.goBack();
+    navigation.navigate('SunBreathTutorial');
   };
 
   const handleReset = async () => {

@@ -66,6 +66,18 @@ const SunBreathExerciseScreen: React.FC = () => {
     setShowExitModal(true);
   };
 
+  const handleSettings = () => {
+    // Clear all timers
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+    cycleTimersRef.current = [];
+    
+    // Navigate to settings
+    navigation.navigate('SunBreathTutorial');
+  };
+
   const handleExitConfirm = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -294,12 +306,12 @@ const SunBreathExerciseScreen: React.FC = () => {
 
       <TouchableOpacity 
         style={styles.settingsButton}
-        onPress={() => navigation.navigate('SunBreathSettings')}
+        onPress={handleSettings}
       >
         <MaterialCommunityIcons 
           name="cog" 
           size={30} 
-          color="#FFD700" 
+          color="#FFFFFF" 
         />
       </TouchableOpacity>
 
