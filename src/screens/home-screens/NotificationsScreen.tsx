@@ -120,15 +120,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#2A3744',
+    position: 'relative',
   },
   closeButton: {
     padding: 8,
+    position: 'absolute',
+    right: 20,
   },
   notificationsList: {
     flex: 1,
@@ -204,9 +207,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '600',
     color: '#FFFFFF',
+    textAlign: 'center',
   },
 });
 
