@@ -1,106 +1,116 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import ProgressHeader from '../../components/ProgressHeader';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathIntro'>;
 
+const introContent = [
+  {
+    title: "The Breath of the Sun",
+    content: "A powerful breathing exercise to absorb light and release negativity. Take 5 deep breaths while visualizing golden light entering your body, then release dark clouds of negativity.",
+    icon: "white-balance-sunny"
+  }
+];
+
 const SunBreathIntroScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = introContent.length;
+
+  const handleNext = () => {
+    navigation.navigate('SunBreathTutorial');
+  };
+
+  const handleExit = () => {
+    navigation.navigate('MainTabs');
+  };
+
+  const currentContent = introContent[currentStep - 1];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#FF8C00', '#FFD700']}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
-          <MaterialCommunityIcons name="white-balance-sunny" size={100} color="#FFF" />
-          
-          <Text style={styles.title}>Le Souffle du Soleil</Text>
-          <Text style={styles.subtitle}>The Breath of the Sun</Text>
-          
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.description}>
-              A powerful breathing exercise to absorb light and release negativity.
-            </Text>
-            <Text style={styles.description}>
-              Take 5 deep breaths while visualizing golden light entering your body,
-              then release dark clouds of negativity.
-            </Text>
-          </View>
+    <View style={styles.container}>
+      <ProgressHeader
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onExit={handleExit}
+        onNext={handleNext}
+        showNext={true}
+      />
 
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => navigation.navigate('SunBreathTutorial')}
-          >
-            <Text style={styles.buttonText}>Begin Journey</Text>
-          </TouchableOpacity>
+      <View style={styles.content}>
+        <MaterialCommunityIcons 
+          name={currentContent.icon} 
+          size={100} 
+          color="#FFD700" 
+        />
+        
+        <View style={styles.textContent}>
+          <Text style={styles.title}>{currentContent.title}</Text>
+          <Text style={styles.description}>{currentContent.content}</Text>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </View>
+
+      <TouchableOpacity
+        style={styles.nextButton}
+        onPress={handleNext}
+      >
+        <Text style={styles.nextButtonText}>Begin Journey</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#000000',
   },
   content: {
     flex: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 80,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+  },
+  textContent: {
+    alignItems: 'center',
+    marginTop: 30,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 20,
+    color: '#FFFFFF',
+    marginBottom: 8,
     textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 24,
-    color: '#FFF',
-    marginTop: 8,
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  descriptionContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 15,
-    padding: 20,
-    width: '100%',
-    marginBottom: 40,
   },
   description: {
-    fontSize: 16,
-    color: '#FFF',
+    fontSize: 18,
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 10,
-    lineHeight: 24,
+    lineHeight: 28,
+    opacity: 0.8,
+    marginBottom: 24,
   },
-  button: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  nextButton: {
+    backgroundColor: '#FFD700',
+    marginHorizontal: 24,
+    marginBottom: 40,
+    paddingVertical: 16,
+    borderRadius: 12,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
-  buttonText: {
+  nextButtonText: {
+    color: '#000000',
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FF8C00',
+    textAlign: 'center',
   },
 });
 
