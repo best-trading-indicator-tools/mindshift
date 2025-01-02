@@ -15,7 +15,7 @@ const { width, height } = Dimensions.get('window');
 const INHALE_DURATION = 4000; // 4 seconds
 const HOLD_DURATION = 1000; // 1 second
 const EXHALE_DURATION = 6000; // 6 seconds
-const CYCLES = 5;
+const CYCLES = 1;
 
 const SunBreathExerciseScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -50,6 +50,7 @@ const SunBreathExerciseScreen: React.FC = () => {
 
   const loadVideo = async (type: 'inhale' | 'exhale') => {
     try {
+      // Videos are already cached, this should be instant
       const path = await videoService.getBreathingVideo(type, setLoadingState);
       setVideoPath(path);
     } catch (error) {
@@ -84,6 +85,11 @@ const SunBreathExerciseScreen: React.FC = () => {
   };
 
   const startBreathingCycle = () => {
+    // Don't start if we've exceeded cycles
+    if (currentCycle > CYCLES) {
+      return;
+    }
+
     // Start with inhale
     setIsInhaling(true);
     setInstruction('Breathe In');
@@ -101,29 +107,52 @@ const SunBreathExerciseScreen: React.FC = () => {
       setInstruction('Breathe Out');
       startCountdown(EXHALE_DURATION);
       loadVideo('exhale');
+
+      // If this is the last cycle, wait for exhale to complete before finishing
+      if (currentCycle === CYCLES) {
+        setTimeout(() => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          navigation.navigate('SunBreathComplete');
+        }, EXHALE_DURATION);
+      }
     }, INHALE_DURATION + HOLD_DURATION);
 
+    // Schedule next cycle
     setTimeout(() => {
       if (currentCycle < CYCLES) {
         setCurrentCycle(c => c + 1);
         startBreathingCycle();
-      } else {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-        navigation.navigate('SunBreathComplete');
       }
     }, INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION);
   };
 
   useEffect(() => {
-    loadVideo('inhale');
-    const timer = setTimeout(() => {
-      startBreathingCycle();
-    }, 1000);
+    // Preload both videos before starting
+    const preloadVideos = async () => {
+      try {
+        // Load both videos in parallel
+        await Promise.all([
+          videoService.getBreathingVideo('inhale', setLoadingState),
+          videoService.getBreathingVideo('exhale', setLoadingState)
+        ]);
+        
+        // Once videos are loaded, start the exercise
+        startBreathingCycle();
+      } catch (error) {
+        console.error('Error preloading videos:', error);
+        setLoadingState({
+          isLoading: false,
+          progress: 0,
+          error: 'Failed to load videos'
+        });
+      }
+    };
+
+    preloadVideos();
 
     return () => {
-      clearTimeout(timer);
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -223,22 +252,39 @@ const styles = StyleSheet.create({
     top: 100,
     alignItems: 'center',
     zIndex: 1,
+    width: '100%',
+    paddingHorizontal: 20,
   },
   cycleText: {
     color: '#FFD700',
-    fontSize: 20,
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 1,
   },
   instructionText: {
     color: '#FFF',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 42,
+    fontWeight: '700',
+    marginBottom: 20,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 1.5,
   },
   countdownText: {
     color: '#FFD700',
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 72,
+    fontWeight: '700',
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 8,
+    letterSpacing: 2,
+    opacity: 0.9,
   },
   videoContainer: {
     width: width,
