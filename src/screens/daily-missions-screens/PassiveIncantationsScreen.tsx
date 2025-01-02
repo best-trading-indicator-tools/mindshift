@@ -1512,7 +1512,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   <MaterialCommunityIcons 
                     name="repeat" 
                     size={24} 
-                    color={practiceMode === 'loop' ? '#FFFFFF' : '#9CA3AF'} 
+                    color={practiceMode === 'loop' ? '#000000' : '#9CA3AF'} 
                   />
                   <Text style={[
                     styles.modeButtonText,
@@ -1529,7 +1529,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   <MaterialCommunityIcons 
                     name="timer-outline" 
                     size={24} 
-                    color={practiceMode === 'timer' ? '#FFFFFF' : '#9CA3AF'} 
+                    color={practiceMode === 'timer' ? '#000000' : '#9CA3AF'} 
                   />
                   <Text style={[
                     styles.modeButtonText,
@@ -1574,9 +1574,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   minimumValue={0}
                   maximumValue={60}
                   step={1}
-                  minimumTrackTintColor="#6366F1"
+                  minimumTrackTintColor="#FFD700"
                   maximumTrackTintColor="#E5E7EB"
-                  thumbTintColor="#6366F1"
+                  thumbTintColor="#FFD700"
                 />
               </View>
             )}
@@ -2457,16 +2457,31 @@ const styles = StyleSheet.create({
     bottom: '30%',
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   recordingTextDisplay: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
     fontWeight: '500',
+    lineHeight: 28,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   recordingTagsContainer: {
     flexDirection: 'row',
@@ -2554,7 +2569,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   timerValue: {
-    color: '#6366F1',
+    color: '#FFD700',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -2618,7 +2633,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   musicModalCloseText: {
-    color: '#6366F1',
+    color: '#FFD700',
     fontSize: 16,
     fontWeight: '600',
   },
