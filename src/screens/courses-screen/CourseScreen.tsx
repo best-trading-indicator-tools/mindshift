@@ -9,7 +9,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
-import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
+import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
 import { Icon } from '@rneui/themed';
 
 type TabScreenProps = CompositeScreenProps<

@@ -7,8 +7,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 // Screen imports
 import HomeScreen from '../screens/home-screens/HomeScreen';
 import AiCoachScreen from '../screens/home-screens/AiCoachScreen';
-import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
-import ChallengesScreen from '../screens/ChallengesScreen';
+import { CourseTabScreen, CourseStackScreen } from '../screens/courses-screen/CourseScreen';
+import ChallengesScreen from '../screens/challenges-screens/ChallengesScreen';
 import ProfileScreen from '../screens/profile-page-screens/ProfileScreen';
 import NotificationsScreen from '../screens/home-screens/NotificationsScreen';
 import SupportScreen from '../screens/profile-page-screens/SupportScreen';
