@@ -11,10 +11,13 @@ import InfoBubble from '../../components/InfoBubble';
 import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../services/breathSettingsService';
 import BreathSettingsModal from '../../components/BreathSettingsModal';
 import ProgressHeader from '../../components/ProgressHeader';
+import { tutorialSteps } from './SunBreathTutorialScreen';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
 const { width, height } = Dimensions.get('window');
+
+const TOTAL_STEPS = tutorialSteps.length + 2; // Tutorial + Exercise + Complete
 
 const SunBreathExerciseScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -359,8 +362,8 @@ const SunBreathExerciseScreen: React.FC = () => {
       
       <SafeAreaView style={styles.overlay}>
         <ProgressHeader
-          currentStep={currentCycle}
-          totalSteps={settings.cycles}
+          currentStep={tutorialSteps.length + 1}
+          totalSteps={TOTAL_STEPS}
           onExit={handleExit}
           showNext={false}
         />
@@ -512,12 +515,15 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     position: 'absolute',
-    top: 60,
+    top: 110,
     right: 20,
     zIndex: 10,
-    padding: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 30,
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

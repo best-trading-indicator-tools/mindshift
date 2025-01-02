@@ -8,7 +8,7 @@ import ProgressHeader from '../../components/ProgressHeader';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTutorial'>;
 
-const tutorialSteps = [
+export const tutorialSteps = [
   {
     title: "The Breath of the Sun",
     content: "A powerful breathing exercise to absorb light and release negativity.\n\nTake 5 deep breaths while visualizing golden light entering your body, then release dark clouds of negativity.",
