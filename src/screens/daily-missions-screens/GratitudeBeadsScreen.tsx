@@ -23,7 +23,7 @@ import { audioService, AUDIO_FILES } from '../../services/audioService';
 // Enable playback in silence mode
 Sound.setCategory('Playback');
 
-const TOTAL_BEADS = 20;
+const TOTAL_BEADS = 2;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
 const HOLD_DURATION = 300; // Reduced from 500ms to 300ms for better responsiveness

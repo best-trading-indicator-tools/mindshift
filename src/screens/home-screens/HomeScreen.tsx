@@ -596,21 +596,21 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       ? handleGoldenChecklistNavigation
                       : undefined
                   }
-                  isCompleted={
+                  isCompleted={completedExercises.includes(
                     mission.title === 'Deep Breathing'
-                      ? completedExercises.includes('deep-breathing')
+                      ? 'deep-breathing'
                       : mission.title === 'Active Incantations'
-                      ? completedExercises.includes('active-incantations')
+                      ? 'active-incantations'
                       : mission.title === 'Passive Incantations'
-                      ? completedExercises.includes('passive-incantations')
+                      ? 'passive-incantations'
                       : mission.title === 'Daily Gratitude'
-                      ? completedExercises.includes('gratitude')
+                      ? 'gratitude'
                       : mission.title === 'Gratitude Beads'
-                      ? completedExercises.includes('gratitude-beads')
+                      ? 'gratitude-beads'
                       : mission.title === 'Golden Checklist'
-                      ? completedExercises.includes('golden-checklist')
-                      : false
-                  }
+                      ? 'golden-checklist'
+                      : ''
+                  )}
                 />
               ))}
             </View>

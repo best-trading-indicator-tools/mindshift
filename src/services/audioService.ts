@@ -20,7 +20,7 @@ export const AUDIO_FILES = {
     filename: 'music-incantation-1.wav'
   },
   NECKLACE_BEADS: {
-    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.applestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557',
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557',
     filename: 'necklace-beads.wav'
   }
 };
