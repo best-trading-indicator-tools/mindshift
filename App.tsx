@@ -5,12 +5,12 @@
  * @format
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AppNavigator from './src/navigation/AppNavigator';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, unstable_batchedUpdates } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { getQuestionnaireStatus } from './src/services/questionnaireService';
 import 'react-native-reanimated';
@@ -18,57 +18,45 @@ import 'react-native-reanimated';
 function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'Login'>('PreQuestionnaire');
+  const [initialRoute] = useState<'PreQuestionnaire'>('PreQuestionnaire');
 
-  useEffect(() => {
-    let isMounted = true;
-
-    // Store the unsubscribe function directly
-    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
-      if (!isMounted) return;
-
-      // Batch state updates together
-      const updates = async () => {
-        try {
-          if (!firebaseUser) {
-            return {
-              user: null,
-              route: 'PreQuestionnaire' as const
-            };
-          }
-
-          const questionnaireStatus = await getQuestionnaireStatus();
-          return {
-            user: firebaseUser,
-            route: questionnaireStatus === 'completed' ? 'MainTabs' : 'Login'
-          } as const;
-        } catch (error) {
-          console.error('Error checking questionnaire status:', error);
-          // If there's an error checking questionnaire status, default to Login for authenticated users
-          return {
-            user: firebaseUser,
-            route: 'Login' as const
-          };
-        }
-      };
-
-      const result = await updates();
-      
-      // Apply updates only if component is still mounted
-      if (isMounted) {
-        setUser(result.user);
-        setInitialRoute(result.route);
-        setInitializing(false);
-      }
+  const handleAuthStateChanged = useCallback((firebaseUser: FirebaseAuthTypes.User | null) => {
+    console.log('👤 App.tsx: Auth state changed:', {
+      userExists: !!firebaseUser,
+      userEmail: firebaseUser?.email,
+      timestamp: new Date().toISOString()
     });
 
+    // Batch state updates together
+    unstable_batchedUpdates(() => {
+      setUser(firebaseUser);
+      setInitializing(false);
+    });
+
+    console.log('✅ App.tsx: State update complete', {
+      userExists: !!firebaseUser,
+      isInitializing: false,
+      timestamp: new Date().toISOString()
+    });
+  }, []); // Empty dependency array since these setters never change
+
+  useEffect(() => {
+    console.log('🔄 App.tsx: Setting up auth state listener');
+    const unsubscribe = auth().onAuthStateChanged(handleAuthStateChanged);
+
     return () => {
-      isMounted = false;
-      unsubscribe(); // Properly call the unsubscribe function
+      console.log('🔚 App.tsx: Cleaning up auth state listener');
+      unsubscribe();
     };
-  }, []); // Empty dependency array as this should only run once on mount
+  }, [handleAuthStateChanged]);
+
+  const memoizedNavigator = React.useMemo(() => {
+    console.log('🧭 App.tsx: Creating memoized navigator with route:', initialRoute);
+    return <AppNavigator initialRoute={initialRoute} />;
+  }, [initialRoute]);
 
   if (initializing) {
+    console.log('⌛ App.tsx: Still initializing, showing loading screen');
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' }}>
         <ActivityIndicator size="large" color="#4285F4" />
@@ -76,11 +64,12 @@ function App(): JSX.Element {
     );
   }
 
+  console.log('🚀 App.tsx: Rendering main app UI');
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AppNavigator initialRoute={initialRoute} />
+          {memoizedNavigator}
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

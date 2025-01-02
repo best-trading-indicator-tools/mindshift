@@ -174,20 +174,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     try {
+      console.log('🔑 LoginScreen: Starting email authentication');
       setLoading(true);
       setError(null);
       
       let userCredential: FirebaseAuthTypes.UserCredential;
       
       if (isSignUp) {
+        console.log('📝 LoginScreen: Attempting to create new account');
         userCredential = await auth().createUserWithEmailAndPassword(email, password);
         await createUserProfile(userCredential.user);
+        console.log('✅ LoginScreen: New account created successfully');
       } else {
+        console.log('🔓 LoginScreen: Attempting to sign in');
         userCredential = await auth().signInWithEmailAndPassword(email, password);
+        console.log('✅ LoginScreen: Sign in successful');
       }
       
+      console.log('🚀 LoginScreen: Navigating to PostQuestionnaire');
       navigation.replace('PostQuestionnaire');
     } catch (error: any) {
+      console.error('❌ LoginScreen: Authentication error:', error);
       if (error.code === 'auth/invalid-email') {
         setError('Please enter a valid email address');
       } else if (error.code === 'auth/user-not-found') {
@@ -204,6 +211,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('🔑 LoginScreen: Starting Google sign in');
       setLoading(true);
       setError(null);
       
@@ -215,14 +223,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         throw new Error('No access token present in Google Sign In response');
       }
 
+      console.log('🔄 LoginScreen: Got Google access token, creating credential');
       const googleCredential = auth.GoogleAuthProvider.credential(null, accessToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
       await createUserProfile(userCredential.user);
+      
+      console.log('🚀 LoginScreen: Google sign in successful, navigating to PostQuestionnaire');
       navigation.replace('PostQuestionnaire');
     } catch (error) {
-      console.log('Google Sign-In Error:', error);  // Debug log
-      console.log('Error code:', (error as any).code);  // Debug log
-      console.log('Error message:', (error as any).message);  // Debug log
+      console.error('❌ LoginScreen: Google sign in error:', error);
       handleAuthError(error);
     } finally {
       setLoading(false);
@@ -231,6 +240,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const signInWithApple = async () => {
     try {
+      console.log('🔑 LoginScreen: Starting Apple sign in');
       setLoading(true);
       setError(null);
 
@@ -242,15 +252,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       const { identityToken, nonce } = appleAuthRequestResponse;
       
       if (identityToken) {
+        console.log('🔄 LoginScreen: Got Apple identity token, creating credential');
         const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
         const userCredential = await auth().signInWithCredential(appleCredential);
         await createUserProfile(userCredential.user);
+        
+        console.log('🚀 LoginScreen: Apple sign in successful, navigating to PostQuestionnaire');
         navigation.replace('PostQuestionnaire');
       } else {
         throw new Error('No identity token provided');
       }
     } catch (error: any) {
-      console.log('Apple Sign In Error:', error);
+      console.error('❌ LoginScreen: Apple sign in error:', error);
       if (error.code === 1000) {
         setError('Please ensure you are signed in to your Apple ID in device settings and try again');
       } else {

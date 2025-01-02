@@ -145,7 +145,7 @@ const MainTabNavigator = () => {
 };
 
 interface AppNavigatorProps {
-  initialRoute?: 'Login' | 'MainTabs' | 'PreQuestionnaire';
+  initialRoute?: 'Login' | 'MainTabs' | 'PreQuestionnaire' | 'PostQuestionnaire';
 }
 
 const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestionnaire' }) => {
@@ -169,6 +169,14 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           name="Login" 
           component={LoginScreen}
           options={{
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen 
+          name="PostQuestionnaire" 
+          component={PostQuestionnaireScreen}
+          options={{
+            headerShown: false,
             gestureEnabled: false,
           }}
         />
@@ -282,14 +290,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           name="Trial" 
           component={TrialScreen}
           options={{
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen
-          name="PostQuestionnaire"
-          component={PostQuestionnaireScreen}
-          options={{
-            headerShown: false,
             gestureEnabled: false,
           }}
         />
