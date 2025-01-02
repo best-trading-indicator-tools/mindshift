@@ -602,6 +602,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   ? 'golden-checklist'
                   : mission.title === 'Gratitude Beads'
                   ? 'gratitude-beads'
+                  : mission.title === 'The Sun Breath'
+                  ? 'sun-breath'
                   : ''
               }))}
             />
