@@ -43,6 +43,7 @@ import {
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
+import Sound from 'react-native-sound';
 
 const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
@@ -88,6 +89,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
   const [hasListenedToAny, setHasListenedToAny] = useState(false);
   const [isDeletingRecording, setIsDeletingRecording] = useState<string | null>(null);
+  const backgroundMusic = useRef<Sound | null>(null);
 
   const backgroundImages = [
     require('../../assets/illustrations/zen1.jpg'),
@@ -202,6 +204,44 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       }
     };
   }, [presentationMode, showPlaybackScreen]);
+
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        const audioPath = await setupAudioFile(
+          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fmusic-incantation-1.wav?alt=media&token=c8880174-bbe8-4200-a776-03613c47478c'
+        );
+
+        backgroundMusic.current = new Sound(audioPath, '', (error) => {
+          if (error) {
+            console.log('Failed to load background music', error);
+            return;
+          }
+          
+          if (backgroundMusic.current) {
+            backgroundMusic.current.setVolume(0.3);
+            backgroundMusic.current.setNumberOfLoops(-1);
+            backgroundMusic.current.play((success) => {
+              if (!success) {
+                console.log('Playback failed');
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing audio:', error);
+      }
+    };
+
+    initAudio();
+
+    return () => {
+      if (backgroundMusic.current) {
+        backgroundMusic.current.stop();
+        backgroundMusic.current.release();
+      }
+    };
+  }, []);
 
   const loadAffirmations = async () => {
     try {
@@ -1664,6 +1704,28 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       } catch (storeError) {
         console.error('Error opening app:', error);
       }
+    }
+  };
+
+  const setupAudioFile = async (url: string): Promise<string> => {
+    const filename = 'music-incantation-1.wav';
+    const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
+
+    try {
+      const exists = await RNFS.exists(localPath);
+      if (exists) {
+        return localPath;
+      }
+
+      await RNFS.downloadFile({
+        fromUrl: url,
+        toFile: localPath,
+      }).promise;
+
+      return localPath;
+    } catch (error) {
+      console.error('Error setting up audio file:', error);
+      throw error;
     }
   };
 

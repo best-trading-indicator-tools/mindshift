@@ -17,6 +17,7 @@ import { markExerciseAsCompleted } from '../../services/exerciseService';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import Svg, { Path } from 'react-native-svg';
+import RNFS from 'react-native-fs';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -251,6 +252,30 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
   );
 };
 
+const setupAudioFile = async (url: string): Promise<string> => {
+  const filename = 'necklace-beads.wav';
+  const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
+
+  try {
+    // Check if file exists in cache
+    const exists = await RNFS.exists(localPath);
+    if (exists) {
+      return localPath;
+    }
+
+    // Download and cache the file
+    await RNFS.downloadFile({
+      fromUrl: url,
+      toFile: localPath,
+    }).promise;
+
+    return localPath;
+  } catch (error) {
+    console.error('Error setting up audio file:', error);
+    throw error;
+  }
+};
+
 const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [completedBeads, setCompletedBeads] = useState<number[]>([]);
   const [currentBead, setCurrentBead] = useState(0);
@@ -261,25 +286,34 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   useEffect(() => {
     // Initialize and play background music
-    backgroundMusic.current = new Sound(
-      require('../../assets/audio/musics/necklace-beads.wav'),
-      (error) => {
-        if (error) {
-          console.log('Failed to load background music', error);
-          return;
-        }
-        
-        if (backgroundMusic.current) {
-          backgroundMusic.current.setVolume(0.3); // Set lower volume
-          backgroundMusic.current.setNumberOfLoops(-1); // Loop indefinitely
-          backgroundMusic.current.play((success) => {
-            if (!success) {
-              console.log('Playback failed');
-            }
-          });
-        }
+    const initAudio = async () => {
+      try {
+        const audioPath = await setupAudioFile(
+          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.applestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557'
+        );
+
+        backgroundMusic.current = new Sound(audioPath, '', (error) => {
+          if (error) {
+            console.log('Failed to load background music', error);
+            return;
+          }
+          
+          if (backgroundMusic.current) {
+            backgroundMusic.current.setVolume(0.3);
+            backgroundMusic.current.setNumberOfLoops(-1);
+            backgroundMusic.current.play((success) => {
+              if (!success) {
+                console.log('Playback failed');
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing audio:', error);
       }
-    );
+    };
+
+    initAudio();
 
     // Cleanup function
     return () => {

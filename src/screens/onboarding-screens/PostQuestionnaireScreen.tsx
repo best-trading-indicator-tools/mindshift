@@ -6,8 +6,31 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
 import { getQuestionnaireResponses } from '../../services/questionnaireService';
+import RNFS from 'react-native-fs';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostQuestionnaire'>;
+
+const setupAudioFile = async (url: string): Promise<string> => {
+  const filename = 'haveagreatday.wav';
+  const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
+
+  try {
+    const exists = await RNFS.exists(localPath);
+    if (exists) {
+      return localPath;
+    }
+
+    await RNFS.downloadFile({
+      fromUrl: url,
+      toFile: localPath,
+    }).promise;
+
+    return localPath;
+  } catch (error) {
+    console.error('Error setting up audio file:', error);
+    throw error;
+  }
+};
 
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   // Get the main stress point from questionnaire responses
@@ -33,21 +56,33 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
     let soundInstance: Sound | null = null;
 
-    // Play audio
-    Sound.setCategory('Playback');
-    soundInstance = new Sound(require('../../assets/audio/haveagreatday.wav'), (error) => {
-      if (error) {
-        console.error('Failed to load sound', error);
-        return;
-      }
+    const initAudio = async () => {
+      try {
+        const audioPath = await setupAudioFile(
+          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fhaveagreatday.wav?alt=media&token=140dd18b-06c1-45b5-acb2-c65a58b8d090'
+        );
 
-      // Play the sound
-      soundInstance?.play((success) => {
-        if (!success) {
-          console.log('Sound playback failed');
-        }
-      });
-    });
+        // Play audio
+        Sound.setCategory('Playback');
+        soundInstance = new Sound(audioPath, '', (error) => {
+          if (error) {
+            console.error('Failed to load sound', error);
+            return;
+          }
+
+          // Play the sound
+          soundInstance?.play((success) => {
+            if (!success) {
+              console.log('Sound playback failed');
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Error initializing audio:', error);
+      }
+    };
+
+    initAudio();
 
     // Cleanup
     return () => {

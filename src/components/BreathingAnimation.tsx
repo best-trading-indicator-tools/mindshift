@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity,
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { markExerciseAsCompleted } from '../services/exerciseService';
+import RNFS from 'react-native-fs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
@@ -13,6 +14,28 @@ const TOTAL_CYCLES = 5;
 
 // Enable playback in silence mode
 Sound.setCategory('Playback', true);
+
+const setupAudioFile = async (url: string): Promise<string> => {
+  const filename = 'haveagreatday.wav';
+  const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
+
+  try {
+    const exists = await RNFS.exists(localPath);
+    if (exists) {
+      return localPath;
+    }
+
+    await RNFS.downloadFile({
+      fromUrl: url,
+      toFile: localPath,
+    }).promise;
+
+    return localPath;
+  } catch (error) {
+    console.error('Error setting up audio file:', error);
+    throw error;
+  }
+};
 
 const BreathingAnimation: React.FC<{ 
   navigation: any;
@@ -274,20 +297,32 @@ const BreathingAnimation: React.FC<{
   useEffect(() => {
     if (phase === 'complete') {
       // Load and play the completion sound
-      const sound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
-        if (error) {
-          console.log('Failed to load completion sound', error);
-          return;
-        }
-        if (sound) {
-          completionSound.current = sound;
-          sound.play((success) => {
-            if (!success) {
-              console.log('Sound playback failed');
+      const initAudio = async () => {
+        try {
+          const audioPath = await setupAudioFile(
+            'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fhaveagreatday.wav?alt=media&token=140dd18b-06c1-45b5-acb2-c65a58b8d090'
+          );
+
+          const sound = new Sound(audioPath, '', (error) => {
+            if (error) {
+              console.log('Failed to load completion sound', error);
+              return;
+            }
+            if (sound) {
+              completionSound.current = sound;
+              sound.play((success) => {
+                if (!success) {
+                  console.log('Sound playback failed');
+                }
+              });
             }
           });
+        } catch (error) {
+          console.error('Error initializing completion audio:', error);
         }
-      });
+      };
+
+      initAudio();
 
       const timer = setTimeout(() => {
         handleCompletion();
