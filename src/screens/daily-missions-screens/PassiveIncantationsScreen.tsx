@@ -87,6 +87,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [currentLoopCount, setCurrentLoopCount] = useState(0);
   const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
   const [hasListenedToAny, setHasListenedToAny] = useState(false);
+  const [isDeletingRecording, setIsDeletingRecording] = useState<string | null>(null);
 
   const backgroundImages = [
     require('../../assets/illustrations/zen1.jpg'),
@@ -258,22 +259,35 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const handleDeleteRecording = async (recordingId: string) => {
+    // Prevent multiple rapid clicks
+    if (isDeletingRecording === recordingId) return;
+    
     try {
+      setIsDeletingRecording(recordingId);
+      
+      // First update the UI by removing the recording from state
       const updatedRecordings = recordings.filter(rec => rec.id !== recordingId);
       setRecordings(updatedRecordings);
       await AsyncStorage.setItem('affirmations', JSON.stringify(updatedRecordings));
       
+      // Then try to delete the file
       const recording = recordings.find(rec => rec.id === recordingId);
       if (recording?.audioUrl) {
         try {
-          await RNFS.unlink(recording.audioUrl);
+          const fileExists = await RNFS.exists(recording.audioUrl);
+          if (fileExists) {
+            await RNFS.unlink(recording.audioUrl);
+          }
         } catch (error) {
-          console.error('Error deleting audio file:', error);
+          // Ignore file deletion errors since the recording is already removed from the UI
+          console.log('File deletion error (non-critical):', error);
         }
       }
     } catch (error) {
       console.error('Failed to delete recording:', error);
       Alert.alert('Error', 'Failed to delete recording. Please try again.');
+    } finally {
+      setIsDeletingRecording(null);
     }
   };
 
@@ -294,13 +308,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       <Text style={styles.title}>Record and Manage</Text>
       <View style={styles.headerButtons}>
         <TouchableOpacity onPress={() => setShowNewAffirmationModal(true)} style={styles.headerButton}>
-          <MaterialCommunityIcons name="plus" size={24} color="#6366F1" />
+          <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setShowAudioSettings(true)} 
           style={styles.headerButton}
         >
-          <MaterialCommunityIcons name="tune-vertical" size={24} color="#6366F1" />
+          <MaterialCommunityIcons name="tune-vertical" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
           <Text style={styles.editButton}>
@@ -360,7 +374,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 <MaterialCommunityIcons
                   name={isBeingPlayed ? "pause" : "play"}
                   size={24}
-                  color="#FFF"
+                  color="#000000"
                 />
               </TouchableOpacity>
             )}
@@ -580,11 +594,70 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const handleListenAll = async () => {
     if (filteredRecordings.length === 0) return;
 
-    const recordingsToPlay = shuffleAffirmations ? 
-      [...filteredRecordings].sort(() => Math.random() - 0.5) : 
-      [...filteredRecordings];
+    // Create a copy of the recordings in their current order
+    const recordingsToPlay = [...filteredRecordings];
+    
+    // If shuffle is enabled, shuffle the array
+    if (shuffleAffirmations) {
+      recordingsToPlay.sort(() => Math.random() - 0.5);
+    }
 
-    playRecordingSequence(recordingsToPlay);
+    // Stop any current playback
+    if (isPlaying) {
+      await audioRecorderPlayer.current.stopPlayer();
+      audioRecorderPlayer.current.removePlayBackListener();
+    }
+
+    setIsPlaying(true);
+    
+    // Play recordings sequentially
+    for (let i = 0; i < recordingsToPlay.length; i++) {
+      const recording = recordingsToPlay[i];
+      
+      try {
+        // Verify file exists
+        const fileExists = await RNFS.exists(recording.audioUrl);
+        if (!fileExists) continue;
+
+        const fileStats = await RNFS.stat(recording.audioUrl);
+        if (fileStats.size === 0) continue;
+
+        // Play current recording
+        await audioRecorderPlayer.current.startPlayer(recording.audioUrl);
+        await audioRecorderPlayer.current.setVolume(affirmationsVolume);
+        setPlayingId(recording.id);
+        setCurrentRecordingText(recording.text || `Recording ${recordings.findIndex(r => r.id === recording.id) + 1}`);
+        setHasListenedToAny(true);
+
+        // Wait for recording to finish
+        await new Promise<void>((resolve) => {
+          const handlePlaybackComplete = (e: any) => {
+            const progress = e.currentPosition / e.duration;
+            progressAnimation.setValue(progress);
+
+            if (e.currentPosition >= e.duration - 50 || progress >= 0.99) {
+              audioRecorderPlayer.current.removePlayBackListener();
+              resolve();
+            }
+          };
+
+          audioRecorderPlayer.current.addPlayBackListener(handlePlaybackComplete);
+        });
+
+        // If this isn't the last recording, wait for the interval
+        if (i < recordingsToPlay.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, intervalBetweenAffirmations * 1000));
+        }
+      } catch (error) {
+        console.error('Error playing recording:', error);
+      }
+    }
+
+    // Reset state after all playback is done
+    setIsPlaying(false);
+    setPlayingId(null);
+    setCurrentRecordingText('');
+    progressAnimation.setValue(0);
   };
 
   // New function for practice flow playback in zen mode
@@ -1203,7 +1276,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 <MaterialCommunityIcons
                   name={isPlaying ? "pause" : "play"}
                   size={48}
-                  color="#4F46E5"
+                  color="#000000"
                 />
               </TouchableOpacity>
             </View>
@@ -1710,7 +1783,7 @@ const styles = StyleSheet.create({
   },
   editButton: {
     fontSize: 16,
-    color: '#6366F1',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   headerButtons: {
@@ -1745,7 +1818,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1770,7 +1843,7 @@ const styles = StyleSheet.create({
   },
   draggingItem: {
     backgroundColor: '#1E1E1E',
-    borderColor: '#6366F1',
+    borderColor: '#FFD700',
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
@@ -1783,21 +1856,22 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.02 }],
   },
   recordingItemPlaying: {
-    borderColor: '#6366F1',
+    borderColor: '#FFD700',
     borderWidth: 2,
     backgroundColor: '#1E1E1E',
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingBottom: 100,
   },
   modalContent: {
     backgroundColor: '#151932',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 20,
     minHeight: 300,
+    marginHorizontal: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1887,10 +1961,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#B91C1C',
   },
   submitButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
   },
   cancelButtonText: {
     color: '#FFFFFF',
@@ -1899,7 +1973,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
