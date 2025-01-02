@@ -18,8 +18,12 @@ const SunBreathCompleteScreen: React.FC = () => {
 
   const handleComplete = async () => {
     try {
-      await markExerciseAsCompleted('sun-breath', 'The Sun Breath');
-      navigation.navigate('MainTabs');
+      const success = await markExerciseAsCompleted('sun-breath', 'The Sun Breath');
+      if (success) {
+        navigation.navigate('MainTabs');
+      } else {
+        console.error('Failed to mark exercise as completed');
+      }
     } catch (error) {
       console.error('Error marking exercise as completed:', error);
     }
