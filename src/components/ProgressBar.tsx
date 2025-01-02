@@ -25,15 +25,19 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           const isCompleted = completedMissions.includes(mission.id);
           const stepHeight = 100 / totalSteps;
           const top = index * stepHeight;
-          const isTransitionSegment = index > 0 && 
+          const isTransitionIntoCompleted = index > 0 && 
+            !completedMissions.includes(missions[index - 1].id) && 
+            completedMissions.includes(mission.id);
+          
+          const isTransitionOutOfCompleted = index > 0 && 
             completedMissions.includes(missions[index - 1].id) && 
             !completedMissions.includes(mission.id);
           
-          if (isTransitionSegment) {
+          if (isTransitionIntoCompleted || isTransitionOutOfCompleted) {
             return (
               <LinearGradient
                 key={mission.id}
-                colors={['#10B981', '#FFD700']}
+                colors={isTransitionIntoCompleted ? ['#FFD700', '#10B981'] : ['#10B981', '#FFD700']}
                 style={[
                   styles.missionLine,
                   {
