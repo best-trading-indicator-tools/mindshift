@@ -107,8 +107,8 @@ const SunBreathExerciseScreen: React.FC = () => {
       // Set isPaused to false after everything is ready
       setIsPaused(false);
       
-      // Start fresh breathing cycle with new settings
-      startBreathingCycle();
+      // Start fresh breathing cycle with new settings, passing them directly
+      startBreathingCycle(0, newSettings);
     } catch (error) {
       console.error('Error saving settings or loading videos:', error);
       setLoadingState({
@@ -220,19 +220,22 @@ const SunBreathExerciseScreen: React.FC = () => {
     }, 1000);
   };
 
-  const startBreathingCycle = (pauseDuration: number = 0) => {
+  const startBreathingCycle = (pauseDuration: number = 0, overrideSettings?: BreathSettings) => {
     // Clear any existing timers
     cycleTimersRef.current.forEach(timer => clearTimeout(timer));
     cycleTimersRef.current = [];
 
+    // Use override settings if provided, otherwise use state settings
+    const activeSettings = overrideSettings || settings;
+
     // Don't start if we've exceeded cycles
-    if (currentCycle > settings.cycles) {
+    if (currentCycle > activeSettings.cycles) {
       return;
     }
 
-    const inhaleMs = settings.inhaleSeconds * 1000;
-    const holdMs = settings.holdSeconds * 1000;
-    const exhaleMs = settings.exhaleSeconds * 1000;
+    const inhaleMs = activeSettings.inhaleSeconds * 1000;
+    const holdMs = activeSettings.holdSeconds * 1000;
+    const exhaleMs = activeSettings.exhaleSeconds * 1000;
 
     // Start with inhale
     setIsInhaling(true);
@@ -254,7 +257,7 @@ const SunBreathExerciseScreen: React.FC = () => {
       loadVideo('exhale');
 
       // If this is the last cycle, wait for exhale to complete before finishing
-      if (currentCycle === settings.cycles) {
+      if (currentCycle === activeSettings.cycles) {
         const completeTimer = setTimeout(() => {
           if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -267,7 +270,7 @@ const SunBreathExerciseScreen: React.FC = () => {
     cycleTimersRef.current.push(exhaleTimer);
 
     // Schedule next cycle
-    if (currentCycle < settings.cycles) {
+    if (currentCycle < activeSettings.cycles) {
       const nextCycleTimer = setTimeout(() => {
         setCurrentCycle(c => c + 1);
         startBreathingCycle();
