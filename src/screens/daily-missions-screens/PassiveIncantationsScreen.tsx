@@ -486,7 +486,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
           <View style={styles.settingsModalBody}>
             <View style={styles.settingsItem}>
-              <MaterialCommunityIcons name="volume-high" size={24} color="#666" />
+              <MaterialCommunityIcons name="volume-high" size={24} color="#FFD700" />
               <View style={styles.settingsSliderContainer}>
                 <Text style={styles.settingsItemLabel}>Background Volume</Text>
                 <Slider
@@ -495,15 +495,15 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   onValueChange={setBackgroundVolume}
                   minimumValue={0}
                   maximumValue={1}
-                  minimumTrackTintColor="#6366F1"
-                  maximumTrackTintColor="#E5E7EB"
-                  thumbTintColor="#6366F1"
+                  minimumTrackTintColor="#FFD700"
+                  maximumTrackTintColor="#2A3744"
+                  thumbTintColor="#FFD700"
                 />
               </View>
             </View>
 
             <View style={styles.settingsItem}>
-              <MaterialCommunityIcons name="account-voice" size={24} color="#666" />
+              <MaterialCommunityIcons name="account-voice" size={24} color="#FFD700" />
               <View style={styles.settingsSliderContainer}>
                 <Text style={styles.settingsItemLabel}>Affirmations Volume</Text>
                 <Slider
@@ -512,15 +512,15 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   onValueChange={setAffirmationsVolume}
                   minimumValue={0}
                   maximumValue={1}
-                  minimumTrackTintColor="#6366F1"
-                  maximumTrackTintColor="#E5E7EB"
-                  thumbTintColor="#6366F1"
+                  minimumTrackTintColor="#FFD700"
+                  maximumTrackTintColor="#2A3744"
+                  thumbTintColor="#FFD700"
                 />
               </View>
             </View>
 
             <View style={styles.settingsItem}>
-              <MaterialCommunityIcons name="timer-outline" size={24} color="#666" />
+              <MaterialCommunityIcons name="timer-outline" size={24} color="#FFD700" />
               <View style={styles.settingsSliderContainer}>
                 <Text style={styles.settingsItemLabel}>Interval Between Affirmations</Text>
                 <View style={styles.intervalSliderContainer}>
@@ -531,9 +531,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                     minimumValue={1}
                     maximumValue={10}
                     step={1}
-                    minimumTrackTintColor="#6366F1"
-                    maximumTrackTintColor="#E5E7EB"
-                    thumbTintColor="#6366F1"
+                    minimumTrackTintColor="#FFD700"
+                    maximumTrackTintColor="#2A3744"
+                    thumbTintColor="#FFD700"
                   />
                   <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
                 </View>
@@ -541,28 +541,28 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             </View>
 
             <View style={styles.settingsItem}>
-              <MaterialCommunityIcons name="shuffle-variant" size={24} color="#666" />
+              <MaterialCommunityIcons name="shuffle-variant" size={24} color="#FFD700" />
               <View style={styles.settingsToggleContainer}>
                 <Text style={styles.settingsItemLabel}>Shuffle Affirmations</Text>
                 <Switch
                   value={shuffleAffirmations}
                   onValueChange={setShuffleAffirmations}
-                  trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
-                  thumbColor={shuffleAffirmations ? "#FFFFFF" : "#F4F3F4"}
+                  trackColor={{ false: "#2A3744", true: "#FFD700" }}
+                  thumbColor={shuffleAffirmations ? "#FFFFFF" : "#4B5563"}
                 />
               </View>
             </View>
 
             {isPlaybackScreen && (
               <View style={styles.settingsItem}>
-                <MaterialCommunityIcons name="presentation" size={24} color="#666" />
+                <MaterialCommunityIcons name="presentation" size={24} color="#FFD700" />
                 <View style={styles.settingsToggleContainer}>
                   <Text style={styles.settingsItemLabel}>Presentation Mode</Text>
                   <Switch
                     value={presentationMode}
                     onValueChange={setPresentationMode}
-                    trackColor={{ false: "#E5E7EB", true: "#6366F1" }}
-                    thumbColor={presentationMode ? "#FFFFFF" : "#F4F3F4"}
+                    trackColor={{ false: "#2A3744", true: "#FFD700" }}
+                    thumbColor={presentationMode ? "#FFFFFF" : "#4B5563"}
                   />
                 </View>
               </View>
@@ -2072,11 +2072,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 24,
   },
-  intervalValue: {
-    fontSize: 14,
-    color: '#666666',
-    marginLeft: 8,
-  },
   playbackControls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2091,7 +2086,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loopButtonActive: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
   },
   tagContainer: {
     paddingVertical: 8,
@@ -2161,7 +2156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
   },
   tagInputButtonText: {
     color: '#FFFFFF',
@@ -2377,7 +2372,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   settingsModalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1F2937',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 0,
@@ -2385,17 +2380,17 @@ const styles = StyleSheet.create({
   settingsModalHeader: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#2A3744', // Darker separator line
   },
   settingsModalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   settingsModalSubtitle: {
     fontSize: 14,
-    color: '#FFB800',
+    color: '#FFD700', // Gold accent color
     marginBottom: 8,
   },
   settingsModalClose: {
@@ -2404,7 +2399,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   settingsModalCloseText: {
-    color: '#6366F1',
+    color: '#FFD700', // Gold accent color
     fontSize: 16,
     fontWeight: '600',
   },
@@ -2422,7 +2417,7 @@ const styles = StyleSheet.create({
   },
   settingsItemLabel: {
     fontSize: 16,
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   settingsSlider: {
@@ -2433,6 +2428,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  intervalValue: {
+    fontSize: 14,
+    color: '#FFD700', // Gold accent color
+    marginLeft: 8,
   },
   settingsToggleContainer: {
     flex: 1,
@@ -2580,7 +2580,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   modeButtonActive: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#FFD700',
   },
   modeButtonText: {
     color: '#9CA3AF',
@@ -2588,7 +2588,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modeButtonTextActive: {
-    color: '#FFFFFF',
+    color: '#000000',
   },
   musicModalContent: {
     backgroundColor: '#1F2937',
