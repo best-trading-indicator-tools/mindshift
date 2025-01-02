@@ -522,7 +522,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             <View style={styles.settingsItem}>
               <MaterialCommunityIcons name="timer-outline" size={24} color="#FFD700" />
               <View style={styles.settingsSliderContainer}>
-                <Text style={styles.settingsItemLabel}>Interval Between Affirmations</Text>
+                <Text style={styles.settingsItemLabel}>
+                  Interval Between Affirmations
+                  <Text style={styles.intervalValue}> {intervalBetweenAffirmations} sec</Text>
+                </Text>
                 <View style={styles.intervalSliderContainer}>
                   <Slider
                     style={styles.settingsSlider}
@@ -535,7 +538,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                     maximumTrackTintColor="#2A3744"
                     thumbTintColor="#FFD700"
                   />
-                  <Text style={styles.intervalValue}>{intervalBetweenAffirmations} sec</Text>
                 </View>
               </View>
             </View>
@@ -2428,11 +2430,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
   },
   intervalValue: {
     fontSize: 14,
-    color: '#FFD700', // Gold accent color
-    marginLeft: 8,
+    color: '#FFD700',
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   settingsToggleContainer: {
     flex: 1,
