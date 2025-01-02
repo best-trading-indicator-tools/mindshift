@@ -91,6 +91,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
       };
 
       await saveMentorBoard(newBoard);
+      await markExerciseAsCompleted('mentor-board', 'Mentor Board');
       await loadBoards();
       setShowNewBoardModal(false);
       setNewBoardName('');
@@ -371,6 +372,11 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
               
               // Save to storage first
               await saveMentorBoard(updatedBoard);
+              
+              // Mark exercise as completed when mentors are added
+              if (updatedBoard.mentors.length > 0) {
+                await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+              }
               
               // Then update local state
               setMentorBoards(prevBoards => 

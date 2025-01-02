@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 20 : 40,
+    marginBottom: 40,
   },
   nextButton: {
     backgroundColor: '#E31837',
