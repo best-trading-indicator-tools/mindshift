@@ -143,6 +143,8 @@ const DAILY_MISSIONS = [
   },
 ];
 
+const MISSIONS_PER_DAY = 5;
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userName, setUserName] = useState('User');
@@ -154,7 +156,53 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const cardSpacing = 12;
   const [hasNotifications, setHasNotifications] = useState(true);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
+  const [dailyMissions, setDailyMissions] = useState<typeof DAILY_MISSIONS>([]);
   const isCheckingRef = useRef(false);
+
+  // Function to get today's date as a string
+  const getTodayString = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  };
+
+  // Function to shuffle array using Fisher-Yates algorithm
+  const shuffleArray = <T extends any>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
+  // Function to select random missions for the day
+  const selectDailyMissions = async () => {
+    try {
+      // Check if we already have missions selected for today
+      const lastUpdateDate = await AsyncStorage.getItem('lastMissionsUpdateDate');
+      const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+      const today = getTodayString();
+
+      if (lastUpdateDate === today && storedMissions) {
+        // If we have missions for today, use them
+        setDailyMissions(JSON.parse(storedMissions));
+      } else {
+        // Select new random missions
+        const shuffledMissions = shuffleArray(DAILY_MISSIONS);
+        const selectedMissions = shuffledMissions.slice(0, MISSIONS_PER_DAY);
+        
+        // Store the selected missions and update date
+        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(selectedMissions));
+        await AsyncStorage.setItem('lastMissionsUpdateDate', today);
+        
+        setDailyMissions(selectedMissions);
+      }
+    } catch (error) {
+      console.error('Error selecting daily missions:', error);
+      // Fallback to first 5 missions if there's an error
+      setDailyMissions(DAILY_MISSIONS.slice(0, MISSIONS_PER_DAY));
+    }
+  };
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -180,6 +228,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     checkExerciseCompletions();
     loadStreak();
     updateProgress();
+    selectDailyMissions();
   }, []);
 
   // Update focus listener useEffect
@@ -190,7 +239,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         Promise.all([
           checkExerciseCompletions(),
           loadStreak(),
-          updateProgress()
+          updateProgress(),
+          selectDailyMissions()
         ]).finally(() => {
           isCheckingRef.current = false;
         });
@@ -211,7 +261,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       console.log('Checking exercise completions for user:', currentUser.uid);
       
       // Get completion status for all exercises
-      const exerciseIds = DAILY_MISSIONS.map(mission => {
+      const exerciseIds = dailyMissions.map(mission => {
         switch (mission.title) {
           case 'Deep Breathing':
             return 'deep-breathing';
@@ -255,8 +305,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const updateProgress = async () => {
     try {
-      const progress = await checkDailyProgress();
-      setProgressPercentage(progress.progressPercentage);
+      const { progressPercentage } = await checkDailyProgress();
+      setProgressPercentage(progressPercentage);
     } catch (error) {
       console.error('Error updating progress:', error);
     }
@@ -311,34 +361,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleReset = async () => {
-    Alert.alert(
-      'Reset App Data',
-      'This will clear all app data including vision boards, exercises, and settings. This action cannot be undone. Are you sure?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await clearAllAppData();
-              // Refresh the UI
-              await checkExerciseCompletions();
-              await loadStreak();
-              await updateProgress();
-              // Show success message
-              Alert.alert('Success', 'All app data has been cleared.');
-            } catch (error) {
-              console.error('Error resetting app:', error);
-              Alert.alert('Error', 'Failed to reset app data. Please try again.');
-            }
-          }
-        }
-      ]
-    );
+    try {
+      await resetAllDailyExercises();
+      await clearNotifications();
+      await selectDailyMissions(); // Re-select missions after reset
+      checkExerciseCompletions();
+      loadStreak();
+      updateProgress();
+      Alert.alert('Success', 'All daily exercises have been reset.');
+    } catch (error) {
+      console.error('Error resetting exercises:', error);
+      Alert.alert('Error', 'Failed to reset exercises. Please try again.');
+    }
   };
 
   const handleVisionBoardNavigation = async () => {
@@ -356,68 +390,44 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleGratitudeNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('daily_gratitude_intro_seen');
-      navigation.getParent()?.navigate('DailyGratitudeIntro');
-    } catch (error) {
-      console.error('Error handling gratitude navigation:', error);
-      navigation.getParent()?.navigate('DailyGratitudeIntro');
+    const mission = dailyMissions.find(m => m.title === 'Daily Gratitude');
+    if (mission) {
+      navigation.navigate('DailyGratitudeIntro');
     }
   };
 
   const handleDeepBreathingNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('deep_breathing_intro_seen');
-      navigation.getParent()?.navigate('DeepBreathingIntro');
-    } catch (error) {
-      console.error('Error handling deep breathing navigation:', error);
-      navigation.getParent()?.navigate('DeepBreathingIntro');
+    const mission = dailyMissions.find(m => m.title === 'Deep Breathing');
+    if (mission) {
+      navigation.navigate('DeepBreathingIntro');
     }
   };
 
   const handleActiveIncantationsNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('active_incantations_intro_seen');
-      navigation.getParent()?.navigate('ActiveIncantationsIntro');
-    } catch (error) {
-      console.error('Error handling active incantations navigation:', error);
-      navigation.getParent()?.navigate('ActiveIncantationsIntro');
+    const mission = dailyMissions.find(m => m.title === 'Active Incantations');
+    if (mission) {
+      navigation.navigate('ActiveIncantations');
     }
   };
 
   const handlePassiveIncantationsNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('passive_incantations_intro_seen');
-      navigation.getParent()?.navigate('PassiveIncantationsIntro');
-    } catch (error) {
-      console.error('Error handling passive incantations navigation:', error);
-      navigation.getParent()?.navigate('PassiveIncantationsIntro');
+    const mission = dailyMissions.find(m => m.title === 'Passive Incantations');
+    if (mission) {
+      navigation.navigate('PassiveIncantations');
     }
   };
 
   const handleGoldenChecklistNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('golden_checklist_intro_seen');
-      navigation.getParent()?.navigate('GoldenChecklistIntro');
-    } catch (error) {
-      console.error('Error handling golden checklist navigation:', error);
-      navigation.getParent()?.navigate('GoldenChecklistIntro');
+    const mission = dailyMissions.find(m => m.title === 'Golden Checklist');
+    if (mission) {
+      navigation.navigate('GoldenChecklistIntro');
     }
   };
 
   const handleGratitudeBeadsNavigation = async () => {
-    try {
-      // Clear the flag to ensure intro is shown
-      await AsyncStorage.removeItem('gratitude_beads_intro_seen');
-      navigation.getParent()?.navigate('GratitudeBeadsIntro');
-    } catch (error) {
-      console.error('Error handling gratitude beads navigation:', error);
-      navigation.getParent()?.navigate('GratitudeBeadsIntro');
+    const mission = dailyMissions.find(m => m.title === 'Gratitude Beads');
+    if (mission) {
+      navigation.navigate('GratitudeBeadsIntro');
     }
   };
 
@@ -546,10 +556,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={styles.missionsContent}>
             <ProgressBar 
-              totalSteps={DAILY_MISSIONS.length}
+              totalSteps={dailyMissions.length}
               completedSteps={completedExercises.length}
               completedMissions={completedExercises}
-              missions={DAILY_MISSIONS.map(mission => ({
+              missions={dailyMissions.map(mission => ({
                 title: mission.title,
                 id: mission.title === 'Deep Breathing' 
                   ? 'deep-breathing'
@@ -567,7 +577,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               }))}
             />
             <View style={styles.missionsList}>
-              {DAILY_MISSIONS.map((mission, index) => (
+              {dailyMissions.map((mission, index) => (
                 <MissionItem
                   key={index}
                   {...mission}

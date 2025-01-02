@@ -141,19 +141,46 @@ export const getStreak = async (): Promise<number> => {
   }
 };
 
+interface DailyMission {
+  title: string;
+  subtitle: string;
+  duration: string;
+  type: string;
+  icon: string;
+}
+
+interface MissionKey {
+  key: string;
+  name: string;
+}
+
 export const checkDailyProgress = async () => {
   try {
-    const missions = [
-      { key: 'deep-breathing', name: 'Deep Breathing' },
-      { key: 'active-incantations', name: 'Active Incantations' },
-      { key: 'passive-incantations', name: 'Passive Incantations' },
-      { key: 'gratitude', name: 'Daily Gratitude' },
-      { key: 'gratitude-beads', name: 'Gratitude Beads' },
-      { key: 'golden-checklist', name: 'Golden Checklist' }
-    ];
+    // Get today's selected missions
+    const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+    if (!storedMissions) {
+      return { completedCount: 0, totalMissions: 0, remainingMissions: 0, progressPercentage: 0 };
+    }
+
+    const missions = JSON.parse(storedMissions).map((mission: DailyMission) => ({
+      key: mission.title === 'Deep Breathing' 
+        ? 'deep-breathing'
+        : mission.title === 'Active Incantations'
+        ? 'active-incantations'
+        : mission.title === 'Passive Incantations'
+        ? 'passive-incantations'
+        : mission.title === 'Daily Gratitude'
+        ? 'gratitude'
+        : mission.title === 'Golden Checklist'
+        ? 'golden-checklist'
+        : mission.title === 'Gratitude Beads'
+        ? 'gratitude-beads'
+        : '',
+      name: mission.title
+    }));
 
     const results = await Promise.all(
-      missions.map(mission => isExerciseCompletedToday(mission.key))
+      missions.map((mission: MissionKey) => isExerciseCompletedToday(mission.key))
     );
 
     const completedCount = results.filter(Boolean).length;
