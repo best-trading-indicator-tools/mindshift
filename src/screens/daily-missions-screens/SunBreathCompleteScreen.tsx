@@ -5,17 +5,32 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useMissionsContext } from '../../contexts/MissionsContext';
+import { useNotificationsContext } from '../../contexts/NotificationsContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
 
 const SunBreathCompleteScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { completeMission } = useMissionsContext();
+  const { addNotification } = useNotificationsContext();
 
   const handleRepeat = () => {
     navigation.replace('SunBreathExercise');
   };
 
   const handleComplete = () => {
+    // Mark mission as complete
+    completeMission('The Sun Breath');
+    
+    // Add completion notification
+    addNotification({
+      title: 'Mission Complete!',
+      message: 'You have completed The Sun Breath exercise.',
+      type: 'success',
+      timestamp: new Date(),
+    });
+
     navigation.navigate('MainTabs');
   };
 
@@ -36,10 +51,12 @@ const SunBreathCompleteScreen: React.FC = () => {
 
           <Text style={styles.title}>Exercise{'\n'}Complete!</Text>
           
-          <Text style={styles.message}>
-            Take a moment to notice how you feel.{'\n\n'}
-            Your body and mind are now refreshed and energized.
-          </Text>
+          <View style={styles.messageContainer}>
+            <Text style={styles.message}>
+              Take a moment to notice how you feel.{'\n\n'}
+              Your body and mind are now refreshed and energized.
+            </Text>
+          </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
@@ -88,12 +105,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 48,
   },
+  messageContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 60,
+    width: '100%',
+  },
   message: {
     fontSize: 22,
     color: 'white',
     textAlign: 'center',
     lineHeight: 32,
-    marginBottom: 60,
     opacity: 0.95,
   },
   buttonContainer: {
@@ -101,6 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     gap: 15,
+    paddingBottom: 20,
   },
   button: {
     borderRadius: 30,
@@ -126,9 +150,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   completeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   completeButtonText: {
     color: 'white',
