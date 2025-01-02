@@ -15,11 +15,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathEx
 
 const { width, height } = Dimensions.get('window');
 
-const INHALE_DURATION = 4000; // 4 seconds
-const HOLD_DURATION = 1000; // 1 second
-const EXHALE_DURATION = 6000; // 6 seconds
-const CYCLES = 1;
-
 const SunBreathExerciseScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [currentCycle, setCurrentCycle] = useState(1);
@@ -358,7 +353,7 @@ const SunBreathExerciseScreen: React.FC = () => {
 
       <View style={styles.content}>
         <View style={styles.instructionContainer}>
-          <Text style={styles.cycleText}>Breath {currentCycle} of {CYCLES}</Text>
+          <Text style={styles.cycleText}>Breath {currentCycle} of {settings.cycles}</Text>
           <Text style={styles.instructionText}>{instruction}</Text>
           {instruction !== 'Hold' && (
             <Text style={styles.countdownText}>{countdown}</Text>
