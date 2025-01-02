@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 import RNFS from 'react-native-fs';
+import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
@@ -299,24 +300,22 @@ const BreathingAnimation: React.FC<{
       // Load and play the completion sound
       const initAudio = async () => {
         try {
-          const audioPath = await setupAudioFile(
-            'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fhaveagreatday.wav?alt=media&token=140dd18b-06c1-45b5-acb2-c65a58b8d090'
+          completionSound.current = await audioService.loadSound(
+            AUDIO_FILES.HAVE_A_GREAT_DAY,
+            (state) => {
+              if (state.error) {
+                console.error('Error loading completion sound:', state.error);
+              }
+            }
           );
 
-          const sound = new Sound(audioPath, '', (error) => {
-            if (error) {
-              console.log('Failed to load completion sound', error);
-              return;
-            }
-            if (sound) {
-              completionSound.current = sound;
-              sound.play((success) => {
-                if (!success) {
-                  console.log('Sound playback failed');
-                }
-              });
-            }
-          });
+          if (completionSound.current) {
+            completionSound.current.play((success) => {
+              if (!success) {
+                console.log('Sound playback failed');
+              }
+            });
+          }
         } catch (error) {
           console.error('Error initializing completion audio:', error);
         }
@@ -332,7 +331,7 @@ const BreathingAnimation: React.FC<{
         clearTimeout(timer);
         if (completionSound.current) {
           completionSound.current.stop();
-          completionSound.current.release();
+          audioService.releaseSound(AUDIO_FILES.HAVE_A_GREAT_DAY.filename);
           completionSound.current = null;
         }
       };

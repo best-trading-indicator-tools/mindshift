@@ -44,6 +44,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Sound from 'react-native-sound';
+import { audioService, AUDIO_FILES } from '../../services/audioService';
 
 const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
@@ -208,26 +209,24 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   useEffect(() => {
     const initAudio = async () => {
       try {
-        const audioPath = await setupAudioFile(
-          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fmusic-incantation-1.wav?alt=media&token=c8880174-bbe8-4200-a776-03613c47478c'
+        backgroundMusic.current = await audioService.loadSound(
+          AUDIO_FILES.MUSIC_INCANTATION,
+          (state) => {
+            if (state.error) {
+              console.error('Error loading background music:', state.error);
+            }
+          }
         );
 
-        backgroundMusic.current = new Sound(audioPath, '', (error) => {
-          if (error) {
-            console.log('Failed to load background music', error);
-            return;
-          }
-          
-          if (backgroundMusic.current) {
-            backgroundMusic.current.setVolume(0.3);
-            backgroundMusic.current.setNumberOfLoops(-1);
-            backgroundMusic.current.play((success) => {
-              if (!success) {
-                console.log('Playback failed');
-              }
-            });
-          }
-        });
+        if (backgroundMusic.current) {
+          backgroundMusic.current.setVolume(0.3);
+          backgroundMusic.current.setNumberOfLoops(-1);
+          backgroundMusic.current.play((success) => {
+            if (!success) {
+              console.log('Playback failed');
+            }
+          });
+        }
       } catch (error) {
         console.error('Error initializing audio:', error);
       }
@@ -238,7 +237,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     return () => {
       if (backgroundMusic.current) {
         backgroundMusic.current.stop();
-        backgroundMusic.current.release();
+        audioService.releaseSound(AUDIO_FILES.MUSIC_INCANTATION.filename);
       }
     };
   }, []);

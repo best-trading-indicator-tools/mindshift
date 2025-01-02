@@ -18,6 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import Svg, { Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
+import { audioService, AUDIO_FILES } from '../../services/audioService';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -288,26 +289,24 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     // Initialize and play background music
     const initAudio = async () => {
       try {
-        const audioPath = await setupAudioFile(
-          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.applestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557'
+        backgroundMusic.current = await audioService.loadSound(
+          AUDIO_FILES.NECKLACE_BEADS,
+          (state) => {
+            if (state.error) {
+              console.error('Error loading background music:', state.error);
+            }
+          }
         );
 
-        backgroundMusic.current = new Sound(audioPath, '', (error) => {
-          if (error) {
-            console.log('Failed to load background music', error);
-            return;
-          }
-          
-          if (backgroundMusic.current) {
-            backgroundMusic.current.setVolume(0.3);
-            backgroundMusic.current.setNumberOfLoops(-1);
-            backgroundMusic.current.play((success) => {
-              if (!success) {
-                console.log('Playback failed');
-              }
-            });
-          }
-        });
+        if (backgroundMusic.current) {
+          backgroundMusic.current.setVolume(0.3);
+          backgroundMusic.current.setNumberOfLoops(-1);
+          backgroundMusic.current.play((success) => {
+            if (!success) {
+              console.log('Playback failed');
+            }
+          });
+        }
       } catch (error) {
         console.error('Error initializing audio:', error);
       }
@@ -319,7 +318,7 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     return () => {
       if (backgroundMusic.current) {
         backgroundMusic.current.stop();
-        backgroundMusic.current.release();
+        audioService.releaseSound(AUDIO_FILES.NECKLACE_BEADS.filename);
       }
     };
   }, []);
