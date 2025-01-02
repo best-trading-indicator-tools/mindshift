@@ -91,6 +91,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [hasListenedToAny, setHasListenedToAny] = useState(false);
   const [isDeletingRecording, setIsDeletingRecording] = useState<string | null>(null);
   const backgroundMusic = useRef<Sound | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const backgroundImages = [
     require('../../assets/illustrations/zen1.jpg'),
@@ -1766,10 +1767,16 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </TouchableOpacity>
             )}
             <TouchableOpacity 
-              style={styles.exitButton}
+              style={styles.doneButton}
               onPress={handleComplete}
             >
-              <Text style={styles.exitButtonText}>I'm done</Text>
+              <Text style={styles.doneButtonText}>I'm done</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.exitButton}
+              onPress={() => setShowExitModal(true)}
+            >
+              <Text style={styles.exitButtonText}>Exit</Text>
             </TouchableOpacity>
           </View>
 
@@ -1818,6 +1825,38 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 </View>
               </View>
             </KeyboardAvoidingView>
+          </Modal>
+
+          {/* Exit Modal */}
+          <Modal
+            visible={showExitModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowExitModal(false)}
+          >
+            <View style={styles.exitModalOverlay}>
+              <View style={styles.exitModalContent}>
+                <Text style={styles.exitModalTitle}>Wait! Are you sure?</Text>
+                <Text style={styles.exitModalText}>
+                  You're making progress! Continue practicing to maintain your results.
+                </Text>
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={() => setShowExitModal(false)}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.exitModalButton}
+                  onPress={() => {
+                    setShowExitModal(false);
+                    navigation.goBack();
+                  }}
+                >
+                  <Text style={styles.exitModalButtonText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </Modal>
         </>
       </SafeAreaView>
@@ -1949,8 +1988,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   doneButton: {
-    color: '#6366F1',
-    fontSize: 16,
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: '#000000',
+    fontSize: 18,
     fontWeight: '600',
   },
   settingsLabel: {
@@ -1970,38 +2015,33 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   buttonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 40,
     gap: 12,
   },
   listenAllButton: {
-    backgroundColor: '#B91C1C',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    width: '80%',
+    backgroundColor: '#2A3744',
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: 'center',
   },
   listenAllButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
   },
   exitButton: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    width: '80%',
+    backgroundColor: '#FF9999',
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E31837',
   },
   exitButtonText: {
     color: '#000000',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
   },
   textInput: {
     backgroundColor: '#1E1E1E',
@@ -2662,6 +2702,69 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  exitModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  exitModalContent: {
+    backgroundColor: '#1F2937',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  exitModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  exitModalText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+  },
+  continueButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  exitModalButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  exitModalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 
