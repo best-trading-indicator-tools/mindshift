@@ -50,7 +50,7 @@ const MissionItem: React.FC<MissionItemProps> = ({
             </View>
             
             <View style={styles.iconContainer}>
-              <MaterialCommunityIcons name={icon} size={40} color="#6366f1" />
+              <MaterialCommunityIcons name={icon} size={40} color="#FFD700" />
             </View>
           </View>
         </View>

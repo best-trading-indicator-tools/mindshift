@@ -483,7 +483,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>Bonjour {userName}!</Text>
+            <Text style={styles.greeting}>Hi {userName}!</Text>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
