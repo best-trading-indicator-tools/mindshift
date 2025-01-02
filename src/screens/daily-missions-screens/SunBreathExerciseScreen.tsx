@@ -8,6 +8,8 @@ import Animated, {
   withTiming,
   useSharedValue,
   withSequence,
+  withDelay,
+  runOnJS,
 } from 'react-native-reanimated';
 import SunBreathAnimation from '../../components/sun-breath/SunBreathAnimation';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -45,32 +47,32 @@ const SunBreathExerciseScreen: React.FC = () => {
   };
 
   const startBreathingCycle = () => {
-    // Inhale
+    // Start with inhale
     setIsInhaling(true);
     setInstruction('Breathe In');
+    
+    // Inhale animation (0 to 1)
     progress.value = withSequence(
-      withTiming(1, { duration: INHALE_DURATION }),
-      withTiming(1, { duration: HOLD_DURATION }),
-      withTiming(0, { duration: EXHALE_DURATION }, () => {
-        if (currentCycle < CYCLES) {
-          setCurrentCycle(prev => prev + 1);
-          startBreathingCycle();
-        } else {
-          // Exercise completed
-          navigation.navigate('SunBreathComplete');
-        }
-      })
+      withTiming(1, { duration: INHALE_DURATION }, () => {
+        runOnJS(setInstruction)('Hold');
+      }),
+      // Hold
+      withDelay(HOLD_DURATION, 
+        withTiming(0, { duration: EXHALE_DURATION }, () => {
+          runOnJS(setIsInhaling)(false);
+          runOnJS(setInstruction)('Breathe Out');
+          
+          // Check if we should continue to next cycle
+          if (currentCycle < CYCLES) {
+            runOnJS(setCurrentCycle)(c => c + 1);
+            runOnJS(startBreathingCycle)();
+          } else {
+            // Exercise completed
+            runOnJS(() => navigation.navigate('SunBreathComplete'))();
+          }
+        })
+      )
     );
-
-    // Schedule state changes
-    setTimeout(() => {
-      setInstruction('Hold');
-    }, INHALE_DURATION);
-
-    setTimeout(() => {
-      setIsInhaling(false);
-      setInstruction('Breathe Out');
-    }, INHALE_DURATION + HOLD_DURATION);
   };
 
   useEffect(() => {
