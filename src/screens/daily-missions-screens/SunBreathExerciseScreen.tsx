@@ -81,7 +81,8 @@ const SunBreathExerciseScreen: React.FC = () => {
     setShowSettingsModal(true);
   };
 
-  const handleSettingsSave = (newSettings: BreathSettings) => {
+  const handleSettingsSave = async (newSettings: BreathSettings) => {
+    // First set the settings in state
     setSettings(newSettings);
     setShowSettingsModal(false);
     
@@ -99,25 +100,23 @@ const SunBreathExerciseScreen: React.FC = () => {
     cycleTimersRef.current.forEach(timer => clearTimeout(timer));
     cycleTimersRef.current = [];
     
-    // Preload videos and restart exercise
-    const preloadAndStart = async () => {
-      try {
-        await Promise.all([
-          videoService.getBreathingVideo('inhale', setLoadingState),
-          videoService.getBreathingVideo('exhale', setLoadingState)
-        ]);
-        startBreathingCycle();
-      } catch (error) {
-        console.error('Error preloading videos:', error);
-        setLoadingState({
-          isLoading: false,
-          progress: 0,
-          error: 'Failed to load videos'
-        });
-      }
-    };
-    
-    preloadAndStart();
+    try {
+      // Wait for videos to preload before starting
+      await Promise.all([
+        videoService.getBreathingVideo('inhale', setLoadingState),
+        videoService.getBreathingVideo('exhale', setLoadingState)
+      ]);
+      
+      // Start fresh breathing cycle with new settings
+      startBreathingCycle();
+    } catch (error) {
+      console.error('Error preloading videos:', error);
+      setLoadingState({
+        isLoading: false,
+        progress: 0,
+        error: 'Failed to load videos'
+      });
+    }
   };
 
   const handleExitConfirm = () => {
