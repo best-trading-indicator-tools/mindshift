@@ -19,6 +19,10 @@ export const AUDIO_FILES = {
     url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fmusic-incantation-1.wav?alt=media&token=c8880174-bbe8-4200-a776-03613c47478c',
     filename: 'music-incantation-1.wav'
   },
+  GONG: {
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fgong.wav?alt=media&token=c1843866-9a52-4ce6-8c24-e45a9d8188ad',
+    filename: 'gong.wav'
+  },
   NECKLACE_BEADS: {
     url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557',
     filename: 'necklace-beads.wav'

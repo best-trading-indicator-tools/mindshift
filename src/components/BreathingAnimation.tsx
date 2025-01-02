@@ -60,27 +60,37 @@ const BreathingAnimation: React.FC<{
     if (!isFirstRender.current) return;
     isFirstRender.current = false;
 
-    const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
-      if (error) {
-        console.log('Failed to load gong sound', error);
-        return;
+    const initAudio = async () => {
+      try {
+        gongSound.current = await audioService.loadSound(
+          AUDIO_FILES.GONG,
+          (state) => {
+            if (state.error) {
+              console.error('Error loading gong sound:', state.error);
+            }
+          }
+        );
+
+        if (isMounted.current) {
+          console.log('Sound loaded successfully');
+          // Add delay before starting
+          setTimeout(() => {
+            playGong();
+            startBreathingCycle();
+          }, INITIAL_DELAY);
+        }
+      } catch (error) {
+        console.error('Error initializing gong audio:', error);
       }
-      if (isMounted.current) {
-        console.log('Sound loaded successfully');
-        gongSound.current = sound;
-        // Add delay before starting
-        setTimeout(() => {
-          playGong();
-          startBreathingCycle();
-        }, INITIAL_DELAY);
-      }
-    });
+    };
+
+    initAudio();
 
     return () => {
       isMounted.current = false;
       if (gongSound.current) {
         gongSound.current.stop();
-        gongSound.current.release();
+        audioService.releaseSound(AUDIO_FILES.GONG.filename);
         gongSound.current = null;
       }
       if (animationRef.current) {
