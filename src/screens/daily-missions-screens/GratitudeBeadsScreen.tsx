@@ -16,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { markExerciseAsCompleted } from '../../services/exerciseService';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
+import Svg, { Path } from 'react-native-svg';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -23,10 +24,17 @@ Sound.setCategory('Playback');
 const TOTAL_BEADS = 20;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
-const HOLD_DURATION = 500; // Reduced from 2000 to 500ms to make it more responsive
+const HOLD_DURATION = 300; // Reduced from 500ms to 300ms for better responsiveness
 const PROGRESS_VIBRATION = 50; // Short vibration for progress
 const SUCCESS_VIBRATION = [100, 100, 100]; // Pattern for bead completion
 const COMPLETION_VIBRATION = [0, 100, 50, 100, 50, 100, 50, 200]; // Special pattern for completing all beads
+
+const HAPTICS = {
+  TOUCH: [10] as number[], // Light initial touch
+  HOLD: [1, 50, 1, 50, 1] as number[], // Subtle rolling feeling
+  COMPLETE: [50, 30, 100] as number[], // Satisfying click
+  SEQUENCE_COMPLETE: [0, 100, 50, 100, 50, 100, 50, 200] as number[], // Final completion
+};
 
 const GRATITUDE_PROMPTS = [
   "I'm grateful for my health because...",
@@ -66,10 +74,12 @@ interface BeadProps {
 
 const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, onHold }) => {
   const [isHolding, setIsHolding] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
   const holdTimer = useRef<NodeJS.Timeout>();
   const progressTimer = useRef<NodeJS.Timeout>();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isCurrent) {
@@ -95,6 +105,9 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
   const handlePressIn = () => {
     if (!isCurrent) return;
     
+    // Initial touch feedback
+    Vibration.vibrate(HAPTICS.TOUCH);
+    
     setIsHolding(true);
     Animated.timing(progressAnim, {
       toValue: 1,
@@ -102,16 +115,36 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
       useNativeDriver: false,
     }).start();
 
-    // Add progress vibration
+    // Rolling bead feedback
     progressTimer.current = setInterval(() => {
-      Vibration.vibrate(PROGRESS_VIBRATION);
+      Vibration.vibrate(HAPTICS.HOLD);
     }, HOLD_DURATION / 3);
 
     holdTimer.current = setTimeout(() => {
       setIsHolding(false);
       progressAnim.setValue(0);
       clearInterval(progressTimer.current);
-      Vibration.vibrate(SUCCESS_VIBRATION); // Vibrate on successful hold
+      
+      // Completion feedback
+      Vibration.vibrate(HAPTICS.COMPLETE);
+      
+      // Completion animation sequence
+      setShowParticles(true);
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowParticles(false);
+      });
+      
       onHold();
     }, HOLD_DURATION);
   };
@@ -145,6 +178,19 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
           },
         ]}
       >
+        {isCompleted && (
+          <Animated.View
+            style={[
+              styles.glow,
+              {
+                opacity: glowAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.6],
+                }),
+              },
+            ]}
+          />
+        )}
         <LinearGradient
           colors={
             isCompleted 
@@ -170,6 +216,35 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
               },
             ]}
           />
+        )}
+        {showParticles && (
+          <View style={styles.particlesContainer}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.particle,
+                  {
+                    transform: [
+                      {
+                        translateX: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, Math.cos(i * Math.PI / 4) * 30],
+                        }),
+                      },
+                      {
+                        translateY: glowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, Math.sin(i * Math.PI / 4) * 30],
+                        }),
+                      },
+                    ],
+                    opacity: glowAnim,
+                  },
+                ]}
+              />
+            ))}
+          </View>
         )}
       </Animated.View>
     </TouchableOpacity>
@@ -313,8 +388,24 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     }
   };
 
+  // Add function to generate path between completed beads
+  const generateBeadPath = (completedBeads: number[], getPosition: (index: number) => { x: number; y: number }) => {
+    if (completedBeads.length < 2) return '';
+    
+    // Sort beads by index to ensure correct path order
+    const sortedBeads = [...completedBeads].sort((a, b) => a - b);
+    
+    const points = sortedBeads.map(index => {
+      const pos = getPosition(index);
+      // Add CIRCLE_RADIUS to center the path in the container
+      return `${pos.x + CIRCLE_RADIUS},${pos.y + CIRCLE_RADIUS}`;
+    });
+    
+    return `M ${points.join(' L ')}`;
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, styles.safeArea]}>
       <TouchableOpacity 
         style={styles.exitButton}
         onPress={handleExit}
@@ -347,34 +438,83 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Gratitude Beads</Text>
-        <Text style={styles.instructions}>
-          Touch and hold for <Text style={{ fontWeight: 'bold' }}>2 seconds</Text> each highlighted bead while expressing your gratitude
-        </Text>
-
-        <View style={styles.beadsContainer}>
-          <View style={styles.beadsCircle}>
-            {Array.from({ length: TOTAL_BEADS }).map((_, index) => {
-              const position = getBeadPosition(index);
-              return (
-                <Bead
-                  key={index}
-                  index={index}
-                  isCompleted={completedBeads.includes(index)}
-                  isCurrent={currentBead === index}
-                  position={position}
-                  onHold={handleBeadHold}
-                />
-              );
-            })}
+      <View style={styles.mainContainer}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Gratitude Beads</Text>
+          
+          <View style={styles.progressIndicator}>
+            <View style={styles.progressText}>
+              <Text style={styles.progressNumber}>{completedBeads.length}</Text>
+              <Text style={styles.progressTotal}>/ {TOTAL_BEADS}</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill,
+                  { width: `${(completedBeads.length / TOTAL_BEADS) * 100}%` }
+                ]} 
+              />
+            </View>
           </View>
-        </View>
 
-        <View style={styles.promptContainer}>
-          <Text style={styles.promptText}>
-            {GRATITUDE_PROMPTS[currentPrompt]}
+          <Text style={styles.instructions}>
+            Touch and hold each highlighted bead while expressing your gratitude
           </Text>
+
+          <View style={styles.beadsContainer}>
+            <View style={styles.beadsCircle}>
+              <Svg style={StyleSheet.absoluteFill}>
+                <Path
+                  d={generateBeadPath(completedBeads, getBeadPosition)}
+                  stroke="rgba(255, 215, 0, 0.3)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <Path
+                  d={generateBeadPath(completedBeads, getBeadPosition)}
+                  stroke="rgba(255, 215, 0, 0.1)"
+                  strokeWidth={6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </Svg>
+              {Array.from({ length: TOTAL_BEADS }).map((_, index) => {
+                const position = getBeadPosition(index);
+                return (
+                  <Bead
+                    key={index}
+                    index={index}
+                    isCompleted={completedBeads.includes(index)}
+                    isCurrent={currentBead === index}
+                    position={position}
+                    onHold={handleBeadHold}
+                  />
+                );
+              })}
+            </View>
+          </View>
+
+          <Animated.View 
+            style={[
+              styles.promptCard,
+              {
+                transform: [{
+                  scale: new Animated.Value(1)
+                }]
+              }
+            ]}
+          >
+            <View style={styles.promptHeader}>
+              <MaterialCommunityIcons name="lightbulb-outline" size={24} color="#FFD700" />
+              <Text style={styles.promptTitle}>Gratitude Prompt</Text>
+            </View>
+            <Text style={styles.promptText}>
+              {GRATITUDE_PROMPTS[currentPrompt]}
+            </Text>
+          </Animated.View>
         </View>
 
         <TouchableOpacity
@@ -386,7 +526,7 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           disabled={completedBeads.length < TOTAL_BEADS}
         >
           <Text style={styles.completeButtonText}>
-            {completedBeads.length === TOTAL_BEADS ? "I'm Done" : `${TOTAL_BEADS - completedBeads.length} More to Go`}
+            I'm Done
           </Text>
         </TouchableOpacity>
       </View>
@@ -435,6 +575,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1F2937',
   },
+  safeArea: {
+    flex: 1,
+  },
   exitButton: {
     position: 'absolute',
     top: 60,
@@ -450,14 +593,13 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: 16,
+    width: '100%',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 30,
+    marginTop: 40,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -465,8 +607,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 32,
-    marginTop: 30,
+    marginBottom: 12,
     opacity: 0.8,
   },
   beadsContainer: {
@@ -474,6 +615,7 @@ const styles = StyleSheet.create({
     height: CIRCLE_RADIUS * 2.2,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 10,
   },
   beadsCircle: {
     width: CIRCLE_RADIUS * 2,
@@ -516,7 +658,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 30,
     width: '100%',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   completeButtonDisabled: {
     backgroundColor: 'rgba(255, 215, 0, 0.5)',
@@ -559,7 +701,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 36,
     textAlign: 'center',
   },
   modalText: {
@@ -596,20 +738,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  promptContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    padding: 16,
-    borderRadius: 12,
-    width: '100%',
-    marginTop: 40,
-    marginBottom: 70,
-  },
-  promptText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
   progressRing: {
     position: 'absolute',
     top: -4,
@@ -645,6 +773,71 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  progressIndicator: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  progressText: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 8,
+  },
+  progressNumber: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFD700',
+  },
+  progressTotal: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    opacity: 0.7,
+    marginLeft: 4,
+  },
+  progressBar: {
+    width: '80%',
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FFD700',
+    borderRadius: 3,
+  },
+  promptCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    marginBottom: 80,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    width: '100%',
+  },
+  promptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  promptTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginLeft: 8,
+  },
+  promptText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: 24,
+  },
+  mainContainer: {
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 16,
   },
 });
 
