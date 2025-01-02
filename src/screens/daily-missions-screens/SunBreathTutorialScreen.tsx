@@ -31,7 +31,7 @@ const tutorialSteps = [
   },
   {
     title: "Practice Flow",
-    content: "We'll guide you through 5 complete breath cycles. Each cycle includes a 4-second inhale, 1-second hold, and 6-second exhale.",
+    content: "We'll guide you through 5 complete breath cycles.\n\nEach cycle includes a 4-second inhale, 1-second hold, and 6-second exhale.",
     icon: "repeat"
   }
 ];

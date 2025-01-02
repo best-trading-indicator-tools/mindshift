@@ -62,19 +62,57 @@ const SunBreathExerciseScreen: React.FC = () => {
     setShowExitModal(false);
     setIsPaused(false);
     
-    // Calculate how long we were paused
-    const pauseDuration = Date.now() - pauseTime;
-    
-    // Reschedule all timers with adjusted times
-    startBreathingCycle(pauseDuration);
-    
-    // Restart the countdown from where it was
-    startCountdown(
-      instruction === 'Breathe In' ? INHALE_DURATION :
-      instruction === 'Hold' ? HOLD_DURATION :
-      EXHALE_DURATION,
-      countdown
-    );
+    // Resume video and countdown from current phase
+    if (instruction === 'Breathe In') {
+      loadVideo('inhale');
+      startCountdown(INHALE_DURATION, countdown);
+      
+      // Schedule the remaining phases
+      const remainingInhaleTime = countdown * 1000;
+      
+      const holdTimer = setTimeout(() => {
+        setInstruction('Hold');
+        startCountdown(HOLD_DURATION);
+      }, remainingInhaleTime);
+      cycleTimersRef.current.push(holdTimer);
+
+      const exhaleTimer = setTimeout(() => {
+        setIsInhaling(false);
+        setInstruction('Breathe Out');
+        startCountdown(EXHALE_DURATION);
+        loadVideo('exhale');
+      }, remainingInhaleTime + HOLD_DURATION);
+      cycleTimersRef.current.push(exhaleTimer);
+
+    } else if (instruction === 'Hold') {
+      startCountdown(HOLD_DURATION, countdown);
+      
+      const remainingHoldTime = countdown * 1000;
+      
+      const exhaleTimer = setTimeout(() => {
+        setIsInhaling(false);
+        setInstruction('Breathe Out');
+        startCountdown(EXHALE_DURATION);
+        loadVideo('exhale');
+      }, remainingHoldTime);
+      cycleTimersRef.current.push(exhaleTimer);
+
+    } else if (instruction === 'Breathe Out') {
+      loadVideo('exhale');
+      startCountdown(EXHALE_DURATION, countdown);
+      
+      // If this is the last cycle, schedule completion
+      if (currentCycle === CYCLES) {
+        const remainingExhaleTime = countdown * 1000;
+        const completeTimer = setTimeout(() => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          navigation.navigate('SunBreathComplete');
+        }, remainingExhaleTime);
+        cycleTimersRef.current.push(completeTimer);
+      }
+    }
   };
 
   const loadVideo = async (type: 'inhale' | 'exhale') => {
