@@ -5,33 +5,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useMissionsContext } from '../../contexts/MissionsContext';
-import { useNotificationsContext } from '../../contexts/NotificationsContext';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
 
 const SunBreathCompleteScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { completeMission } = useMissionsContext();
-  const { addNotification } = useNotificationsContext();
 
   const handleRepeat = () => {
     navigation.replace('SunBreathExercise');
   };
 
-  const handleComplete = () => {
-    // Mark mission as complete
-    completeMission('The Sun Breath');
-    
-    // Add completion notification
-    addNotification({
-      title: 'Mission Complete!',
-      message: 'You have completed The Sun Breath exercise.',
-      type: 'success',
-      timestamp: new Date(),
-    });
-
-    navigation.navigate('MainTabs');
+  const handleComplete = async () => {
+    try {
+      await markExerciseAsCompleted('sun-breath', 'The Sun Breath');
+      navigation.navigate('MainTabs');
+    } catch (error) {
+      console.error('Error marking exercise as completed:', error);
+    }
   };
 
   return (
