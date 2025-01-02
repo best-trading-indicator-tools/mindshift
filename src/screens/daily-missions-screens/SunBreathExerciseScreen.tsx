@@ -217,10 +217,6 @@ const SunBreathExerciseScreen: React.FC = () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-        // Navigate to complete screen if this is the last exhale of the last cycle
-        if (currentCycle === settings.cycles && instruction === 'Breathe Out') {
-          navigation.replace('SunBreathComplete');
-        }
       }
     }, 1000);
   };
@@ -260,10 +256,18 @@ const SunBreathExerciseScreen: React.FC = () => {
       setInstruction('Breathe Out');
       startCountdown(exhaleMs);
       loadVideo('exhale');
+      
+      // If this is the last cycle, schedule navigation after exhale
+      if (currentCycle === activeSettings.cycles) {
+        const completeTimer = setTimeout(() => {
+          navigation.replace('SunBreathComplete');
+        }, exhaleMs);
+        cycleTimersRef.current.push(completeTimer);
+      }
     }, inhaleMs + holdMs - pauseDuration);
     cycleTimersRef.current.push(exhaleTimer);
 
-    // Schedule next cycle
+    // Schedule next cycle only if not the last cycle
     if (currentCycle < activeSettings.cycles) {
       const nextCycleTimer = setTimeout(() => {
         setCurrentCycle(c => c + 1);
