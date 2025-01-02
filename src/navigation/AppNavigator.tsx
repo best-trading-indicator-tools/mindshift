@@ -5,12 +5,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Screen imports
-import HomeScreen from '../screens/HomeScreen';
-import AiCoachScreen from '../screens/AiCoachScreen';
+import HomeScreen from '../screens/home-screens/HomeScreen';
+import AiCoachScreen from '../screens/home-screens/AiCoachScreen';
 import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import ProfileScreen from '../screens/profile-page-screens/ProfileScreen';
-import NotificationsScreen from '../screens/NotificationsScreen';
+import NotificationsScreen from '../screens/home-screens/NotificationsScreen';
 import SupportScreen from '../screens/profile-page-screens/SupportScreen';
 import LoginScreen from '../screens/onboarding-screens/LoginScreen';
 import DeepBreathingScreen from '../screens/daily-missions-screens/DeepBreathingScreen';

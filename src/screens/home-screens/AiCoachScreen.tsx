@@ -11,8 +11,8 @@ import {
   Text,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { config } from '../config/env';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { config } from '../../config/env';
 
 // Debug logs for environment variables
 console.log('==== Environment Debug ====');

@@ -5,15 +5,15 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { CompositeScreenProps, NavigationProp } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
-import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../components/Illustrations';
-import ProgressBar from '../components/ProgressBar';
-import { NotificationBell } from '../components/NotificationBell';
-import CircularProgress from '../components/CircularProgress';
+import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
+import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../../components/Illustrations';
+import ProgressBar from '../../components/ProgressBar';
+import { NotificationBell } from '../../components/NotificationBell';
+import CircularProgress from '../../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
-import MissionItem from '../components/MissionItem';
-import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../services/exerciseService';
-import { clearNotifications } from '../services/notificationService';
+import MissionItem from '../../components/MissionItem';
+import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../../services/exerciseService';
+import { clearNotifications } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = CompositeScreenProps<
@@ -494,7 +494,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         >
           <View style={styles.aiCoachIcon}>
             <Image
-              source={require('../assets/illustrations/atom.gif')}
+              source={require('../../assets/illustrations/atom.gif')}
               style={{ width: 50, height: 50 }}
             />
           </View>

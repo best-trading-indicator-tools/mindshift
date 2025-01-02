@@ -9,8 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { isExerciseCompletedToday } from '../services/exerciseService';
-import { Notification, getNotifications, markNotificationAsRead } from '../services/notificationService';
+import { isExerciseCompletedToday } from '../../services/exerciseService';
+import { Notification, getNotifications, markNotificationAsRead } from '../../services/notificationService';
 
 const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
