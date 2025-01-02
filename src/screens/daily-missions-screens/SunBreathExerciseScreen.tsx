@@ -7,6 +7,7 @@ import Video, { VideoRef } from 'react-native-video';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ExitModal from '../../components/ExitModal';
 import { videoService, VideoLoadingState } from '../../services/videoService';
+import InfoBubble from '../../components/InfoBubble';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -159,6 +160,13 @@ const SunBreathExerciseScreen: React.FC = () => {
     };
   }, []);
 
+  const getPhaseInstructions = () => {
+    if (instruction === 'Hold') return '';
+    return isInhaling 
+      ? 'Visualize golden sunlight entering your body, filling you with warmth and positive energy.'
+      : 'Release dark clouds of negativity, letting go of any tension or stress.';
+  };
+
   if (loadingState.error) {
     return (
       <SafeAreaView style={styles.container}>
@@ -217,6 +225,12 @@ const SunBreathExerciseScreen: React.FC = () => {
             />
           )}
         </View>
+
+        {instruction !== 'Hold' && (
+          <View style={styles.infoBubbleContainer}>
+            <InfoBubble message={getPhaseInstructions()} />
+          </View>
+        )}
       </View>
 
       <ExitModal
@@ -329,6 +343,12 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  infoBubbleContainer: {
+    position: 'absolute',
+    bottom: 60,
+    left: 0,
+    right: 0,
   },
 });
 

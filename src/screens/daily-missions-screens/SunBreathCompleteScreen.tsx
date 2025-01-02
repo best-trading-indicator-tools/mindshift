@@ -21,7 +21,8 @@ const SunBreathCompleteScreen: React.FC = () => {
 
   return (
     <LinearGradient
-      colors={['#FF8C00', '#FFD700']}
+      colors={['#F4A261', '#FFB347', '#FFD700']}
+      locations={[0, 0.5, 1]}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
@@ -33,10 +34,10 @@ const SunBreathCompleteScreen: React.FC = () => {
             style={styles.icon}
           />
 
-          <Text style={styles.title}>Exercise Complete!</Text>
+          <Text style={styles.title}>Exercise{'\n'}Complete!</Text>
           
           <Text style={styles.message}>
-            Take a moment to notice how you feel.{'\n'}
+            Take a moment to notice how you feel.{'\n\n'}
             Your body and mind are now refreshed and energized.
           </Text>
 
@@ -45,7 +46,7 @@ const SunBreathCompleteScreen: React.FC = () => {
               style={[styles.button, styles.repeatButton]} 
               onPress={handleRepeat}
             >
-              <MaterialCommunityIcons name="repeat" size={24} color="#FF8C00" />
+              <MaterialCommunityIcons name="repeat" size={24} color="#F4A261" />
               <Text style={styles.repeatButtonText}>Repeat</Text>
             </TouchableOpacity>
 
@@ -76,23 +77,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   icon: {
-    marginBottom: 30,
+    marginBottom: 40,
     opacity: 0.95,
   },
   title: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: '600',
     color: 'white',
-    marginBottom: 30,
+    marginBottom: 40,
     textAlign: 'center',
+    lineHeight: 48,
   },
   message: {
-    fontSize: 20,
+    fontSize: 22,
     color: 'white',
     textAlign: 'center',
-    lineHeight: 28,
-    marginBottom: 50,
-    opacity: 0.9,
+    lineHeight: 32,
+    marginBottom: 60,
+    opacity: 0.95,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -111,15 +113,22 @@ const styles = StyleSheet.create({
   },
   repeatButton: {
     backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   repeatButtonText: {
-    color: '#FF8C00',
+    color: '#F4A261',
     fontSize: 18,
     fontWeight: '600',
     marginLeft: 8,
   },
   completeButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   completeButtonText: {
     color: 'white',
