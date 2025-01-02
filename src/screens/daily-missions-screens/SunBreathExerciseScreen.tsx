@@ -217,11 +217,8 @@ const SunBreathExerciseScreen: React.FC = () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-        // If this is the last exhale and we've finished counting down
+        // Navigate to complete screen if this is the last exhale of the last cycle
         if (currentCycle === settings.cycles && instruction === 'Breathe Out') {
-          // Clear all timers before navigating
-          cycleTimersRef.current.forEach(timer => clearTimeout(timer));
-          cycleTimersRef.current = [];
           navigation.replace('SunBreathComplete');
         }
       }
