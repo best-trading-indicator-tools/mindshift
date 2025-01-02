@@ -33,8 +33,13 @@ const SunBreathExerciseScreen: React.FC = () => {
   });
   const videoRef = useRef<VideoRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const handleExit = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setIsPaused(true);
     setShowExitModal(true);
   };
 
@@ -42,11 +47,18 @@ const SunBreathExerciseScreen: React.FC = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    setIsPaused(true);
     navigation.navigate('MainTabs');
   };
 
   const handleExitCancel = () => {
     setShowExitModal(false);
+    setIsPaused(false);
+    startCountdown(
+      instruction === 'Breathe In' ? INHALE_DURATION :
+      instruction === 'Hold' ? HOLD_DURATION :
+      EXHALE_DURATION
+    );
   };
 
   const loadVideo = async (type: 'inhale' | 'exhale') => {
@@ -222,6 +234,7 @@ const SunBreathExerciseScreen: React.FC = () => {
               resizeMode="cover"
               repeat={true}
               muted={true}
+              paused={isPaused}
             />
           )}
         </View>
