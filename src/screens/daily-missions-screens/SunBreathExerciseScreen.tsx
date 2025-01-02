@@ -181,7 +181,7 @@ const SunBreathExerciseScreen: React.FC = () => {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
-          navigation.navigate('SunBreathComplete');
+          navigation.push('SunBreathComplete');
         }, remainingExhaleTime);
         cycleTimersRef.current.push(completeTimer);
       }
@@ -263,7 +263,7 @@ const SunBreathExerciseScreen: React.FC = () => {
       // If this is the last cycle, schedule navigation after exhale
       if (currentCycle === activeSettings.cycles) {
         const completeTimer = setTimeout(() => {
-          navigation.replace('SunBreathComplete');
+          navigation.push('SunBreathComplete');
         }, exhaleMs);
         cycleTimersRef.current.push(completeTimer);
       }
