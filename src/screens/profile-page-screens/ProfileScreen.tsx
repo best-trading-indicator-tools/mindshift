@@ -65,17 +65,30 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       // Check if user is signed in before attempting to sign out
       const currentUser = auth().currentUser;
       if (currentUser) {
+        // Set up a one-time auth state listener before signing out
+        const unsubscribe = auth().onAuthStateChanged((user) => {
+          if (!user) {
+            // User is fully signed out, now safe to navigate
+            navigation.getParent()?.reset({
+              index: 0,
+              routes: [{ name: 'PreQuestionnaire' }],
+            });
+            // Clean up listener
+            unsubscribe();
+          }
+        });
+
+        // Trigger the sign out
         await auth().signOut();
+      } else {
+        // If no user is signed in, navigate immediately
+        navigation.getParent()?.reset({
+          index: 0,
+          routes: [{ name: 'PreQuestionnaire' }],
+        });
       }
-      
-      // Always navigate to PreQuestionnaire regardless of auth state
-      navigation.getParent()?.reset({
-        index: 0,
-        routes: [{ name: 'PreQuestionnaire' }],
-      });
     } catch (error) {
       console.error('Dev Logout Error:', error);
-      // Show error to user instead of forcing navigation
       Alert.alert(
         'Logout Error',
         'There was an error during logout. Please try again.',

@@ -18,7 +18,7 @@ import 'react-native-reanimated';
 function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [initialRoute] = useState<'PreQuestionnaire'>('PreQuestionnaire');
+  const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'PostQuestionnaire'>('PreQuestionnaire');
 
   const handleAuthStateChanged = useCallback((firebaseUser: FirebaseAuthTypes.User | null) => {
     console.log('👤 App.tsx: Auth state changed:', {
@@ -30,6 +30,8 @@ function App(): JSX.Element {
     // Batch state updates together
     unstable_batchedUpdates(() => {
       setUser(firebaseUser);
+      // If user exists, go to MainTabs, otherwise PreQuestionnaire
+      setInitialRoute(firebaseUser ? 'MainTabs' : 'PreQuestionnaire');
       setInitializing(false);
     });
 
