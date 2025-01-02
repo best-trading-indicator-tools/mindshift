@@ -17,8 +17,8 @@ import {
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
-import { LoginScreenProps } from '../types/auth.types';
-import { createUserProfile } from '../services/firebase';
+import { LoginScreenProps } from '../../types/auth.types';
+import { createUserProfile } from '../../services/firebase';
 import Config from 'react-native-config';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -372,7 +372,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               onPress={signInWithGoogle}
               disabled={loading}>
               <Image
-                source={require('../assets/illustrations/icons/google-icon.png')}
+                source={require('../../assets/illustrations/icons/google-icon.png')}
                 style={styles.socialIcon}
               />
               <Text style={styles.socialButtonText}>Continue with Google</Text>
@@ -385,7 +385,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 onPress={signInWithApple}
                 disabled={loading}>
                 <Image
-                  source={require('../assets/illustrations/icons/apple-icon.png')}
+                  source={require('../../assets/illustrations/icons/apple-icon.png')}
                   style={styles.socialIcon}
                 />
                 <Text style={styles.socialButtonText}>Continue with Apple</Text>

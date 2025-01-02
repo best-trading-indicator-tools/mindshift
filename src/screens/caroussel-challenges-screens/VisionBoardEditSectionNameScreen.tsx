@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VisionBoard } from './VisionBoardScreen';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'EditSectionName'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardEditSectionName'>;
 
-const EditSectionNameScreen: React.FC<Props> = ({ navigation, route }) => {
+const VisionBoardEditSectionNameScreen: React.FC<Props> = ({ navigation, route }) => {
   const { boardId, sectionId, currentName } = route.params;
   const [newName, setNewName] = useState(currentName);
 
@@ -128,4 +128,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditSectionNameScreen; 
+export default VisionBoardEditSectionNameScreen; 

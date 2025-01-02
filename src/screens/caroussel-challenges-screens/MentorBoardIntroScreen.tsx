@@ -10,8 +10,8 @@ import {
   ScrollView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import ProgressHeader from '../components/ProgressHeader';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import ProgressHeader from '../../components/ProgressHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardIntro'>;
 
@@ -47,7 +47,7 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
             <View style={styles.illustrationContainer}>
               <Image
-                source={require('../assets/illustrations/mentorboard.jpg')}
+                source={require('../../assets/illustrations/mentorboard.jpg')}
                 style={styles.illustration}
                 resizeMode="contain"
               />

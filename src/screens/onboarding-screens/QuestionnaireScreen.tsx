@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import QuestionnaireProgressHeader from '../components/QuestionnaireProgressHeader';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import QuestionnaireProgressHeader from '../../components/QuestionnaireProgressHeader';
 import { 
   questions, 
   markQuestionnaireCompleted, 
@@ -10,7 +10,7 @@ import {
   Question, 
   ScaleQuestion, 
   FrequencyQuestion 
-} from '../services/questionnaireService';
+} from '../../services/questionnaireService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Questionnaire'>;
 

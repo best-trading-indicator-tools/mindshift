@@ -14,9 +14,9 @@ import {
   Modal,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import PexelsImagePicker from '../components/PexelsImagePicker';
+import PexelsImagePicker from '../../components/PexelsImagePicker';
 import { VisionBoard } from './VisionBoardScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -222,7 +222,7 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
             style={styles.menuItem}
             onPress={() => {
               setShowMenu(false);
-              navigation.navigate('EditSectionName', { 
+              navigation.navigate('VisionBoardEditSectionName', { 
                 boardId,
                 sectionId,
                 currentName: sectionName

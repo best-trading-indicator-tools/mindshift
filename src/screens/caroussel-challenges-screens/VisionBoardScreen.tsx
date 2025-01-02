@@ -15,11 +15,11 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
-import { LayoutTile } from '../types/layout';
-import { markExerciseAsCompleted } from '../services/exerciseService';
+import { LayoutTile } from '../../types/layout';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
 
 export interface VisionBoardSection {
   id: string;

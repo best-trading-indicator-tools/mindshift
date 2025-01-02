@@ -9,12 +9,12 @@ import {
   Platform,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
-import PexelsImagePicker from '../components/PexelsImagePicker';
+import PexelsImagePicker from '../../components/PexelsImagePicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../services/exerciseService';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisionBoardSection'>;
 

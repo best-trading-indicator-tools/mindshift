@@ -11,11 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { MentorBoard, MentorImage } from '../types/mentorBoard';
-import { loadMentorBoards, saveMentorBoard } from '../services/mentorBoardService';
-import WikimediaImagePicker from '../components/WikimediaImagePicker';
+import { MentorBoard, MentorImage } from '../../types/mentorBoard';
+import { loadMentorBoards, saveMentorBoard } from '../../services/mentorBoardService';
+import WikimediaImagePicker from '../../components/WikimediaImagePicker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardDetails'>;
 

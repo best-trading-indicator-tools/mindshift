@@ -12,7 +12,7 @@ import {
 import { Text } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import * as DocumentPicker from 'react-native-document-picker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Support'>;

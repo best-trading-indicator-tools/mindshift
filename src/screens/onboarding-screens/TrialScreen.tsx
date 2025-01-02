@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
-import ConfettiOverlay from '../components/ConfettiOverlay';
+import ConfettiOverlay from '../../components/ConfettiOverlay';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Trial'>;
 
@@ -16,7 +16,7 @@ const TrialScreen: React.FC<Props> = ({ navigation }) => {
     Sound.setCategory('Playback');
 
     // Create and load the sound file
-    const sound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+    const sound = new Sound(require('../../assets/audio/haveagreatday.wav'), (error) => {
       if (error || !isMounted) {
         console.error('Failed to load sound', error);
         return;

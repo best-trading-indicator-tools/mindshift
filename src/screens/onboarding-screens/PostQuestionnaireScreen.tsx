@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
-import ConfettiOverlay from '../components/ConfettiOverlay';
-import { getQuestionnaireResponses } from '../services/questionnaireService';
+import ConfettiOverlay from '../../components/ConfettiOverlay';
+import { getQuestionnaireResponses } from '../../services/questionnaireService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostQuestionnaire'>;
 
@@ -35,7 +35,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
     // Play audio
     Sound.setCategory('Playback');
-    soundInstance = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+    soundInstance = new Sound(require('../../assets/audio/haveagreatday.wav'), (error) => {
       if (error) {
         console.error('Failed to load sound', error);
         return;

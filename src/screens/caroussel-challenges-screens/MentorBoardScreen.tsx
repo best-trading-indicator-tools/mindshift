@@ -15,14 +15,14 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
-import { MentorBoard } from '../types/mentorBoard';
-import { markExerciseAsCompleted } from '../services/exerciseService';
-import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../services/mentorBoardService';
-import WikimediaImagePicker from '../components/WikimediaImagePicker';
-import DraggableCollage from '../components/DraggableCollage';
+import { MentorBoard } from '../../types/mentorBoard';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../../services/mentorBoardService';
+import WikimediaImagePicker from '../../components/WikimediaImagePicker';
+import DraggableCollage from '../../components/DraggableCollage';
 import { runOnJS } from 'react-native-reanimated';
 
 const DEFAULT_COLORS = [

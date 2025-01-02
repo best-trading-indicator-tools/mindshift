@@ -5,10 +5,10 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList, RootTabParamList } from '../navigation/AppNavigator';
+import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
-import { setQuestionnaireStatus } from '../services/questionnaireService';
+import { setQuestionnaireStatus } from '../../services/questionnaireService';
 
 const IconComponent = MaterialCommunityIcons as any;
 

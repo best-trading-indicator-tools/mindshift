@@ -9,34 +9,34 @@ import HomeScreen from '../screens/HomeScreen';
 import AiCoachScreen from '../screens/AiCoachScreen';
 import { CourseTabScreen, CourseStackScreen } from '../screens/CourseScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import ProfileScreen from '../screens/profile-page-screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import SupportScreen from '../screens/SupportScreen';
-import LoginScreen from '../screens/LoginScreen';
+import SupportScreen from '../screens/profile-page-screens/SupportScreen';
+import LoginScreen from '../screens/onboarding-screens/LoginScreen';
 import DeepBreathingScreen from '../screens/daily-missions-screens/DeepBreathingScreen';
 import ActiveIncantationsScreen from '../screens/daily-missions-screens/ActiveIncantationsScreen';
 import PassiveIncantationsScreen from '../screens/daily-missions-screens/PassiveIncantationsScreen';
 import GoldenChecklistScreen from '../screens/daily-missions-screens/GoldenChecklistScreen';
-import VisionBoardScreen from '../screens/VisionBoardScreen';
-import VisionBoardSectionsScreen from '../screens/VisionBoardSectionsScreen';
-import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
-import VisionBoardSectionPhotosScreen from '../screens/VisionBoardSectionPhotosScreen';
+import VisionBoardScreen from '../screens/caroussel-challenges-screens/VisionBoardScreen';
+import VisionBoardSectionsScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionsScreen';
+import VisionBoardSectionScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionScreen';
+import VisionBoardSectionPhotosScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionPhotosScreen';
 import MusicSelectionScreen from '../screens/daily-missions-screens/MusicSelectionScreen';
-import NewVisionBoardSection from '../screens/NewVisionBoardSection';
-import { default as EditSectionNameScreen } from '../screens/EditSectionNameScreen';
-import MentorBoardScreen from '../screens/MentorBoardScreen';
-import MentorBoardDetailsScreen from '../screens/MentorBoardDetailsScreen';
-import MentorBoardIntroScreen from '../screens/MentorBoardIntroScreen';
-import VisionBoardIntroScreen from '../screens/VisionBoardIntroScreen';
+import NewVisionBoardSection from '../screens/caroussel-challenges-screens/NewVisionBoardSection';
+import { default as VisionBoardEditSectionNameScreen } from '../screens/caroussel-challenges-screens/VisionBoardEditSectionNameScreen';
+import MentorBoardScreen from '../screens/caroussel-challenges-screens/MentorBoardScreen';
+import MentorBoardDetailsScreen from '../screens/caroussel-challenges-screens/MentorBoardDetailsScreen';
+import MentorBoardIntroScreen from '../screens/caroussel-challenges-screens/MentorBoardIntroScreen';
+import VisionBoardIntroScreen from '../screens/caroussel-challenges-screens/VisionBoardIntroScreen';
 import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/daily-missions-screens/DeepBreathingIntroScreen';
 import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
 import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/PassiveIncantationsIntroScreen';
 import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/GoldenChecklistIntroScreen';
-import QuestionnaireScreen from '../screens/QuestionnaireScreen';
-import TrialScreen from '../screens/TrialScreen';
-import PostQuestionnaireScreen from '../screens/PostQuestionnaireScreen';
-import PreQuestionnaireScreen from '../screens/PreQuestionnaireScreen';
+import QuestionnaireScreen from '../screens/onboarding-screens/QuestionnaireScreen';
+import TrialScreen from '../screens/onboarding-screens/TrialScreen';
+import PostQuestionnaireScreen from '../screens/onboarding-screens/PostQuestionnaireScreen';
+import PreQuestionnaireScreen from '../screens/onboarding-screens/PreQuestionnaireScreen';
 import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
 
 export type RootTabParamList = {
@@ -70,7 +70,7 @@ export type RootStackParamList = {
   VisionBoardSection: { boardId: string; sectionId: string; sectionName: string };
   VisionBoardSectionPhotos: { boardId: string; sectionId: string; sectionName: string };
   NewVisionBoardSection: { boardId: string };
-  EditSectionName: { boardId: string; sectionId: string; currentName: string };
+  VisionBoardEditSectionName: { boardId: string; sectionId: string; currentName: string };
   MusicSelection: {
     exerciseName: string;
   };
@@ -243,7 +243,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />
         <Stack.Screen name="VisionBoardSectionPhotos" component={VisionBoardSectionPhotosScreen} />
         <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
-        <Stack.Screen name="EditSectionName" component={EditSectionNameScreen} />
+        <Stack.Screen name="VisionBoardEditSectionName" component={VisionBoardEditSectionNameScreen} />
         <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
         <Stack.Screen name="MentorBoardDetails" component={MentorBoardDetailsScreen} />
         <Stack.Screen 

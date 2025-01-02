@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import ProgressHeader from '../components/ProgressHeader';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import ProgressHeader from '../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -66,21 +66,21 @@ const VisionBoardIntroScreen: React.FC = () => {
 
         {currentStep === 1 && (
           <Image 
-            source={require('../assets/illustrations/vision-board-example1.jpg')}
+            source={require('../../assets/illustrations/vision-board-example1.jpg')}
             style={styles.exampleImage}
             resizeMode="contain"
           />
         )}
         {currentStep === 2 && (
           <Image 
-            source={require('../assets/illustrations/vision-board-example2.png')}
+            source={require('../../assets/illustrations/vision-board-example2.png')}
             style={styles.exampleImage}
             resizeMode="contain"
           />
         )}
         {currentStep === 3 && (
           <Image 
-            source={require('../assets/illustrations/vision-board-example3.jpg')}
+            source={require('../../assets/illustrations/vision-board-example3.jpg')}
             style={styles.exampleImage}
             resizeMode="contain"
           />

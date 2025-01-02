@@ -14,12 +14,12 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VisionBoard } from './VisionBoardScreen';
 import { useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import { LayoutTile, RowConfig } from '../types/layout';
+import { LayoutTile, RowConfig } from '../../types/layout';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -579,7 +579,7 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
                 onPress={() => {
                   setShowMenu(false);
                   if (selectedSection?.id && selectedSection?.name) {
-                    navigation.navigate('EditSectionName', { 
+                    navigation.navigate('VisionBoardEditSectionName', { 
                       boardId,
                       sectionId: selectedSection.id,
                       currentName: selectedSection.name
