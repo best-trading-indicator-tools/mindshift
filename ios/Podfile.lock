@@ -3785,4 +3785,24 @@ SPEC CHECKSUMS:
   ReactCodegen: 8d7f9f05befdeb108948bbaa18d149b25a964f72
   ReactCommon: 858d61cce81635d57be89348568b603e838b3cac
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
-  RNAppleAuthentication: e00c76a
+  RNAppleAuthentication: e00c76acb03351f5544373c78fa7f359bef6d5d3
+  RNAudioRecorderPlayer: 224c7de87722938aedce04000d09baa633148f5b
+  RNCAsyncStorage: d494bdee892cc6a4d790c960afb7b5dd1d91abb1
+  RNFBApp: 1de631bffe154f4f8b56f8dbfb13d6305d658e97
+  RNFBAuth: aa53108a283606c560e4380d75d093c35a13d8dd
+  RNFBFirestore: 040e9607af616bec5d3903f5fa6a1a4e5dd0e4bd
+  RNFBStorage: debf79a222417a239adacd5ef2419395c33d6dd2
+  RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
+  RNGestureHandler: 15ee1ab573a954c92641877ca946e2680f2e58da
+  RNGoogleSignin: 27c2199f487ee08cc692d8d2c035bc9c154ddc22
+  RNReanimated: 77a04017cdf54b9da500ccefde56d9d15b8ddff6
+  RNScreens: 8ae716a7e26b9ecee7f2856e6ff47b8e7e253ee8
+  RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852
+  RNSVG: 16775caac1e5d193c876ee15431494d7a9649aec
+  RNVectorIcons: 8c7af262a73890caabbac2bb081ddbaa1b8a768c
+  SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  Yoga: 7548e4449365bf0ef60db4aefe58abff37fcabec
+
+PODFILE CHECKSUM: f7a6db8527b3f29eb704c1a12b509b1f6f5221d6
+
+COCOAPODS: 1.16.2

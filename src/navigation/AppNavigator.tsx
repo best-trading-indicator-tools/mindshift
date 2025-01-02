@@ -43,6 +43,7 @@ import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/Gratitu
 import SunBreathTutorialScreen from '../screens/daily-missions-screens/SunBreathTutorialScreen';
 import SunBreathExerciseScreen from '../screens/daily-missions-screens/SunBreathExerciseScreen';
 import SunBreathCompleteScreen from '../screens/daily-missions-screens/SunBreathCompleteScreen';
+import SunBreathSettingsScreen from '../screens/daily-missions-screens/SunBreathSettingsScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -96,6 +97,7 @@ export type RootStackParamList = {
   SunBreathTutorial: undefined;
   SunBreathExercise: undefined;
   SunBreathComplete: undefined;
+  SunBreathSettings: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -344,6 +346,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
             animation: 'slide_from_right',
           }}
         />
+        <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

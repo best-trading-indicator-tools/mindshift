@@ -253,4 +253,8 @@ export const clearAllAppData = async () => {
     const keys = await AsyncStorage.getAllKeys();
     await AsyncStorage.multiRemove(keys);
     return true;
-  } catch (err
+  } catch (error) {
+    console.error('Error clearing app data:', error);
+    return false;
+  }
+}; 

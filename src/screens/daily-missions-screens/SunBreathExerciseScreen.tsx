@@ -8,6 +8,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import ExitModal from '../../components/ExitModal';
 import { videoService, VideoLoadingState } from '../../services/videoService';
 import InfoBubble from '../../components/InfoBubble';
+import { getBreathSettings, BreathSettings } from '../../services/breathSettingsService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -24,18 +25,33 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [isInhaling, setIsInhaling] = useState(true);
   const [instruction, setInstruction] = useState('Breathe In');
   const [showExitModal, setShowExitModal] = useState(false);
-  const [countdown, setCountdown] = useState(4); // Start with inhale duration
+  const [countdown, setCountdown] = useState(4);
   const [videoPath, setVideoPath] = useState<string>('');
   const [loadingState, setLoadingState] = useState<VideoLoadingState>({
     isLoading: true,
     progress: 0,
     error: null
   });
+  const [settings, setSettings] = useState<BreathSettings>({
+    inhaleSeconds: 4,
+    holdSeconds: 1,
+    exhaleSeconds: 6,
+    cycles: 1,
+  });
   const videoRef = useRef<VideoRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const savedSettings = await getBreathSettings();
+      setSettings(savedSettings);
+      setCountdown(savedSettings.inhaleSeconds);
+    };
+    loadSettings();
+  }, []);
 
   const handleExit = () => {
     if (timerRef.current) {
@@ -65,44 +81,44 @@ const SunBreathExerciseScreen: React.FC = () => {
     // Resume video and countdown from current phase
     if (instruction === 'Breathe In') {
       loadVideo('inhale');
-      startCountdown(INHALE_DURATION, countdown);
+      startCountdown(settings.inhaleSeconds * 1000, countdown);
       
       // Schedule the remaining phases
       const remainingInhaleTime = countdown * 1000;
       
       const holdTimer = setTimeout(() => {
         setInstruction('Hold');
-        startCountdown(HOLD_DURATION);
+        startCountdown(settings.holdSeconds * 1000);
       }, remainingInhaleTime);
       cycleTimersRef.current.push(holdTimer);
 
       const exhaleTimer = setTimeout(() => {
         setIsInhaling(false);
         setInstruction('Breathe Out');
-        startCountdown(EXHALE_DURATION);
+        startCountdown(settings.exhaleSeconds * 1000);
         loadVideo('exhale');
-      }, remainingInhaleTime + HOLD_DURATION);
+      }, remainingInhaleTime + settings.holdSeconds * 1000);
       cycleTimersRef.current.push(exhaleTimer);
 
     } else if (instruction === 'Hold') {
-      startCountdown(HOLD_DURATION, countdown);
+      startCountdown(settings.holdSeconds * 1000, countdown);
       
       const remainingHoldTime = countdown * 1000;
       
       const exhaleTimer = setTimeout(() => {
         setIsInhaling(false);
         setInstruction('Breathe Out');
-        startCountdown(EXHALE_DURATION);
+        startCountdown(settings.exhaleSeconds * 1000);
         loadVideo('exhale');
       }, remainingHoldTime);
       cycleTimersRef.current.push(exhaleTimer);
 
     } else if (instruction === 'Breathe Out') {
       loadVideo('exhale');
-      startCountdown(EXHALE_DURATION, countdown);
+      startCountdown(settings.exhaleSeconds * 1000, countdown);
       
       // If this is the last cycle, schedule completion
-      if (currentCycle === CYCLES) {
+      if (currentCycle === settings.cycles) {
         const remainingExhaleTime = countdown * 1000;
         const completeTimer = setTimeout(() => {
           if (timerRef.current) {
@@ -157,48 +173,52 @@ const SunBreathExerciseScreen: React.FC = () => {
     cycleTimersRef.current = [];
 
     // Don't start if we've exceeded cycles
-    if (currentCycle > CYCLES) {
+    if (currentCycle > settings.cycles) {
       return;
     }
+
+    const inhaleMs = settings.inhaleSeconds * 1000;
+    const holdMs = settings.holdSeconds * 1000;
+    const exhaleMs = settings.exhaleSeconds * 1000;
 
     // Start with inhale
     setIsInhaling(true);
     setInstruction('Breathe In');
     loadVideo('inhale');
-    startCountdown(INHALE_DURATION); // Start the countdown immediately
+    startCountdown(inhaleMs);
     
     // Schedule the state changes with adjusted times
     const holdTimer = setTimeout(() => {
       setInstruction('Hold');
-      startCountdown(HOLD_DURATION);
-    }, INHALE_DURATION - pauseDuration);
+      startCountdown(holdMs);
+    }, inhaleMs - pauseDuration);
     cycleTimersRef.current.push(holdTimer);
 
     const exhaleTimer = setTimeout(() => {
       setIsInhaling(false);
       setInstruction('Breathe Out');
-      startCountdown(EXHALE_DURATION);
+      startCountdown(exhaleMs);
       loadVideo('exhale');
 
       // If this is the last cycle, wait for exhale to complete before finishing
-      if (currentCycle === CYCLES) {
+      if (currentCycle === settings.cycles) {
         const completeTimer = setTimeout(() => {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
           navigation.navigate('SunBreathComplete');
-        }, EXHALE_DURATION);
+        }, exhaleMs);
         cycleTimersRef.current.push(completeTimer);
       }
-    }, INHALE_DURATION + HOLD_DURATION - pauseDuration);
+    }, inhaleMs + holdMs - pauseDuration);
     cycleTimersRef.current.push(exhaleTimer);
 
     // Schedule next cycle
-    if (currentCycle < CYCLES) {
+    if (currentCycle < settings.cycles) {
       const nextCycleTimer = setTimeout(() => {
         setCurrentCycle(c => c + 1);
         startBreathingCycle();
-      }, INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION - pauseDuration);
+      }, inhaleMs + holdMs + exhaleMs - pauseDuration);
       cycleTimersRef.current.push(nextCycleTimer);
     }
   };
@@ -269,6 +289,17 @@ const SunBreathExerciseScreen: React.FC = () => {
           name="close" 
           size={30} 
           color="#FFF" 
+        />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.settingsButton}
+        onPress={() => navigation.navigate('SunBreathSettings')}
+      >
+        <MaterialCommunityIcons 
+          name="cog" 
+          size={30} 
+          color="#FFD700" 
         />
       </TouchableOpacity>
 
@@ -426,6 +457,15 @@ const styles = StyleSheet.create({
     bottom: 60,
     left: 0,
     right: 0,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 10,
+    padding: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 30,
   },
 });
 
