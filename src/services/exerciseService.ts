@@ -13,7 +13,8 @@ export type ExerciseType =
   | 'gratitude'
   | 'gratitude-beads'
   | 'golden-checklist'
-  | 'vision-board';
+  | 'vision-board'
+  | 'sun-breath';
 
 export interface ExerciseCompletion {
   userId: string;
@@ -175,6 +176,8 @@ export const checkDailyProgress = async () => {
         ? 'golden-checklist'
         : mission.title === 'Gratitude Beads'
         ? 'gratitude-beads'
+        : mission.title === 'The Sun Breath'
+        ? 'sun-breath'
         : '',
       name: mission.title
     }));

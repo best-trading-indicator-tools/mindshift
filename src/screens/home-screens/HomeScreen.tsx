@@ -290,6 +290,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             return 'golden-checklist';
           case 'Gratitude Beads':
             return 'gratitude-beads';
+          case 'The Sun Breath':
+            return 'sun-breath';
           default:
             return null;
         }
@@ -612,7 +614,23 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   duration={mission.duration}
                   type={mission.type}
                   icon={mission.icon}
-                  isCompleted={completedExercises.includes(mission.title)}
+                  isCompleted={completedExercises.includes(
+                    mission.title === 'Deep Breathing' 
+                      ? 'deep-breathing'
+                      : mission.title === 'Active Incantations'
+                      ? 'active-incantations'
+                      : mission.title === 'Passive Incantations'
+                      ? 'passive-incantations'
+                      : mission.title === 'Daily Gratitude'
+                      ? 'gratitude'
+                      : mission.title === 'Golden Checklist'
+                      ? 'golden-checklist'
+                      : mission.title === 'Gratitude Beads'
+                      ? 'gratitude-beads'
+                      : mission.title === 'The Sun Breath'
+                      ? 'sun-breath'
+                      : ''
+                  )}
                   onPress={() => {
                     switch (mission.title) {
                       case 'Deep Breathing':
