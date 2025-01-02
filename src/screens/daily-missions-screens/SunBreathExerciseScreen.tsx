@@ -208,16 +208,23 @@ const SunBreathExerciseScreen: React.FC = () => {
     const seconds = startFrom || Math.floor(duration / 1000);
     setCountdown(seconds);
     
+    let timeLeft = seconds;
     timerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 0) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          return 0;
+      timeLeft--;
+      setCountdown(timeLeft);
+      
+      if (timeLeft <= 0) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
         }
-        return prev - 1;
-      });
+        // If this is the last exhale and we've finished counting down
+        if (currentCycle === settings.cycles && instruction === 'Breathe Out') {
+          // Clear all timers before navigating
+          cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+          cycleTimersRef.current = [];
+          navigation.replace('SunBreathComplete');
+        }
+      }
     }, 1000);
   };
 
@@ -256,17 +263,6 @@ const SunBreathExerciseScreen: React.FC = () => {
       setInstruction('Breathe Out');
       startCountdown(exhaleMs);
       loadVideo('exhale');
-
-      // If this is the last cycle, wait for exhale to complete before finishing
-      if (currentCycle === activeSettings.cycles) {
-        const completeTimer = setTimeout(() => {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          navigation.navigate('SunBreathComplete');
-        }, exhaleMs);
-        cycleTimersRef.current.push(completeTimer);
-      }
     }, inhaleMs + holdMs - pauseDuration);
     cycleTimersRef.current.push(exhaleTimer);
 
