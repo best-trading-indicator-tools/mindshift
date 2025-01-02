@@ -140,7 +140,7 @@ const SunBreathExerciseScreen: React.FC = () => {
     
     timerRef.current = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) {
+        if (prev <= 0) {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
@@ -165,6 +165,7 @@ const SunBreathExerciseScreen: React.FC = () => {
     setIsInhaling(true);
     setInstruction('Breathe In');
     loadVideo('inhale');
+    startCountdown(INHALE_DURATION); // Start the countdown immediately
     
     // Schedule the state changes with adjusted times
     const holdTimer = setTimeout(() => {
