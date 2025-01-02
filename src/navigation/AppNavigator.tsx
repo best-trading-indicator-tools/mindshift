@@ -38,6 +38,8 @@ import TrialScreen from '../screens/onboarding-screens/TrialScreen';
 import PostQuestionnaireScreen from '../screens/onboarding-screens/PostQuestionnaireScreen';
 import PreQuestionnaireScreen from '../screens/onboarding-screens/PreQuestionnaireScreen';
 import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
+import GratitudeBeadsScreen from '../screens/daily-missions-screens/GratitudeBeadsScreen';
+import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/GratitudeBeadsIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -86,6 +88,8 @@ export type RootStackParamList = {
   Trial: undefined;
   PostQuestionnaire: undefined;
   PreQuestionnaire: undefined;
+  GratitudeBeads: undefined;
+  GratitudeBeadsIntro: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -291,6 +295,23 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           component={TrialScreen}
           options={{
             gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="GratitudeBeads"
+          component={GratitudeBeadsScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="GratitudeBeadsIntro"
+          component={GratitudeBeadsIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
           }}
         />
       </Stack.Navigator>

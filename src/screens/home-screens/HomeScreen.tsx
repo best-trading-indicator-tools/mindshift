@@ -134,6 +134,13 @@ const DAILY_MISSIONS = [
     type: 'Review',
     icon: 'checkbox-marked',
   },
+  {
+    title: 'Gratitude Beads',
+    subtitle: 'Practice gratitude with mindful reflection',
+    duration: '5-10 min',
+    type: 'Reflection',
+    icon: 'progress-clock',
+  },
 ];
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
@@ -401,6 +408,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleGratitudeBeadsNavigation = async () => {
+    try {
+      // Clear the flag to ensure intro is shown
+      await AsyncStorage.removeItem('gratitude_beads_intro_seen');
+      navigation.getParent()?.navigate('GratitudeBeadsIntro');
+    } catch (error) {
+      console.error('Error handling gratitude beads navigation:', error);
+      navigation.getParent()?.navigate('GratitudeBeadsIntro');
+    }
+  };
+
   const renderChallenges = () => {
     return challenges.map((challenge, index) => (
       <TouchableOpacity
@@ -558,6 +576,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       ? handlePassiveIncantationsNavigation
                       : mission.title === 'Daily Gratitude'
                       ? handleGratitudeNavigation
+                      : mission.title === 'Gratitude Beads'
+                      ? handleGratitudeBeadsNavigation
                       : mission.title === 'Golden Checklist'
                       ? handleGoldenChecklistNavigation
                       : undefined
@@ -570,6 +590,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       : mission.title === 'Passive Incantations'
                       ? completedExercises.includes('passive-incantations')
                       : mission.title === 'Daily Gratitude'
+                      ? completedExercises.includes('gratitude')
+                      : mission.title === 'Gratitude Beads'
                       ? completedExercises.includes('gratitude')
                       : mission.title === 'Golden Checklist'
                       ? completedExercises.includes('golden-checklist')
