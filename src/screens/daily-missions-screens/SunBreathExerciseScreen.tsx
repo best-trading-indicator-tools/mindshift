@@ -9,6 +9,7 @@ import ExitModal from '../../components/ExitModal';
 import { videoService, VideoLoadingState } from '../../services/videoService';
 import InfoBubble from '../../components/InfoBubble';
 import { getBreathSettings, BreathSettings } from '../../services/breathSettingsService';
+import BreathSettingsModal from '../../components/BreathSettingsModal';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -43,6 +44,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -74,8 +76,21 @@ const SunBreathExerciseScreen: React.FC = () => {
     cycleTimersRef.current.forEach(timer => clearTimeout(timer));
     cycleTimersRef.current = [];
     
-    // Navigate to settings
-    navigation.navigate('SunBreathTutorial');
+    setPauseTime(Date.now());
+    setIsPaused(true);
+    setShowSettingsModal(true);
+  };
+
+  const handleSettingsSave = (newSettings: BreathSettings) => {
+    setSettings(newSettings);
+    setShowSettingsModal(false);
+    // Restart exercise with new settings
+    setCurrentCycle(1);
+    setCountdown(newSettings.inhaleSeconds);
+    setIsInhaling(true);
+    setInstruction('Breathe In');
+    setIsPaused(false);
+    startBreathingCycle();
   };
 
   const handleExitConfirm = () => {
@@ -352,6 +367,15 @@ const SunBreathExerciseScreen: React.FC = () => {
           </View>
         )}
       </View>
+
+      <BreathSettingsModal
+        visible={showSettingsModal}
+        onClose={() => {
+          setShowSettingsModal(false);
+          handleExitCancel(); // Resume exercise
+        }}
+        onSave={handleSettingsSave}
+      />
 
       <ExitModal
         visible={showExitModal}
