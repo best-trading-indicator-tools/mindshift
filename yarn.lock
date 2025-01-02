@@ -2367,14 +2367,6 @@
   "resolved" "https://registry.npmjs.org/@rneui/themed/-/themed-4.0.0-rc.8.tgz"
   "version" "4.0.0-rc.8"
 
-"@shopify/react-native-skia@^1.8.0":
-  "integrity" "sha512-D5xNP5o7nOL/4emufMo133pgiKweQ2bZtseK4LqQ1aMxSZ6xT1Hw8tk4o3IY+LWTkt1dW8zlRJ1SnBUFFMAm2w=="
-  "resolved" "https://registry.npmjs.org/@shopify/react-native-skia/-/react-native-skia-1.8.0.tgz"
-  "version" "1.8.0"
-  dependencies:
-    "canvaskit-wasm" "0.39.1"
-    "react-reconciler" "0.27.0"
-
 "@sideway/address@^4.1.5":
   "integrity" "sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q=="
   "resolved" "https://registry.npmjs.org/@sideway/address/-/address-4.1.5.tgz"
@@ -2541,6 +2533,14 @@
   dependencies:
     "@types/react" "*"
     "@types/react-native" "^0.70"
+
+"@types/react-native-video@^5.0.20":
+  "integrity" "sha512-CdD4T43uEKzTNJ/RylTDViNuGuyOPWQUEuA1Y9GY8T+HiE9cwYw1zQNqk8a7zz9GHamlPfJQ+bYoEE9OWjZ/6g=="
+  "resolved" "https://registry.npmjs.org/@types/react-native-video/-/react-native-video-5.0.20.tgz"
+  "version" "5.0.20"
+  dependencies:
+    "@types/react" "*"
+    "react-native" "*"
 
 "@types/react-native@^0.70":
   "integrity" "sha512-c6WbyCgWTBgKKMESj/8b4w+zWcZSsCforson7UdXtXMecG3MxCinYi6ihhrHVPyUrVzORsvEzK8zg32z4pK6Sg=="
@@ -2734,11 +2734,6 @@
   "integrity" "sha512-fEzPV3hSkSMltkw152tJKNARhOupqbH96MZWyRjNaYZOMIzbrTeQDG+MTc6Mr2pgzFQzFxAfmhGDNP5QK++2ZA=="
   "resolved" "https://registry.npmjs.org/@ungap/structured-clone/-/structured-clone-1.2.1.tgz"
   "version" "1.2.1"
-
-"@webgpu/types@0.1.21":
-  "integrity" "sha512-pUrWq3V5PiSGFLeLxoGqReTZmiiXwY3jRkIG5sLLKjyqNxrwm/04b4nw7LSmGWJcKk59XOM/YRTUwOzo4MMlow=="
-  "resolved" "https://registry.npmjs.org/@webgpu/types/-/types-0.1.21.tgz"
-  "version" "0.1.21"
 
 "@xmldom/xmldom@^0.8.8":
   "integrity" "sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw=="
@@ -3240,13 +3235,6 @@
   "integrity" "sha512-5ExiE3qQN6oF8Clf8ifIDcMRCRE/dMGcETG/XGMD8/XiXm6HXQgQTh1yZYLXXpSOsEUlJm1Xr7kGULZTuGtP/w=="
   "resolved" "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001690.tgz"
   "version" "1.0.30001690"
-
-"canvaskit-wasm@0.39.1":
-  "integrity" "sha512-Gy3lCmhUdKq+8bvDrs9t8+qf7RvcjuQn+we7vTVVyqgOVO1UVfHpsnBxkTZw+R4ApEJ3D5fKySl9TU11hmjl/A=="
-  "resolved" "https://registry.npmjs.org/canvaskit-wasm/-/canvaskit-wasm-0.39.1.tgz"
-  "version" "0.39.1"
-  dependencies:
-    "@webgpu/types" "0.1.21"
 
 "chalk@^4.0.0", "chalk@^4.1.0", "chalk@^4.1.2":
   "integrity" "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA=="
@@ -6896,7 +6884,12 @@
     "prop-types" "^15.7.2"
     "yargs" "^16.1.1"
 
-"react-native@0.76.5":
+"react-native-video@^6.8.2":
+  "integrity" "sha512-lAf6pa/eqksaQnZ+rx9XWx9HpfNt0xr/XmSXMASynJJ8EqMJTr8gHJe4Wfkebo5W8qAMKRuHYtZs+4Shzl3IIQ=="
+  "resolved" "https://registry.npmjs.org/react-native-video/-/react-native-video-6.8.2.tgz"
+  "version" "6.8.2"
+
+"react-native@*", "react-native@0.76.5":
   "integrity" "sha512-op2p2kB+lqMF1D7AdX4+wvaR0OPFbvWYs+VBE7bwsb99Cn9xISrLRLAgFflZedQsa5HvnOGrULhtnmItbIKVVw=="
   "resolved" "https://registry.npmjs.org/react-native/-/react-native-0.76.5.tgz"
   "version" "0.76.5"
@@ -6939,14 +6932,6 @@
     "whatwg-fetch" "^3.0.0"
     "ws" "^6.2.3"
     "yargs" "^17.6.2"
-
-"react-reconciler@0.27.0":
-  "integrity" "sha512-HmMDKciQjYmBRGuuhIaKA1ba/7a+UsM5FzOZsMO2JYHt9Jh8reCb7j1eDC95NOyUlKM9KRyvdx0flBuDvYSBoA=="
-  "resolved" "https://registry.npmjs.org/react-reconciler/-/react-reconciler-0.27.0.tgz"
-  "version" "0.27.0"
-  dependencies:
-    "loose-envify" "^1.1.0"
-    "scheduler" "^0.21.0"
 
 "react-refresh@^0.14.0":
   "integrity" "sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA=="
@@ -7209,13 +7194,6 @@
     "call-bound" "^1.0.2"
     "es-errors" "^1.3.0"
     "is-regex" "^1.2.1"
-
-"scheduler@^0.21.0":
-  "integrity" "sha512-1r87x5fz9MXqswA2ERLo0EbOAU74DpIUO090gIasYTqlVoJeMcl+Z1Rg7WHz+qtPujhS/hGIt9kxZOYBV3faRQ=="
-  "resolved" "https://registry.npmjs.org/scheduler/-/scheduler-0.21.0.tgz"
-  "version" "0.21.0"
-  dependencies:
-    "loose-envify" "^1.1.0"
 
 "scheduler@^0.23.2":
   "integrity" "sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ=="

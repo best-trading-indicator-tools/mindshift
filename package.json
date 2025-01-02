@@ -26,7 +26,7 @@
     "@react-navigation/native-stack": "^6.9.17",
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
-    "@shopify/react-native-skia": "^1.8.0",
+    "@types/react-native-video": "^5.0.20",
     "expo-linear-gradient": "^14.0.1",
     "lottie-react-native": "^7.1.0",
     "openai": "^4.77.0",
@@ -49,7 +49,8 @@
     "react-native-screens": "^4.4.0",
     "react-native-sound": "^0.11.2",
     "react-native-svg": "^15.10.1",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "react-native-video": "^6.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

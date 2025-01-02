@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  useSharedValue,
-  withSequence,
-  withDelay,
-  runOnJS,
-} from 'react-native-reanimated';
-import SunBreathAnimation from '../../components/sun-breath/SunBreathAnimation';
+import Video, { VideoRef } from 'react-native-video';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ExitModal from '../../components/ExitModal';
+import { getBreathingVideo } from '../../services/videoService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -30,10 +23,8 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [isInhaling, setIsInhaling] = useState(true);
   const [instruction, setInstruction] = useState('Breathe In');
   const [showExitModal, setShowExitModal] = useState(false);
+  const videoRef = useRef<VideoRef>(null);
   
-  const progress = useSharedValue(0);
-  const opacity = useSharedValue(1);
-
   const handleExit = () => {
     setShowExitModal(true);
   };
@@ -51,28 +42,24 @@ const SunBreathExerciseScreen: React.FC = () => {
     setIsInhaling(true);
     setInstruction('Breathe In');
     
-    // Inhale animation (0 to 1)
-    progress.value = withSequence(
-      withTiming(1, { duration: INHALE_DURATION }, () => {
-        runOnJS(setInstruction)('Hold');
-      }),
-      // Hold
-      withDelay(HOLD_DURATION, 
-        withTiming(0, { duration: EXHALE_DURATION }, () => {
-          runOnJS(setIsInhaling)(false);
-          runOnJS(setInstruction)('Breathe Out');
-          
-          // Check if we should continue to next cycle
-          if (currentCycle < CYCLES) {
-            runOnJS(setCurrentCycle)(c => c + 1);
-            runOnJS(startBreathingCycle)();
-          } else {
-            // Exercise completed
-            runOnJS(() => navigation.navigate('SunBreathComplete'))();
-          }
-        })
-      )
-    );
+    // Schedule the state changes
+    setTimeout(() => {
+      setInstruction('Hold');
+    }, INHALE_DURATION);
+
+    setTimeout(() => {
+      setIsInhaling(false);
+      setInstruction('Breathe Out');
+    }, INHALE_DURATION + HOLD_DURATION);
+
+    setTimeout(() => {
+      if (currentCycle < CYCLES) {
+        setCurrentCycle(c => c + 1);
+        startBreathingCycle();
+      } else {
+        navigation.navigate('SunBreathComplete');
+      }
+    }, INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION);
   };
 
   useEffect(() => {
@@ -82,10 +69,6 @@ const SunBreathExerciseScreen: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,15 +84,19 @@ const SunBreathExerciseScreen: React.FC = () => {
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Animated.View style={[styles.instructionContainer, animatedStyle]}>
+        <View style={styles.instructionContainer}>
           <Text style={styles.cycleText}>Breath {currentCycle} of {CYCLES}</Text>
           <Text style={styles.instructionText}>{instruction}</Text>
-        </Animated.View>
+        </View>
 
-        <View style={styles.animationContainer}>
-          <SunBreathAnimation
-            isInhaling={isInhaling}
-            progress={progress.value}
+        <View style={styles.videoContainer}>
+          <Video
+            ref={videoRef}
+            source={{ uri: getBreathingVideo(isInhaling ? 'inhale' : 'exhale') }}
+            style={styles.video}
+            resizeMode="cover"
+            repeat={true}
+            muted={true}
           />
         </View>
       </View>
@@ -135,10 +122,12 @@ const styles = StyleSheet.create({
   },
   exitButton: {
     position: 'absolute',
-    top: 20,
+    top: 60,
     left: 20,
     zIndex: 10,
-    padding: 10,
+    padding: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 30,
   },
   instructionContainer: {
     position: 'absolute',
@@ -156,10 +145,14 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
-  animationContainer: {
+  videoContainer: {
     width: width,
     height: height,
     position: 'absolute',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
   },
 });
 
