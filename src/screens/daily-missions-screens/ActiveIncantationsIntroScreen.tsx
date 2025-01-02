@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import ProgressHeader from '../components/ProgressHeader';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import ProgressHeader from '../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsIntro'>;

@@ -1,39 +1,41 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import ProgressHeader from '../components/ProgressHeader';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import ProgressHeader from '../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingIntro'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitudeIntro'>;
 
 const introContent = [
   {
-    title: "Deep Breathing",
-    content: "Take a moment to find peace and calmness. Deep breathing is a powerful tool to reduce stress and anxiety, helping you center yourself in the present moment."
+    title: "The Power of Gratitude",
+    content: "Science has shown that practicing gratitude can significantly boost happiness and reduce stress. This simple yet powerful practice rewires your brain to focus on the positive aspects of life."
   },
   {
-    title: "How It Works",
-    content: "Follow the guided breathing exercise: inhale deeply through your nose, hold briefly, then exhale slowly through your mouth. This practice will help you relax and restore balance to your mind and body."
+    title: "The Magic of 'Because'",
+    content: "When expressing gratitude, adding 'because' makes it more meaningful. Instead of just saying what you're grateful for, explaining why deepens the emotional impact and helps you truly appreciate the value it brings to your life."
+  },
+  {
+    title: "Example",
+    content: "Instead of \"I'm grateful for my friend\", try \"I'm grateful for my friend because they always listen and support me without judgment.\" Notice how much more powerful and specific this feels."
   }
 ];
 
-
-const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation }) => {
+const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = introContent.length; // Match total steps with actual content
+  const totalSteps = introContent.length;
 
   const handleNext = async () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
       try {
-        await AsyncStorage.setItem('deep_breathing_intro_seen', 'true');
+        await AsyncStorage.setItem('daily_gratitude_intro_seen', 'true');
       } catch (error) {
         console.error('Error saving intro state:', error);
       }
-      navigation.push('DeepBreathing');
+      navigation.push('Gratitude');
     }
   };
 
@@ -55,12 +57,8 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.content}>
         <View style={styles.textContent}>
-          {currentContent && (
-            <>
-              <Text style={styles.title}>{currentContent.title}</Text>
-              <Text style={styles.description}>{currentContent.content}</Text>
-            </>
-          )}
+          <Text style={styles.title}>{currentContent.title}</Text>
+          <Text style={styles.description}>{currentContent.content}</Text>
         </View>
       </View>
 
@@ -105,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   nextButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#B91C1C',
     marginHorizontal: 24,
     marginBottom: 40,
     paddingVertical: 16,
@@ -123,4 +121,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DeepBreathingIntroScreen; 
+export default DailyGratitudeIntroScreen; 

@@ -26,8 +26,8 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../services/exerciseService';
-import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../services/affirmationService';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../../services/affirmationService';
 import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,
   AVEncodingOption,
@@ -87,11 +87,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [currentLoopCount, setCurrentLoopCount] = useState(0);
   const [showMusicSelectionModal, setShowMusicSelectionModal] = useState(false);
   const [hasListenedToAny, setHasListenedToAny] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const backgroundImages = [
-    require('../assets/illustrations/zen1.jpg'),
-    require('../assets/illustrations/zen2.jpg'),
-    require('../assets/illustrations/zen3.jpg'),
+    require('../../assets/illustrations/zen1.jpg'),
+    require('../../assets/illustrations/zen2.jpg'),
+    require('../../assets/illustrations/zen3.jpg'),
   ];
 
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
@@ -417,8 +418,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       transparent={true}
       onRequestClose={() => setShowAudioSettings(false)}
     >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, styles.settingsModalContent]}>
+      <View style={styles.exitModalOverlay}>
+        <View style={[styles.exitModalContent, styles.settingsModalContent]}>
           <View style={styles.settingsModalHeader}>
             <Text style={styles.settingsModalTitle}>Voice & Music Options</Text>
             <Text style={styles.settingsModalSubtitle}>For playlist: {selectedTag}</Text>
@@ -867,10 +868,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       onRequestClose={() => setShowRecordingModal(false)}
     >
       <TouchableWithoutFeedback onPress={() => setShowRecordingModal(false)}>
-        <View style={styles.modalContainer}>
+        <View style={styles.exitModalOverlay}>
           <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Record Affirmation</Text>
+            <View style={styles.exitModalContent}>
+              <Text style={styles.exitModalTitle}>Record Affirmation</Text>
               <Text style={styles.affirmationPreview}>{newAffirmationText}</Text>
               
               <View style={styles.tagSelectionContainer}>
@@ -1371,8 +1372,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       transparent={true}
       onRequestClose={() => setShowPracticeFlowModal(false)}
     >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, styles.practiceFlowModalContent]}>
+      <View style={styles.exitModalOverlay}>
+        <View style={[styles.exitModalContent, styles.practiceFlowModalContent]}>
           <View style={styles.practiceFlowHeader}>
             <Text style={styles.practiceFlowTitle}>Current practice flow</Text>
             <Text style={styles.practiceFlowSubtitle}>For all playlists</Text>
@@ -1480,8 +1481,8 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       transparent={true}
       onRequestClose={() => setShowMusicSelectionModal(false)}
     >
-      <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, styles.musicModalContent]}>
+      <View style={styles.exitModalOverlay}>
+        <View style={[styles.exitModalContent, styles.musicModalContent]}>
           <View style={styles.musicModalHeader}>
             <Text style={styles.musicModalTitle}>Background Music</Text>
             <Text style={styles.musicModalSubtitle}>Choose your music app</Text>
@@ -1508,7 +1509,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../assets/illustrations/icons/spotify.png')}
+                source={require('../../assets/illustrations/icons/spotify.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>Spotify</Text>
@@ -1528,7 +1529,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../assets/illustrations/icons/applemusic.png')}
+                source={require('../../assets/illustrations/icons/applemusic.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>Apple Music</Text>
@@ -1548,7 +1549,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../assets/illustrations/icons/soundcloud.png')}
+                source={require('../../assets/illustrations/icons/soundcloud.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>SoundCloud</Text>
@@ -1594,6 +1595,26 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     }
   };
 
+  const handleExitPress = () => {
+    setShowExitModal(true);
+  };
+
+  const handleContinue = () => {
+    setShowExitModal(false);
+  };
+
+  const handleExit = () => {
+    if (isPlaying) {
+      audioRecorderPlayer.current.stopPlayer();
+    }
+    audioRecorderPlayer.current.removePlayBackListener();
+    setIsPlaying(false);
+    setPlayingId(null);
+    setCurrentRecordingText('');
+    setCurrentLoopCount(0);
+    navigation.navigate('MainTabs');
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
@@ -1630,12 +1651,47 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </TouchableOpacity>
             )}
             <TouchableOpacity 
+              style={styles.redExitButton}
+              onPress={handleExitPress}
+            >
+              <Text style={styles.redExitButtonText}>Exit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
               style={styles.exitButton}
               onPress={handleComplete}
             >
               <Text style={styles.exitButtonText}>I'm done</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Exit Modal */}
+          <Modal
+            visible={showExitModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowExitModal(false)}
+          >
+            <View style={styles.exitModalOverlay}>
+              <View style={styles.exitModalContent}>
+                <Text style={styles.exitModalTitle}>Wait! Are you sure?</Text>
+                <Text style={styles.exitModalText}>
+                  You're making progress! Continue practicing to maintain your results.
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.exitModalButton, { backgroundColor: '#FFD700' }]}
+                  onPress={handleContinue}
+                >
+                  <Text style={{ color: '#000000', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Continue</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.exitModalButton, { backgroundColor: '#E31837' }]}
+                  onPress={handleExit}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', textAlign: 'center' }}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {/* New Affirmation Modal */}
           <Modal
@@ -1645,10 +1701,10 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           >
             <KeyboardAvoidingView 
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={styles.modalContainer}
+              style={styles.exitModalOverlay}
             >
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>New Affirmation</Text>
+              <View style={styles.exitModalContent}>
+                <Text style={styles.exitModalTitle}>New Affirmation</Text>
                 <TextInput
                   style={styles.textInput}
                   placeholder="Type your affirmation..."
@@ -1660,7 +1716,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                 />
                 <View style={styles.modalButtons}>
                   <TouchableOpacity 
-                    style={[styles.modalButton, styles.cancelButton]}
+                    style={[styles.exitModalButton, styles.cancelButton]}
                     onPress={() => {
                       setShowNewAffirmationModal(false);
                       setNewAffirmationText('');
@@ -1669,7 +1725,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                     <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={[styles.modalButton, styles.submitButton]}
+                    style={[styles.exitModalButton, styles.submitButton]}
                     onPress={() => {
                       if (newAffirmationText.trim()) {
                         setShowNewAffirmationModal(false);
@@ -1853,6 +1909,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  redExitButton: {
+    backgroundColor: '#E31837',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    width: '80%',
+    marginBottom: 12,
+  },
+  redExitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   exitButton: {
     backgroundColor: '#FFD700',
     paddingHorizontal: 30,
@@ -1881,10 +1951,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   modalButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 10,
-    marginHorizontal: 5,
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
   },
   cancelButton: {
     backgroundColor: '#2A2A2A',
@@ -2061,14 +2131,14 @@ const styles = StyleSheet.create({
   },
   backgroundImageContainer: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden' as const,
-  } as ViewStyle,
+    overflow: 'hidden',
+  },
   backgroundImage: {
     width: '100%',
     height: '100%',
     opacity: 0.5,
     resizeMode: 'cover',
-  } as ImageStyle,
+  },
   playbackOverlay: {
     flex: 1,
     justifyContent: 'space-between',
@@ -2507,6 +2577,40 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  exitModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  exitModalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  exitModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  exitModalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  exitModalButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
   },
 });
 

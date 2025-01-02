@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 type MusicSelectionScreenProps = {
   navigation: any;
@@ -61,7 +61,7 @@ const MusicSelectionScreen: React.FC<MusicSelectionScreenProps> = ({ navigation,
           )}
         >
           <Image
-            source={require('../assets/illustrations/icons/spotify.png')}
+            source={require('../../assets/illustrations/icons/spotify.png')}
             style={styles.appIcon}
           />
           <Text style={styles.appName}>Spotify</Text>
@@ -78,7 +78,7 @@ const MusicSelectionScreen: React.FC<MusicSelectionScreenProps> = ({ navigation,
           )}
         >
           <Image
-            source={require('../assets/illustrations/icons/applemusic.png')}
+            source={require('../../assets/illustrations/icons/applemusic.png')}
             style={styles.appIcon}
           />
           <Text style={styles.appName}>Apple Music</Text>
@@ -95,7 +95,7 @@ const MusicSelectionScreen: React.FC<MusicSelectionScreenProps> = ({ navigation,
           )}
         >
           <Image
-            source={require('../assets/illustrations/icons/soundcloud.png')}
+            source={require('../../assets/illustrations/icons/soundcloud.png')}
             style={styles.appIcon}
           />
           <Text style={styles.appName}>SoundCloud</Text>

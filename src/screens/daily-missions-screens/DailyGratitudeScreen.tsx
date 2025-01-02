@@ -12,9 +12,9 @@ import {
   Modal,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../services/exerciseService';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
 
@@ -25,7 +25,7 @@ interface GratitudeEntry {
   why: string;
 }
 
-const GratitudeScreen: React.FC<Props> = ({ navigation }) => {
+const DailyGratitudeScreen: React.FC<Props> = ({ navigation }) => {
   const [showPostExercise, setShowPostExercise] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
@@ -363,4 +363,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GratitudeScreen; 
+export default DailyGratitudeScreen; 

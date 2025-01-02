@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions, SafeAreaView, Modal, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { markExerciseAsCompleted } from '../services/exerciseService';
+import { markExerciseAsCompleted } from '../../services/exerciseService';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import ExitExerciseButton from '../components/ExitExerciseButton';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantations'>;
 

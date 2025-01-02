@@ -13,31 +13,31 @@ import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SupportScreen from '../screens/SupportScreen';
 import LoginScreen from '../screens/LoginScreen';
-import DeepBreathingScreen from '../screens/DeepBreathingScreen';
-import ActiveIncantationsScreen from '../screens/ActiveIncantationsScreen';
-import PassiveIncantationsScreen from '../screens/PassiveIncantationsScreen';
-import GratitudeScreen from '../screens/GratitudeScreen';
-import GoldenChecklistScreen from '../screens/GoldenChecklistScreen';
+import DeepBreathingScreen from '../screens/daily-missions-screens/DeepBreathingScreen';
+import ActiveIncantationsScreen from '../screens/daily-missions-screens/ActiveIncantationsScreen';
+import PassiveIncantationsScreen from '../screens/daily-missions-screens/PassiveIncantationsScreen';
+import GoldenChecklistScreen from '../screens/daily-missions-screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/VisionBoardScreen';
 import VisionBoardSectionsScreen from '../screens/VisionBoardSectionsScreen';
 import VisionBoardSectionScreen from '../screens/VisionBoardSectionScreen';
 import VisionBoardSectionPhotosScreen from '../screens/VisionBoardSectionPhotosScreen';
-import MusicSelectionScreen from '../screens/MusicSelectionScreen';
+import MusicSelectionScreen from '../screens/daily-missions-screens/MusicSelectionScreen';
 import NewVisionBoardSection from '../screens/NewVisionBoardSection';
 import { default as EditSectionNameScreen } from '../screens/EditSectionNameScreen';
 import MentorBoardScreen from '../screens/MentorBoardScreen';
 import MentorBoardDetailsScreen from '../screens/MentorBoardDetailsScreen';
 import MentorBoardIntroScreen from '../screens/MentorBoardIntroScreen';
 import VisionBoardIntroScreen from '../screens/VisionBoardIntroScreen';
-import DailyGratitudeIntroScreen from '../screens/DailyGratitudeIntroScreen';
-import DeepBreathingIntroScreen from '../screens/DeepBreathingIntroScreen';
-import ActiveIncantationsIntroScreen from '../screens/ActiveIncantationsIntroScreen';
-import PassiveIncantationsIntroScreen from '../screens/PassiveIncantationsIntroScreen';
-import GoldenChecklistIntroScreen from '../screens/GoldenChecklistIntroScreen';
+import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/DailyGratitudeIntroScreen';
+import DeepBreathingIntroScreen from '../screens/daily-missions-screens/DeepBreathingIntroScreen';
+import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
+import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/PassiveIncantationsIntroScreen';
+import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/GoldenChecklistIntroScreen';
 import QuestionnaireScreen from '../screens/QuestionnaireScreen';
 import TrialScreen from '../screens/TrialScreen';
 import PostQuestionnaireScreen from '../screens/PostQuestionnaireScreen';
 import PreQuestionnaireScreen from '../screens/PreQuestionnaireScreen';
+import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -214,13 +214,10 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="Gratitude" 
-          component={GratitudeScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
+        <Stack.Screen
+          name="Gratitude"
+          component={DailyGratitudeScreen}
+          options={{ headerShown: false }}
         />
         <Stack.Screen 
           name="GoldenChecklist" 
