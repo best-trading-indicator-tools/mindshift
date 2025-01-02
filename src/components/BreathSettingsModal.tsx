@@ -141,9 +141,8 @@ const BreathSettingsModal: React.FC<Props> = ({ visible, onClose, onSave }) => {
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={[styles.button, styles.saveButton, !hasChanges && styles.buttonDisabled]} 
+                style={[styles.button, styles.saveButton]} 
                 onPress={handleSave}
-                disabled={!hasChanges}
               >
                 <Text style={styles.saveButtonText}>Save Settings</Text>
               </TouchableOpacity>

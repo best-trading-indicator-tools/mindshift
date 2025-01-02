@@ -72,12 +72,6 @@ const SunBreathTutorialScreen: React.FC = () => {
           >
             <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.settingsButton}
-            onPress={() => navigation.navigate('SunBreathSettings')}
-          >
-            <MaterialCommunityIcons name="cog" size={24} color="#FFD700" />
-          </TouchableOpacity>
         </View>
         <MaterialCommunityIcons 
           name={currentTutorial.icon} 
@@ -142,17 +136,11 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 16,
   },
   exitButton: {
-    padding: 8,
-  },
-  settingsButton: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
     padding: 8,
   },
 });
