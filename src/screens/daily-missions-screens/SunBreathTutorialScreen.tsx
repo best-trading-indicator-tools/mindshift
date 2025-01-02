@@ -65,14 +65,6 @@ const SunBreathTutorialScreen: React.FC = () => {
       />
 
       <View style={styles.content}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.exitButton}
-            onPress={handleExit}
-          >
-            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
         <MaterialCommunityIcons 
           name={currentTutorial.icon} 
           size={100} 
@@ -133,15 +125,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 16,
-  },
-  exitButton: {
-    padding: 8,
   },
 });
 

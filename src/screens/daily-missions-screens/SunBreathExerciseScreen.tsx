@@ -338,17 +338,6 @@ const SunBreathExerciseScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity 
-        style={styles.exitButton}
-        onPress={handleExit}
-      >
-        <MaterialCommunityIcons 
-          name="close" 
-          size={30} 
-          color="#FFF" 
-        />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
         style={styles.settingsButton}
         onPress={handleSettings}
       >
@@ -424,15 +413,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  exitButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    zIndex: 10,
-    padding: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 30,
   },
   instructionContainer: {
     position: 'absolute',
