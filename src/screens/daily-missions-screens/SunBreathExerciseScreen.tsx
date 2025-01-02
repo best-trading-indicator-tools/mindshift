@@ -10,6 +10,7 @@ import { videoService, VideoLoadingState } from '../../services/videoService';
 import InfoBubble from '../../components/InfoBubble';
 import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../services/breathSettingsService';
 import BreathSettingsModal from '../../components/BreathSettingsModal';
+import ProgressHeader from '../../components/ProgressHeader';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -337,6 +338,13 @@ const SunBreathExerciseScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ProgressHeader
+        currentStep={currentCycle}
+        totalSteps={settings.cycles}
+        onExit={handleExit}
+        showNext={false}
+      />
+
       <TouchableOpacity 
         style={styles.settingsButton}
         onPress={handleSettings}
