@@ -334,68 +334,70 @@ const SunBreathExerciseScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ProgressHeader
-        currentStep={currentCycle}
-        totalSteps={settings.cycles}
-        onExit={handleExit}
-        showNext={false}
-      />
-
-      <TouchableOpacity 
-        style={styles.settingsButton}
-        onPress={handleSettings}
-      >
-        <MaterialCommunityIcons 
-          name="cog" 
-          size={30} 
-          color="#FFFFFF" 
-        />
-      </TouchableOpacity>
-
-      <View style={styles.content}>
-        <View style={styles.instructionContainer}>
-          <Text style={styles.cycleText}>Breath {currentCycle} of {settings.cycles}</Text>
-          <Text style={styles.instructionText}>{instruction}</Text>
-          {instruction !== 'Hold' && (
-            <Text style={styles.countdownText}>{countdown}</Text>
-          )}
-        </View>
-
-        <View style={styles.videoContainer}>
-          {loadingState.isLoading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FFD700" />
-              <Text style={styles.loadingText}>
-                Loading video... {Math.round(loadingState.progress * 100)}%
-              </Text>
-            </View>
-          )}
-          {videoPath && (
-            <Video
-              ref={videoRef}
-              source={{ uri: videoPath }}
-              style={styles.video}
-              resizeMode="cover"
-              repeat={true}
-              muted={true}
-              paused={isPaused}
-            />
-          )}
-        </View>
-
-        {instruction !== 'Hold' && (
-          <View style={styles.infoBubbleContainer}>
-            <InfoBubble message={getPhaseInstructions()} />
+    <View style={styles.container}>
+      <View style={styles.videoContainer}>
+        {loadingState.isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFD700" />
+            <Text style={styles.loadingText}>
+              Loading video... {Math.round(loadingState.progress * 100)}%
+            </Text>
           </View>
         )}
+        {videoPath && (
+          <Video
+            ref={videoRef}
+            source={{ uri: videoPath }}
+            style={styles.video}
+            resizeMode="cover"
+            repeat={true}
+            muted={true}
+            paused={isPaused}
+          />
+        )}
       </View>
+      
+      <SafeAreaView style={styles.overlay}>
+        <ProgressHeader
+          currentStep={currentCycle}
+          totalSteps={settings.cycles}
+          onExit={handleExit}
+          showNext={false}
+        />
+
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={handleSettings}
+        >
+          <MaterialCommunityIcons 
+            name="cog" 
+            size={30} 
+            color="#FFFFFF" 
+          />
+        </TouchableOpacity>
+
+        <View style={styles.content}>
+          <View style={styles.instructionContainer}>
+            <Text style={styles.cycleText}>Breath {currentCycle} of {settings.cycles}</Text>
+            <Text style={styles.instructionText}>{instruction}</Text>
+            {instruction !== 'Hold' && (
+              <Text style={styles.countdownText}>{countdown}</Text>
+            )}
+          </View>
+
+          {instruction !== 'Hold' && (
+            <View style={styles.infoBubbleContainer}>
+              <InfoBubble message={getPhaseInstructions()} />
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
 
       <BreathSettingsModal
         visible={showSettingsModal}
         onClose={() => {
           setShowSettingsModal(false);
-          handleExitCancel(); // Resume exercise
+          handleExitCancel();
         }}
         onSave={handleSettingsSave}
       />
@@ -405,7 +407,7 @@ const SunBreathExerciseScreen: React.FC = () => {
         onContinue={handleExitCancel}
         onExit={handleExitConfirm}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -413,6 +415,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  videoContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  video: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -457,15 +468,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
     letterSpacing: 2,
     opacity: 0.9,
-  },
-  videoContainer: {
-    width: width,
-    height: height,
-    position: 'absolute',
-  },
-  video: {
-    width: '100%',
-    height: '100%',
   },
   loadingContainer: {
     position: 'absolute',

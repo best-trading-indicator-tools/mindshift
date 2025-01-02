@@ -13,7 +13,7 @@ const SunBreathCompleteScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
 
   const handleRepeat = () => {
-    navigation.replace('SunBreathExercise');
+    navigation.push('SunBreathExercise');
   };
 
   const handleComplete = async () => {
