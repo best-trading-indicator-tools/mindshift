@@ -34,11 +34,18 @@ const SunBreathExerciseScreen: React.FC = () => {
   const videoRef = useRef<VideoRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [pauseTime, setPauseTime] = useState<number>(0);
+  const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
 
   const handleExit = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    // Clear all scheduled timers
+    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+    cycleTimersRef.current = [];
+    
+    setPauseTime(Date.now());
     setIsPaused(true);
     setShowExitModal(true);
   };
@@ -54,10 +61,19 @@ const SunBreathExerciseScreen: React.FC = () => {
   const handleExitCancel = () => {
     setShowExitModal(false);
     setIsPaused(false);
+    
+    // Calculate how long we were paused
+    const pauseDuration = Date.now() - pauseTime;
+    
+    // Reschedule all timers with adjusted times
+    startBreathingCycle(pauseDuration);
+    
+    // Restart the countdown from where it was
     startCountdown(
       instruction === 'Breathe In' ? INHALE_DURATION :
       instruction === 'Hold' ? HOLD_DURATION :
-      EXHALE_DURATION
+      EXHALE_DURATION,
+      countdown
     );
   };
 
@@ -76,12 +92,12 @@ const SunBreathExerciseScreen: React.FC = () => {
     }
   };
 
-  const startCountdown = (duration: number) => {
+  const startCountdown = (duration: number, startFrom?: number) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
-    const seconds = Math.floor(duration / 1000);
+    const seconds = startFrom || Math.floor(duration / 1000);
     setCountdown(seconds);
     
     timerRef.current = setInterval(() => {
@@ -97,7 +113,11 @@ const SunBreathExerciseScreen: React.FC = () => {
     }, 1000);
   };
 
-  const startBreathingCycle = () => {
+  const startBreathingCycle = (pauseDuration: number = 0) => {
+    // Clear any existing timers
+    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+    cycleTimersRef.current = [];
+
     // Don't start if we've exceeded cycles
     if (currentCycle > CYCLES) {
       return;
@@ -106,16 +126,16 @@ const SunBreathExerciseScreen: React.FC = () => {
     // Start with inhale
     setIsInhaling(true);
     setInstruction('Breathe In');
-    startCountdown(INHALE_DURATION);
     loadVideo('inhale');
     
-    // Schedule the state changes
-    setTimeout(() => {
+    // Schedule the state changes with adjusted times
+    const holdTimer = setTimeout(() => {
       setInstruction('Hold');
       startCountdown(HOLD_DURATION);
-    }, INHALE_DURATION);
+    }, INHALE_DURATION - pauseDuration);
+    cycleTimersRef.current.push(holdTimer);
 
-    setTimeout(() => {
+    const exhaleTimer = setTimeout(() => {
       setIsInhaling(false);
       setInstruction('Breathe Out');
       startCountdown(EXHALE_DURATION);
@@ -123,22 +143,25 @@ const SunBreathExerciseScreen: React.FC = () => {
 
       // If this is the last cycle, wait for exhale to complete before finishing
       if (currentCycle === CYCLES) {
-        setTimeout(() => {
+        const completeTimer = setTimeout(() => {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
           navigation.navigate('SunBreathComplete');
         }, EXHALE_DURATION);
+        cycleTimersRef.current.push(completeTimer);
       }
-    }, INHALE_DURATION + HOLD_DURATION);
+    }, INHALE_DURATION + HOLD_DURATION - pauseDuration);
+    cycleTimersRef.current.push(exhaleTimer);
 
     // Schedule next cycle
-    setTimeout(() => {
-      if (currentCycle < CYCLES) {
+    if (currentCycle < CYCLES) {
+      const nextCycleTimer = setTimeout(() => {
         setCurrentCycle(c => c + 1);
         startBreathingCycle();
-      }
-    }, INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION);
+      }, INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION - pauseDuration);
+      cycleTimersRef.current.push(nextCycleTimer);
+    }
   };
 
   useEffect(() => {
@@ -169,6 +192,8 @@ const SunBreathExerciseScreen: React.FC = () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+      cycleTimersRef.current = [];
     };
   }, []);
 
