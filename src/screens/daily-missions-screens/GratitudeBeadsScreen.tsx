@@ -10,15 +10,23 @@ import {
   Alert,
   Modal,
   SafeAreaView,
+  Vibration,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
 import LinearGradient from 'react-native-linear-gradient';
+import Sound from 'react-native-sound';
+
+// Enable playback in silence mode
+Sound.setCategory('Playback');
 
 const TOTAL_BEADS = 20;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
 const HOLD_DURATION = 500; // Reduced from 2000 to 500ms to make it more responsive
+const PROGRESS_VIBRATION = 50; // Short vibration for progress
+const SUCCESS_VIBRATION = [100, 100, 100]; // Pattern for bead completion
+const COMPLETION_VIBRATION = [0, 100, 50, 100, 50, 100, 50, 200]; // Special pattern for completing all beads
 
 const GRATITUDE_PROMPTS = [
   "I'm grateful for my health because...",
@@ -26,6 +34,26 @@ const GRATITUDE_PROMPTS = [
   "I'm grateful for this moment because...",
   "I'm grateful for my home because...",
   "I'm grateful for nature because...",
+  "I'm grateful for a challenge I overcame because...",
+  "I'm grateful for a friend who supports me because...",
+  "I'm grateful for my abilities because...",
+  "I'm grateful for a recent learning experience because...",
+  "I'm grateful for a small joy today because...",
+  "I'm grateful for my morning routine because...",
+  "I'm grateful for a mistake I made because...",
+  "I'm grateful for technology because...",
+  "I'm grateful for my community because...",
+  "I'm grateful for a memory that makes me smile because...",
+  "I'm grateful for my current emotions because...",
+  "I'm grateful for my body because...",
+  "I'm grateful for an opportunity I have because...",
+  "I'm grateful for someone who inspires me because...",
+  "I'm grateful for a simple pleasure because...",
+  "I'm grateful for a book or movie because...",
+  "I'm grateful for my work/studies because...",
+  "I'm grateful for a tradition I have because...",
+  "I'm grateful for my pet/animals because...",
+  "I'm grateful for music because...",
 ];
 
 interface BeadProps {
@@ -39,6 +67,7 @@ interface BeadProps {
 const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, onHold }) => {
   const [isHolding, setIsHolding] = useState(false);
   const holdTimer = useRef<NodeJS.Timeout>();
+  const progressTimer = useRef<NodeJS.Timeout>();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -73,9 +102,16 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
       useNativeDriver: false,
     }).start();
 
+    // Add progress vibration
+    progressTimer.current = setInterval(() => {
+      Vibration.vibrate(PROGRESS_VIBRATION);
+    }, HOLD_DURATION / 3);
+
     holdTimer.current = setTimeout(() => {
       setIsHolding(false);
       progressAnim.setValue(0);
+      clearInterval(progressTimer.current);
+      Vibration.vibrate(SUCCESS_VIBRATION); // Vibrate on successful hold
       onHold();
     }, HOLD_DURATION);
   };
@@ -83,6 +119,9 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
   const handlePressOut = () => {
     if (holdTimer.current) {
       clearTimeout(holdTimer.current);
+    }
+    if (progressTimer.current) {
+      clearInterval(progressTimer.current);
     }
     setIsHolding(false);
     progressAnim.setValue(0);
@@ -142,6 +181,39 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   const [currentBead, setCurrentBead] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState(0);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+  const backgroundMusic = useRef<Sound | null>(null);
+
+  useEffect(() => {
+    // Initialize and play background music
+    backgroundMusic.current = new Sound(
+      require('../../assets/audio/musics/necklace-beads.wav'),
+      (error) => {
+        if (error) {
+          console.log('Failed to load background music', error);
+          return;
+        }
+        
+        if (backgroundMusic.current) {
+          backgroundMusic.current.setVolume(0.3); // Set lower volume
+          backgroundMusic.current.setNumberOfLoops(-1); // Loop indefinitely
+          backgroundMusic.current.play((success) => {
+            if (!success) {
+              console.log('Playback failed');
+            }
+          });
+        }
+      }
+    );
+
+    // Cleanup function
+    return () => {
+      if (backgroundMusic.current) {
+        backgroundMusic.current.stop();
+        backgroundMusic.current.release();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Rotate through prompts
@@ -184,9 +256,12 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
       return;
     }
 
+    // Add completion vibration
+    Vibration.vibrate(COMPLETION_VIBRATION);
+
     try {
       const success = await markExerciseAsCompleted(
-        'gratitude',
+        'gratitude-beads',
         'Gratitude Beads'
       );
 
@@ -209,7 +284,33 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   };
 
   const handleExit = () => {
+    // Stop music when exiting
+    if (backgroundMusic.current) {
+      backgroundMusic.current.stop();
+    }
     setShowExitModal(true);
+  };
+
+  const handleUndo = () => {
+    if (completedBeads.length > 0) {
+      // Remove last completed bead
+      setCompletedBeads(prev => prev.slice(0, -1));
+      // Move back to previous bead
+      setCurrentBead(prev => Math.max(0, prev - 1));
+      // Add a subtle vibration feedback
+      Vibration.vibrate(50);
+    }
+  };
+
+  const toggleMusic = () => {
+    if (backgroundMusic.current) {
+      if (isMusicPlaying) {
+        backgroundMusic.current.pause();
+      } else {
+        backgroundMusic.current.play();
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
   };
 
   return (
@@ -222,10 +323,34 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
       </TouchableOpacity>
 
+      <View style={styles.topRightButtons}>
+        {completedBeads.length > 0 && (
+          <TouchableOpacity 
+            style={styles.iconButton}
+            onPress={handleUndo}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="undo" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+        
+        <TouchableOpacity 
+          style={styles.iconButton}
+          onPress={toggleMusic}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <MaterialCommunityIcons 
+            name={isMusicPlaying ? "music" : "music-off"} 
+            size={24} 
+            color="#FFFFFF" 
+          />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.content}>
         <Text style={styles.title}>Gratitude Beads</Text>
         <Text style={styles.instructions}>
-          Touch and hold for <Text style={{ fontWeight: 'bold' }}>3 seconds</Text> each highlighted bead while expressing your gratitude
+          Touch and hold for <Text style={{ fontWeight: 'bold' }}>2 seconds</Text> each highlighted bead while expressing your gratitude
         </Text>
 
         <View style={styles.beadsContainer}>
@@ -270,6 +395,7 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         visible={showExitModal}
         transparent={true}
         animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -279,13 +405,21 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             </Text>
             <TouchableOpacity 
               style={styles.continueButton}
-              onPress={() => setShowExitModal(false)}
+              onPress={() => {
+                setShowExitModal(false);
+                // Resume music if continuing
+                backgroundMusic.current?.play();
+              }}
             >
               <Text style={styles.continueButtonText}>Continue Practice</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.exitModalButton}
-              onPress={() => navigation.navigate('MainTabs')}
+              onPress={() => {
+                // Stop music before navigating
+                backgroundMusic.current?.stop();
+                navigation.navigate('MainTabs');
+              }}
             >
               <Text style={styles.exitModalButtonText}>Exit</Text>
             </TouchableOpacity>
@@ -323,7 +457,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 10,
+    marginTop: 30,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -483,6 +617,34 @@ const styles = StyleSheet.create({
     right: -4,
     bottom: -4,
     borderRadius: BEAD_SIZE,
+  },
+  musicButton: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  topRightButtons: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    flexDirection: 'row',
+    gap: 12,
+    zIndex: 1,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

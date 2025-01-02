@@ -223,6 +223,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             return 'passive-incantations';
           case 'Golden Checklist':
             return 'golden-checklist';
+          case 'Gratitude Beads':
+            return 'gratitude-beads';
           default:
             return null;
         }
@@ -559,6 +561,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   ? 'gratitude'
                   : mission.title === 'Golden Checklist'
                   ? 'golden-checklist'
+                  : mission.title === 'Gratitude Beads'
+                  ? 'gratitude-beads'
                   : ''
               }))}
             />
@@ -592,7 +596,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       : mission.title === 'Daily Gratitude'
                       ? completedExercises.includes('gratitude')
                       : mission.title === 'Gratitude Beads'
-                      ? completedExercises.includes('gratitude')
+                      ? completedExercises.includes('gratitude-beads')
                       : mission.title === 'Golden Checklist'
                       ? completedExercises.includes('golden-checklist')
                       : false

@@ -11,6 +11,7 @@ export type ExerciseType =
   | 'voix-nasale'
   | 'fry-vocal'
   | 'gratitude'
+  | 'gratitude-beads'
   | 'golden-checklist'
   | 'vision-board';
 
@@ -147,6 +148,7 @@ export const checkDailyProgress = async () => {
       { key: 'active-incantations', name: 'Active Incantations' },
       { key: 'passive-incantations', name: 'Passive Incantations' },
       { key: 'gratitude', name: 'Daily Gratitude' },
+      { key: 'gratitude-beads', name: 'Gratitude Beads' },
       { key: 'golden-checklist', name: 'Golden Checklist' }
     ];
 
