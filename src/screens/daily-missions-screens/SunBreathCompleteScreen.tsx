@@ -3,47 +3,46 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-na
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
 
 const SunBreathCompleteScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
 
-  const handleFinish = () => {
+  const handleRepeat = () => {
+    navigation.replace('SunBreathExercise');
+  };
+
+  const handleComplete = () => {
     navigation.navigate('MainTabs');
   };
 
-  const handleRepeat = () => {
-    navigation.navigate('SunBreathExercise');
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#FF8C00', '#FFD700']}
-        style={styles.gradient}
-      >
+    <LinearGradient
+      colors={['#FF8C00', '#FFD700']}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <MaterialCommunityIcons 
             name="check-circle" 
-            size={120} 
-            color="#FFF" 
+            size={100} 
+            color="white" 
+            style={styles.icon}
           />
-          
+
           <Text style={styles.title}>Exercise Complete!</Text>
-          <Text style={styles.subtitle}>You've absorbed the light and released the darkness</Text>
           
-          <View style={styles.messageContainer}>
-            <Text style={styles.message}>
-              Take a moment to notice how you feel. Your body and mind are now refreshed and energized.
-            </Text>
-          </View>
+          <Text style={styles.message}>
+            Take a moment to notice how you feel.{'\n'}
+            Your body and mind are now refreshed and energized.
+          </Text>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={[styles.button, styles.repeatButton]}
+              style={[styles.button, styles.repeatButton]} 
               onPress={handleRepeat}
             >
               <MaterialCommunityIcons name="repeat" size={24} color="#FF8C00" />
@@ -51,86 +50,81 @@ const SunBreathCompleteScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.button, styles.finishButton]}
-              onPress={handleFinish}
+              style={[styles.button, styles.completeButton]} 
+              onPress={handleComplete}
             >
-              <Text style={styles.finishButtonText}>Complete</Text>
+              <Text style={styles.completeButtonText}>Complete</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
     flex: 1,
   },
-  gradient: {
+  container: {
     flex: 1,
   },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 40,
+  },
+  icon: {
+    marginBottom: 30,
+    opacity: 0.95,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 20,
+    fontSize: 36,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 30,
     textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#FFF',
-    marginTop: 8,
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  messageContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 15,
-    padding: 20,
-    width: '100%',
-    marginBottom: 40,
   },
   message: {
-    fontSize: 16,
-    color: '#FFF',
+    fontSize: 20,
+    color: 'white',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 28,
+    marginBottom: 50,
+    opacity: 0.9,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 20,
+    justifyContent: 'center',
+    width: '100%',
+    gap: 15,
   },
   button: {
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
+    borderRadius: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    minWidth: 150,
   },
   repeatButton: {
-    backgroundColor: '#FFF',
-  },
-  finishButton: {
-    backgroundColor: '#FF8C00',
+    backgroundColor: 'white',
   },
   repeatButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: '#FF8C00',
-  },
-  finishButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  completeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  completeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
