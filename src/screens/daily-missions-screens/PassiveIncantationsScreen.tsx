@@ -454,7 +454,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               <MaterialCommunityIcons
                 name="menu"
                 size={24}
-                color="#6366F1"
+                color="#FFFFFF"
                 style={styles.dragHandle}
               />
             )}
