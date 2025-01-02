@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, SafeAreaView, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -10,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import SunBreathAnimation from '../../components/sun-breath/SunBreathAnimation';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import ExitModal from '../../components/ExitModal';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -25,9 +27,22 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [currentCycle, setCurrentCycle] = useState(1);
   const [isInhaling, setIsInhaling] = useState(true);
   const [instruction, setInstruction] = useState('Breathe In');
+  const [showExitModal, setShowExitModal] = useState(false);
   
   const progress = useSharedValue(0);
   const opacity = useSharedValue(1);
+
+  const handleExit = () => {
+    setShowExitModal(true);
+  };
+
+  const handleExitConfirm = () => {
+    navigation.navigate('MainTabs');
+  };
+
+  const handleExitCancel = () => {
+    setShowExitModal(false);
+  };
 
   const startBreathingCycle = () => {
     // Inhale
@@ -72,6 +87,17 @@ const SunBreathExerciseScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity 
+        style={styles.exitButton}
+        onPress={handleExit}
+      >
+        <MaterialCommunityIcons 
+          name="close" 
+          size={30} 
+          color="#FFF" 
+        />
+      </TouchableOpacity>
+
       <View style={styles.content}>
         <Animated.View style={[styles.instructionContainer, animatedStyle]}>
           <Text style={styles.cycleText}>Breath {currentCycle} of {CYCLES}</Text>
@@ -85,6 +111,12 @@ const SunBreathExerciseScreen: React.FC = () => {
           />
         </View>
       </View>
+
+      <ExitModal
+        visible={showExitModal}
+        onContinue={handleExitCancel}
+        onExit={handleExitConfirm}
+      />
     </SafeAreaView>
   );
 };
@@ -98,6 +130,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  exitButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 10,
+    padding: 10,
   },
   instructionContainer: {
     position: 'absolute',

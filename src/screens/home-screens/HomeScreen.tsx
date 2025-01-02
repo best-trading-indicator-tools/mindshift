@@ -100,6 +100,13 @@ const challenges = [
 
 const DAILY_MISSIONS = [
   {
+    title: 'The Sun Breath',
+    subtitle: 'Absorb light, release darkness',
+    duration: '3-5 min',
+    type: 'Training',
+    icon: 'white-balance-sunny',
+  },
+  {
     title: 'Deep Breathing',
     subtitle: 'Train your diaphragm',
     duration: '3-5 min',
@@ -187,15 +194,23 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         // If we have missions for today, use them
         setDailyMissions(JSON.parse(storedMissions));
       } else {
-        // Select new random missions
-        const shuffledMissions = shuffleArray(DAILY_MISSIONS);
+        // Get all missions except The Sun Breath
+        const otherMissions = DAILY_MISSIONS.filter(m => m.title !== 'The Sun Breath');
+        // Get The Sun Breath
+        const sunBreath = DAILY_MISSIONS.find(m => m.title === 'The Sun Breath')!;
+        
+        // Select 5 random missions from other missions
+        const shuffledMissions = shuffleArray(otherMissions);
         const selectedMissions = shuffledMissions.slice(0, MISSIONS_PER_DAY);
         
+        // Add The Sun Breath as the 6th mission
+        const finalMissions = [...selectedMissions, sunBreath];
+        
         // Store the selected missions and update date
-        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(selectedMissions));
+        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(finalMissions));
         await AsyncStorage.setItem('lastMissionsUpdateDate', today);
         
-        setDailyMissions(selectedMissions);
+        setDailyMissions(finalMissions);
       }
     } catch (error) {
       console.error('Error selecting daily missions:', error);
@@ -362,9 +377,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleReset = async () => {
     try {
+      // Clear the missions storage
+      await AsyncStorage.removeItem('selectedDailyMissions');
+      await AsyncStorage.removeItem('lastMissionsUpdateDate');
+      
+      // Reset all daily exercises
       await resetAllDailyExercises();
       await clearNotifications();
-      await selectDailyMissions(); // Re-select missions after reset
+      
+      // Re-select missions after reset
+      await selectDailyMissions();
+      
       checkExerciseCompletions();
       loadStreak();
       updateProgress();
@@ -429,6 +452,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     if (mission) {
       navigation.navigate('GratitudeBeadsIntro');
     }
+  };
+
+  const handleSunBreathNavigation = async () => {
+    navigation.navigate('SunBreathTutorial');
   };
 
   const renderChallenges = () => {
@@ -580,37 +607,37 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               {dailyMissions.map((mission, index) => (
                 <MissionItem
                   key={index}
-                  {...mission}
-                  onPress={
-                    mission.title === 'Deep Breathing' 
-                      ? handleDeepBreathingNavigation
-                      : mission.title === 'Active Incantations'
-                      ? handleActiveIncantationsNavigation
-                      : mission.title === 'Passive Incantations'
-                      ? handlePassiveIncantationsNavigation
-                      : mission.title === 'Daily Gratitude'
-                      ? handleGratitudeNavigation
-                      : mission.title === 'Gratitude Beads'
-                      ? handleGratitudeBeadsNavigation
-                      : mission.title === 'Golden Checklist'
-                      ? handleGoldenChecklistNavigation
-                      : undefined
-                  }
-                  isCompleted={completedExercises.includes(
-                    mission.title === 'Deep Breathing'
-                      ? 'deep-breathing'
-                      : mission.title === 'Active Incantations'
-                      ? 'active-incantations'
-                      : mission.title === 'Passive Incantations'
-                      ? 'passive-incantations'
-                      : mission.title === 'Daily Gratitude'
-                      ? 'gratitude'
-                      : mission.title === 'Gratitude Beads'
-                      ? 'gratitude-beads'
-                      : mission.title === 'Golden Checklist'
-                      ? 'golden-checklist'
-                      : ''
-                  )}
+                  title={mission.title}
+                  subtitle={mission.subtitle}
+                  duration={mission.duration}
+                  type={mission.type}
+                  icon={mission.icon}
+                  isCompleted={completedExercises.includes(mission.title)}
+                  onPress={() => {
+                    switch (mission.title) {
+                      case 'Deep Breathing':
+                        handleDeepBreathingNavigation();
+                        break;
+                      case 'Daily Gratitude':
+                        handleGratitudeNavigation();
+                        break;
+                      case 'Active Incantations':
+                        handleActiveIncantationsNavigation();
+                        break;
+                      case 'Passive Incantations':
+                        handlePassiveIncantationsNavigation();
+                        break;
+                      case 'Golden Checklist':
+                        handleGoldenChecklistNavigation();
+                        break;
+                      case 'Gratitude Beads':
+                        handleGratitudeBeadsNavigation();
+                        break;
+                      case 'The Sun Breath':
+                        handleSunBreathNavigation();
+                        break;
+                    }
+                  }}
                 />
               ))}
             </View>

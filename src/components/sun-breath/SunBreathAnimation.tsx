@@ -1,127 +1,100 @@
-import React, { useEffect } from 'react';
-import { View, Dimensions } from 'react-native';
-import {
-  Canvas,
-  Path,
-  Group,
-  Blur,
-  Paint,
-  vec,
-} from '@shopify/react-native-skia';
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  useSharedValue,
-  withSequence,
-  withRepeat,
-  withSpring,
-} from 'react-native-reanimated';
+import React from 'react';
+import { StyleSheet, Dimensions } from 'react-native';
+import { Canvas, Circle, vec, Paint, Group, BlurMask } from '@shopify/react-native-skia';
+import { mix } from '@shopify/react-native-skia';
 
 const { width, height } = Dimensions.get('window');
+const CENTER = vec(width / 2, height / 2);
+const CIRCLE_RADIUS = 50;
+const NUM_RAYS = 12;
+const NUM_CLOUDS = 8;
 
-interface SunBreathAnimationProps {
+interface Props {
   isInhaling: boolean;
   progress: number;
 }
 
-const SunBreathAnimation: React.FC<SunBreathAnimationProps> = ({
-  isInhaling,
-  progress,
-}) => {
-  // Animation values using Reanimated
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(1);
-  const smokeY = useSharedValue(height);
-  
-  // Light rays configuration
-  const numRays = 12; // Increased number of rays
-  const rayLength = height * 0.8; // Longer rays
-  
-  useEffect(() => {
-    if (isInhaling) {
-      // Inhale animation
-      opacity.value = withTiming(1, { duration: 1000 });
-      scale.value = withSpring(1.2, { damping: 10 });
-    } else {
-      // Exhale animation
-      opacity.value = withTiming(0, { duration: 1000 });
-      scale.value = withSpring(1, { damping: 10 });
-      // Animate smoke rising
-      smokeY.value = withTiming(0, { duration: 2000 });
-    }
-  }, [isInhaling]);
-  
-  // Create light rays paths
-  const createLightRaysPaths = () => {
-    const paths: string[] = [];
-    const centerX = width / 2;
-    const startY = height;
-    
-    for (let i = 0; i < numRays; i++) {
-      const angle = (i * Math.PI) / (numRays - 1);
-      const endX = centerX + Math.sin(angle) * rayLength;
-      const endY = startY - Math.cos(angle) * rayLength;
-      
-      paths.push(`M ${centerX} ${startY} L ${endX} ${endY}`);
-    }
-    
-    return paths;
-  };
-
-  const lightRaysPaths = createLightRaysPaths();
-
-  // Enhanced smoke effect configuration
-  const smokeParticles = Array(20).fill(0).map((_, i) => ({
-    x: width * (0.2 + Math.random() * 0.6),
-    y: height + (i * 20),
-    controlX: width * (0.2 + Math.random() * 0.6),
-    controlY: height * 0.7,
-    endX: width * (0.2 + Math.random() * 0.6),
-    endY: height * 0.4,
-    opacity: 0.2 + Math.random() * 0.3,
-  }));
+const SunBreathAnimation: React.FC<Props> = ({ isInhaling, progress }) => {
+  const rays = Array.from({ length: NUM_RAYS });
+  const clouds = Array.from({ length: NUM_CLOUDS });
 
   return (
-    <Canvas style={{ flex: 1 }}>
-      <Group>
-        {/* Light Rays */}
-        {isInhaling && (
-          <Group transform={[{ scale: scale.value }]}>
-            {lightRaysPaths.map((path: string, index: number) => (
-              <Path
-                key={index}
-                path={path}
-                color={`rgba(255, 215, 0, ${0.3 + (opacity.value * 0.4)})`}
-              >
+    <Canvas style={styles.canvas}>
+      {/* Main breathing circle */}
+      <Circle
+        c={CENTER}
+        r={mix(progress, CIRCLE_RADIUS, CIRCLE_RADIUS * 2)}
+        color={isInhaling ? "#FFD700" : "#333"}
+      >
+        <BlurMask blur={10} style="solid" />
+      </Circle>
+
+      {/* Light rays during inhale */}
+      {isInhaling && (
+        <Group>
+          {rays.map((_, index) => {
+            const angle = (index * 2 * Math.PI) / NUM_RAYS;
+            const rayLength = mix(progress, CIRCLE_RADIUS, CIRCLE_RADIUS * 4);
+            const x1 = CENTER.x + Math.cos(angle) * CIRCLE_RADIUS;
+            const y1 = CENTER.y + Math.sin(angle) * CIRCLE_RADIUS;
+            const x2 = CENTER.x + Math.cos(angle) * rayLength;
+            const y2 = CENTER.y + Math.sin(angle) * rayLength;
+
+            return (
+              <Group key={index} opacity={mix(progress, 0.3, 0.8)}>
                 <Paint>
-                  <Blur blur={20 + (scale.value * 10)} />
+                  <BlurMask blur={20} style="solid" />
                 </Paint>
-              </Path>
-            ))}
-          </Group>
-        )}
-        
-        {/* Smoke Effect */}
-        {!isInhaling && (
-          <Group transform={[{ translateY: smokeY.value }]}>
-            {smokeParticles.map((particle, index: number) => (
-              <Path
-                key={index}
-                path={`M ${particle.x} ${particle.y} 
-                       Q ${particle.controlX} ${particle.controlY} 
-                         ${particle.endX} ${particle.endY}`}
-                color={`rgba(100, 100, 100, ${particle.opacity})`}
-              >
+                <Circle
+                  c={vec(x1, y1)}
+                  r={5}
+                  color="#FFD700"
+                />
+                <Circle
+                  c={vec(x2, y2)}
+                  r={2}
+                  color="#FFD700"
+                />
+              </Group>
+            );
+          })}
+        </Group>
+      )}
+
+      {/* Dark clouds during exhale */}
+      {!isInhaling && (
+        <Group>
+          {clouds.map((_, index) => {
+            const angle = (index * 2 * Math.PI) / NUM_CLOUDS;
+            const cloudDistance = mix(progress, CIRCLE_RADIUS * 4, CIRCLE_RADIUS);
+            const x = CENTER.x + Math.cos(angle) * cloudDistance;
+            const y = CENTER.y + Math.sin(angle) * cloudDistance;
+
+            return (
+              <Group key={index} opacity={mix(progress, 0.8, 0)}>
                 <Paint>
-                  <Blur blur={15} />
+                  <BlurMask blur={30} style="solid" />
                 </Paint>
-              </Path>
-            ))}
-          </Group>
-        )}
-      </Group>
+                <Circle
+                  c={vec(x, y)}
+                  r={20}
+                  color="#333"
+                />
+              </Group>
+            );
+          })}
+        </Group>
+      )}
     </Canvas>
   );
 };
+
+const styles = StyleSheet.create({
+  canvas: {
+    flex: 1,
+    width: width,
+    height: height,
+  },
+});
 
 export default SunBreathAnimation; 

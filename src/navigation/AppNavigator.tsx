@@ -40,10 +40,9 @@ import PreQuestionnaireScreen from '../screens/onboarding-screens/PreQuestionnai
 import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
 import GratitudeBeadsScreen from '../screens/daily-missions-screens/GratitudeBeadsScreen';
 import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/GratitudeBeadsIntroScreen';
-import SunBreathIntroScreen from '../screens/caroussel-challenges-screens/SunBreathIntroScreen';
-import SunBreathTutorialScreen from '../screens/caroussel-challenges-screens/SunBreathTutorialScreen';
-import SunBreathExerciseScreen from '../screens/caroussel-challenges-screens/SunBreathExerciseScreen';
-import SunBreathCompleteScreen from '../screens/caroussel-challenges-screens/SunBreathCompleteScreen';
+import SunBreathTutorialScreen from '../screens/daily-missions-screens/SunBreathTutorialScreen';
+import SunBreathExerciseScreen from '../screens/daily-missions-screens/SunBreathExerciseScreen';
+import SunBreathCompleteScreen from '../screens/daily-missions-screens/SunBreathCompleteScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -94,7 +93,6 @@ export type RootStackParamList = {
   PreQuestionnaire: undefined;
   GratitudeBeads: undefined;
   GratitudeBeadsIntro: undefined;
-  SunBreathIntro: undefined;
   SunBreathTutorial: undefined;
   SunBreathExercise: undefined;
   SunBreathComplete: undefined;
@@ -322,32 +320,24 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen
-          name="SunBreathIntro"
-          component={SunBreathIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="SunBreathTutorial"
+        <Stack.Screen 
+          name="SunBreathTutorial" 
           component={SunBreathTutorialScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen
-          name="SunBreathExercise"
+        <Stack.Screen 
+          name="SunBreathExercise" 
           component={SunBreathExerciseScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen
-          name="SunBreathComplete"
+        <Stack.Screen 
+          name="SunBreathComplete" 
           component={SunBreathCompleteScreen}
           options={{
             presentation: 'fullScreenModal',

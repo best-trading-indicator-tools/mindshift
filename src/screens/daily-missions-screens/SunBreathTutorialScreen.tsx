@@ -10,6 +10,11 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTu
 
 const tutorialSteps = [
   {
+    title: "The Breath of the Sun",
+    content: "A powerful breathing exercise to absorb light and release negativity.\n\nTake 5 deep breaths while visualizing golden light entering your body, then release dark clouds of negativity.",
+    icon: "white-balance-sunny"
+  },
+  {
     title: "Breathe In Light",
     content: "As you breathe in, imagine drawing in golden sunlight through your nose. Visualize this light filling your entire body with warmth and positive energy.",
     icon: "weather-sunny"
