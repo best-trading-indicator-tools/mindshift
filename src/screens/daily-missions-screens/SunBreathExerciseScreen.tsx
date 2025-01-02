@@ -8,7 +8,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import ExitModal from '../../components/ExitModal';
 import { videoService, VideoLoadingState } from '../../services/videoService';
 import InfoBubble from '../../components/InfoBubble';
-import { getBreathSettings, BreathSettings } from '../../services/breathSettingsService';
+import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../services/breathSettingsService';
 import BreathSettingsModal from '../../components/BreathSettingsModal';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
@@ -77,39 +77,44 @@ const SunBreathExerciseScreen: React.FC = () => {
   };
 
   const handleSettingsSave = async (newSettings: BreathSettings) => {
-    // First set the settings in state
-    setSettings(newSettings);
-    setShowSettingsModal(false);
-    
-    // Reset all states
-    setCurrentCycle(1);
-    setCountdown(newSettings.inhaleSeconds);
-    setIsInhaling(true);
-    setInstruction('Breathe In');
-    setIsPaused(false);
-    
-    // Clear all existing timers
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
-    cycleTimersRef.current = [];
-    
     try {
-      // Wait for videos to preload before starting
+      // First save settings to AsyncStorage and wait for it to complete
+      await saveBreathSettings(newSettings);
+      
+      // Clear all existing timers
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+      cycleTimersRef.current = [];
+      
+      // Update local state
+      setSettings(newSettings);
+      setShowSettingsModal(false);
+      
+      // Reset all states
+      setCurrentCycle(1);
+      setCountdown(newSettings.inhaleSeconds);
+      setIsInhaling(true);
+      setInstruction('Breathe In');
+      
+      // Wait for videos to preload
       await Promise.all([
         videoService.getBreathingVideo('inhale', setLoadingState),
         videoService.getBreathingVideo('exhale', setLoadingState)
       ]);
       
+      // Set isPaused to false after everything is ready
+      setIsPaused(false);
+      
       // Start fresh breathing cycle with new settings
       startBreathingCycle();
     } catch (error) {
-      console.error('Error preloading videos:', error);
+      console.error('Error saving settings or loading videos:', error);
       setLoadingState({
         isLoading: false,
         progress: 0,
-        error: 'Failed to load videos'
+        error: 'Failed to save settings or load videos'
       });
     }
   };
