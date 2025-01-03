@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: '100%',
     maxWidth: 300,
-    marginBottom: 40,
+    marginBottom: 80,
   },
   startButtonText: {
     color: '#FFFFFF',
