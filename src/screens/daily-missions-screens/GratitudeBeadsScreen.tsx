@@ -20,6 +20,7 @@ import Svg, { Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
 import { audioService, AUDIO_FILES } from '../../services/audioService';
 
+
 // Enable playback in silence mode
 Sound.setCategory('Playback');
 
