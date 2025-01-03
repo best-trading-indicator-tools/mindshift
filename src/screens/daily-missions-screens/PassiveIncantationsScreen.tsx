@@ -365,7 +365,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           style={styles.headerButton}
           onPress={() => setShowExitModal(true)}
         >
-          <MaterialCommunityIcons name="logout" size={24} color="#E31837" />
+          <MaterialCommunityIcons name="logout" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
