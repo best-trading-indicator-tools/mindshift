@@ -146,6 +146,8 @@ const defaultIncantations = [
   "I am the master of my thoughts and actions"
 ];
 
+const DARK_YELLOW = '#E6B800';
+
 const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   const [incantations, setIncantations] = useState<string[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -250,7 +252,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 style={styles.editIcon}
                 onPress={() => handleEditIncantation(item)}
               >
-                <MaterialCommunityIcons name="pencil" size={22} color="#FFD700" />
+                <MaterialCommunityIcons name="pencil" size={22} color={DARK_YELLOW} />
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.editIcon}
@@ -438,7 +440,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   nextButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: DARK_YELLOW,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

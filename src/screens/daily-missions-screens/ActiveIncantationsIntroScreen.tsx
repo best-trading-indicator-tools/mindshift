@@ -50,7 +50,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
         currentStep={currentStep}
         totalSteps={totalSteps}
         onExit={handleExit}
-        onNext={() => navigation.replace('ManageActiveIncantations')}
+        onNext={handleNext}
         showNext={true}
       />
 
@@ -63,7 +63,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
         {isLastStep && (
           <TouchableOpacity
             style={styles.startButton}
-            onPress={() => navigation.replace('ManageActiveIncantations')}
+            onPress={() => navigation.push('ManageActiveIncantations')}
           >
             <Text style={styles.startButtonText}>Start Practice</Text>
           </TouchableOpacity>
