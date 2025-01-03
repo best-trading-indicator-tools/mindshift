@@ -173,18 +173,20 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const saveIncantations = async (newIncantations: string[]) => {
+  const saveNewOrder = async (recordingsToSave: string[]) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newIncantations));
+      console.log('Starting to save new order...');
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recordingsToSave));
+      console.log('Successfully saved new order');
     } catch (error) {
-      console.error('Error saving incantations:', error);
+      console.error('Failed to save new order:', error);
     }
   };
 
   const handleDeleteIncantation = async (item: string) => {
     const newIncantations = incantations.filter(i => i !== item);
     setIncantations(newIncantations);
-    await saveIncantations(newIncantations);
+    await saveNewOrder(newIncantations);
   };
 
   const handleSaveEdit = async () => {
@@ -192,7 +194,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       item === editingIncantation ? editingText : item
     );
     setIncantations(newIncantations);
-    await saveIncantations(newIncantations);
+    await saveNewOrder(newIncantations);
     setEditModalVisible(false);
   };
 
@@ -226,9 +228,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       <TouchableOpacity
         onLongPress={drag}
         disabled={!isEditMode}
-        delayLongPress={100}
+        delayLongPress={200}
         style={[
           styles.recordingItem,
+          isEditMode && styles.recordingItemEdit,
           isActive && styles.draggingItem
         ]}
       >
@@ -276,19 +279,36 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           {renderHeader()}
-          <DraggableFlatList
-            data={incantations}
-            onDragEnd={async ({ data }) => {
-              setIncantations(data);
-              await saveIncantations(data);
-            }}
-            keyExtractor={(item, index) => `incantation-${index}`}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            dragItemOverflow={true}
-            activationDistance={1}
-            dragHitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          />
+          <View style={{ flex: 1 }}>
+            <DraggableFlatList<string>
+              data={incantations}
+              onDragBegin={() => {
+                console.log('Drag started');
+              }}
+              onDragEnd={({ data }) => {
+                console.log('Drag ended, new data:', data);
+                console.log('Current incantations before update:', incantations);
+                setIncantations(data);
+                console.log('Saving new order...');
+                saveNewOrder(data);
+              }}
+              onPlaceholderIndexChange={(index) => {
+                console.log('Placeholder index changed to:', index);
+              }}
+              keyExtractor={(item, index) => {
+                const key = `${item}-${index}`;
+                console.log('Generated key:', key, 'for item:', item, 'at index:', index);
+                return key;
+              }}
+              renderItem={(params: RenderItemParams<string>) => {
+                console.log('Rendering item:', params.item, 'isActive:', params.isActive, 'index:', params.getIndex());
+                return renderItem(params);
+              }}
+              contentContainerStyle={styles.listContent}
+              dragItemOverflow={true}
+              activationDistance={5}
+            />
+          </View>
           
           <Modal
             visible={showExitModal}
@@ -385,6 +405,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     overflow: 'hidden',
   },
+  recordingItemEdit: {
+    backgroundColor: '#1F2937',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3744',
+  },
   recordingContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -392,7 +417,6 @@ const styles = StyleSheet.create({
   },
   recordingInfo: {
     flex: 1,
-    marginLeft: 12,
   },
   recordingText: {
     fontSize: 16,
