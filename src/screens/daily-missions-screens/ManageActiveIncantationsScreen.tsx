@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
 import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -148,11 +148,10 @@ const defaultIncantationsText = [
   "I am the master of my thoughts and actions"
 ];
 
-// Create default incantations with unique IDs
+// Create default incantations with stable IDs
 const createDefaultIncantations = () => {
-  const timestamp = Date.now();
   return defaultIncantationsText.map((text, index) => ({
-    id: `incantation-${timestamp}-${index}`,
+    id: `incantation-${index}`,  // Stable ID based only on index
     text,
   }));
 };
@@ -203,10 +202,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     const newData = [...data];
     setIncantations(newData);
     
-    // Debounce the storage update
-    setTimeout(() => {
-      saveNewOrder(newData).catch(console.error);
-    }, 0);
+    // Save directly without setTimeout
+    saveNewOrder(newData).catch(console.error);
   };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
@@ -251,7 +248,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   ));
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
+  // Memoize renderItem function
+  const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
     if (!isEditMode) {
       return (
         <View style={styles.recordingItem}>
@@ -305,7 +303,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [isEditMode]); // Only re-create when isEditMode changes
 
   const handleEditIncantation = (item: IncantationItem) => {
     setEditingIncantation(item);
@@ -332,9 +330,9 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             onDragEnd={handleDragEnd}
             keyExtractor={item => item.id}
             renderItem={renderItem}
-            autoscrollSpeed={0}
-            activationDistance={1}
-            contentContainerStyle={styles.listContent}
+            dragItemOverflow={true}
+            activationDistance={10}  // Increased from 1 to 10 for more natural drag activation
+            autoscrollSpeed={50}  // Added non-zero autoscroll speed
           />
           {renderListenAllButton()}
           
