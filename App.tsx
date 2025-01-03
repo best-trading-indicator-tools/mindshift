@@ -5,7 +5,6 @@
  * @format
  */
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
