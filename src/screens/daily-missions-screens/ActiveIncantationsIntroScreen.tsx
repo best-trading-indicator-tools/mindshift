@@ -18,6 +18,10 @@ const introContent = [
   {
     title: "Daily Practice",
     content: "Speak each affirmation with conviction.\n\nTake deep breaths between statements and visualize yourself embodying these truths.\n\nJust 5 minutes a day can create lasting change."
+  },
+  {
+    title: "Easy Management",
+    content: "Tap 'Edit' to start organizing.\n\nPress and hold to drag & drop incantations into your preferred order.\n\nUse the pencil icon to modify text or the trash icon to remove ones that don't resonate."
   }
 ];
 
@@ -29,7 +33,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.navigate('ManageIncantationsIntro');
+      navigation.replace('ManageIncantationsIntro');
     }
   };
 

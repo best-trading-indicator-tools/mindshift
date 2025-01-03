@@ -362,8 +362,9 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           name="ManageIncantationsIntro" 
           component={ManageIncantationsIntroScreen}
           options={{
-            presentation: 'fullScreenModal',
+            headerShown: false,
             animation: 'slide_from_right',
+            gestureEnabled: true,
           }}
         />
       </Stack.Navigator>
