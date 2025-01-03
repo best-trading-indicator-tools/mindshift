@@ -292,7 +292,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             <DraggableFlatList<string>
               data={incantations}
               onDragEnd={handleDragEnd}
-              keyExtractor={item => item}
+              keyExtractor={(item, index) => `${item}-${index}`}
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               dragItemOverflow={true}
@@ -325,7 +325,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.exitButton}
-                  onPress={() => navigation.navigate('MainTabs')}
+                  onPress={() => {
+                    setShowExitModal(false);
+                    navigation.navigate('MainTabs');
+                  }}
                 >
                   <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
