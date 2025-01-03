@@ -10,6 +10,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { runOnJS } from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
 
@@ -45,7 +46,6 @@ const defaultIncantations = [
   "I only consume content that positively changes my life",
   "I learn from all experiences in life",
   "I train for an hour every day",
-  "I eat slowly",
   "I have positive and optimistic thoughts today",
   "I am at peace",
   "I love my life",
@@ -175,11 +175,16 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const saveNewOrder = async (recordingsToSave: string[]) => {
     try {
-      console.log('💾 Saving order...');
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recordingsToSave));
     } catch (error) {
-      console.error('❌ Failed to save:', error);
+      console.error('Failed to save:', error);
     }
+  };
+
+  const handleDragEnd = ({ data }: { data: string[] }) => {
+    'worklet';
+    runOnJS(setIncantations)(data);
+    runOnJS(saveNewOrder)(data);
   };
 
   const handleDeleteIncantation = async (item: string) => {
@@ -281,31 +286,12 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={{ flex: 1 }}>
             <DraggableFlatList<string>
               data={incantations}
-              onDragBegin={() => {
-                console.log('🔄 Drag started');
-              }}
-              onDragEnd={({ data }) => {
-                console.log('✅ Drag endeeed');
-                requestAnimationFrame(() => {
-                  setIncantations(data);
-                  saveNewOrder(data);
-                });
-              }}
-              keyExtractor={(item, index) => `${item}-${index}`}
+              onDragEnd={handleDragEnd}
+              keyExtractor={(_, index) => index.toString()}
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               dragItemOverflow={true}
               activationDistance={5}
-              simultaneousHandlers={[]}
-              autoscrollThreshold={100}
-              animationConfig={{
-                damping: 20,
-                mass: 0.2,
-                stiffness: 100,
-                overshootClamping: false,
-                restSpeedThreshold: 0.2,
-                restDisplacementThreshold: 0.2,
-              }}
             />
           </View>
           
@@ -329,7 +315,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.exitButton}
-                  onPress={() => navigation.navigate('MainTabs')}
+                  onPress={() => navigation.push('MainTabs')}
                 >
                   <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
