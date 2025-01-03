@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
 import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -9,8 +9,11 @@ import DraggableFlatList, {
   RenderItemParams,
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
+
+const STORAGE_KEY = '@active_incantations';
 
 const defaultIncantations = [
   "I am a beacon of positivity",
@@ -144,18 +147,77 @@ const defaultIncantations = [
 ];
 
 const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
-  const [incantations, setIncantations] = useState(defaultIncantations);
+  const [incantations, setIncantations] = useState<string[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingIncantation, setEditingIncantation] = useState('');
+  const [editingText, setEditingText] = useState('');
+
+  useEffect(() => {
+    loadIncantations();
+  }, []);
+
+  const loadIncantations = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setIncantations(JSON.parse(saved));
+      } else {
+        setIncantations(defaultIncantations);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(defaultIncantations));
+      }
+    } catch (error) {
+      console.error('Error loading incantations:', error);
+      setIncantations(defaultIncantations);
+    }
+  };
+
+  const saveIncantations = async (newIncantations: string[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newIncantations));
+    } catch (error) {
+      console.error('Error saving incantations:', error);
+    }
+  };
+
+  const handleDeleteIncantation = async (item: string) => {
+    const newIncantations = incantations.filter(i => i !== item);
+    setIncantations(newIncantations);
+    await saveIncantations(newIncantations);
+  };
+
+  const handleSaveEdit = async () => {
+    const newIncantations = incantations.map(item => 
+      item === editingIncantation ? editingText : item
+    );
+    setIncantations(newIncantations);
+    await saveIncantations(newIncantations);
+    setEditModalVisible(false);
+  };
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.title}>Manage Incantations</Text>
-      <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
-        <Text style={styles.editButton}>
-          {isEditMode ? 'Done' : 'Edit'}
-        </Text>
-      </TouchableOpacity>
+      <Text style={styles.title}>Incantations</Text>
+      <View style={styles.headerActions}>
+        <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
+          <Text style={styles.editButton}>
+            {isEditMode ? 'Done' : 'Edit'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.headerIcon}
+          onPress={() => navigation.navigate('ActiveIncantationsExercise', { incantations })}
+        >
+          <MaterialCommunityIcons name="play-circle" size={24} color="#FFD700" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.headerIcon}
+          onPress={() => setShowExitModal(true)}
+        >
+          <MaterialCommunityIcons name="door-exit" size={24} color="#E31837" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -175,50 +237,50 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.recordingInfo}>
             <Text style={styles.recordingText}>{item}</Text>
           </View>
+          {isEditMode && (
+            <View style={styles.editActions}>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleEditIncantation(item)}
+              >
+                <MaterialCommunityIcons name="pencil" size={22} color="#FFD700" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleDeleteIncantation(item)}
+              >
+                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     </ScaleDecorator>
   );
 
+  const handleEditIncantation = (item: string) => {
+    setEditingIncantation(item);
+    setEditingText(item);
+    setEditModalVisible(true);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setShowExitModal(true)}
-          >
-            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-
           {renderHeader()}
           <DraggableFlatList
             data={incantations}
-            onDragEnd={({ data }) => setIncantations(data)}
+            onDragEnd={async ({ data }) => {
+              setIncantations(data);
+              await saveIncantations(data);
+            }}
             keyExtractor={(item, index) => `incantation-${index}`}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             dragItemOverflow={true}
           />
           
-          <View style={styles.buttonsContainer}>
-            <TouchableOpacity
-              style={styles.startButton}
-              onPress={() => navigation.navigate('ActiveIncantationsExercise', {
-                incantations
-              })}
-            >
-              <Text style={styles.startButtonText}>Start Practice</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.exitButton}
-              onPress={() => setShowExitModal(true)}
-            >
-              <Text style={styles.exitButtonText}>Exit</Text>
-            </TouchableOpacity>
-          </View>
-
           <Modal
             visible={showExitModal}
             transparent={true}
@@ -242,6 +304,38 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                   onPress={() => navigation.navigate('MainTabs')}
                 >
                   <Text style={styles.exitModalButtonText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={editModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setEditModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Edit Incantation</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editingText}
+                  onChangeText={setEditingText}
+                  multiline
+                  autoFocus
+                />
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.saveButtonText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -274,38 +368,6 @@ const styles = StyleSheet.create({
   itemText: {
     color: '#FFFFFF',
     fontSize: 16,
-  },
-  buttonsContainer: {
-    padding: 16,
-    paddingBottom: 32,
-    backgroundColor: '#000000',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  startButton: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 12,
-  },
-  startButtonText: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  exitButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 16,
-    borderRadius: 30,
-  },
-  exitButtonText: {
-    color: '#666',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   recordingItem: {
     backgroundColor: '#2A3744',
@@ -360,12 +422,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 2,
-    padding: 8,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerIcon: {
+    padding: 4,
   },
   modalOverlay: {
     flex: 1,
@@ -413,6 +476,46 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   exitModalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  editActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  editIcon: {
+    padding: 4,
+  },
+  editInput: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#2E2E2E',
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  saveButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+  },
+  saveButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  cancelButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
