@@ -18,7 +18,7 @@ import { markExerciseAsCompleted } from '../../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
 
-const MIN_ENTRIES = 5;
+const MIN_ENTRIES = 10;
 
 interface GratitudeEntry {
   what: string;
