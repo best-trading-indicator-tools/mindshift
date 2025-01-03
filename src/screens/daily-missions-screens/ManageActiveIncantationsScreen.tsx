@@ -168,6 +168,9 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   const [editingIncantation, setEditingIncantation] = useState<IncantationItem | null>(null);
   const [editingText, setEditingText] = useState('');
 
+  // Add ref for the scroll view
+  const scrollRef = React.useRef(null);
+
   useEffect(() => {
     loadIncantations();
   }, []);
@@ -197,9 +200,13 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDragEnd = ({ data }: { data: IncantationItem[] }) => {
-    setIncantations(data);
-    saveNewOrder(data).catch(console.error);
+  const handleDragEnd = ({ data, from, to }: { data: IncantationItem[], from: number, to: number }) => {
+    // Create new objects to avoid reanimated warning
+    const newData = data.map(item => ({ ...item }));
+    if (from !== to) {
+      setIncantations(newData);
+      saveNewOrder(newData).catch(console.error);
+    }
   };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
@@ -245,53 +252,55 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
-    console.log('Rendering item:', item);  // Debug log
     return (
-      <ScaleDecorator>
-        <TouchableOpacity
-          onLongPress={drag}
-          disabled={!isEditMode}
-          delayLongPress={200}
-          style={[
-            styles.recordingItem,
-            isEditMode && styles.recordingItemEdit,
-            isActive && styles.draggingItem
-          ]}
-        >
-          <View style={styles.recordingContent}>
-            {isEditMode && (
-              <MaterialCommunityIcons name="menu" size={24} color="#FFFFFF" style={styles.dragHandle} />
-            )}
-            <View style={styles.recordingInfo}>
-              <Text 
-                style={[
-                  styles.recordingText,
-                  isEditMode && { marginLeft: 0 }
-                ]}
-                numberOfLines={2}
-              >
-                {item?.text || 'No text available'}
-              </Text>
-            </View>
-            {isEditMode && (
-              <View style={styles.editActions}>
-                <TouchableOpacity 
-                  style={styles.editIcon}
-                  onPress={() => handleEditIncantation(item)}
-                >
-                  <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.editIcon}
-                  onPress={() => handleDeleteIncantation(item)}
-                >
-                  <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
-                </TouchableOpacity>
-              </View>
-            )}
+      <TouchableOpacity
+        onLongPress={drag}
+        disabled={!isEditMode}
+        delayLongPress={150}
+        style={[
+          styles.recordingItem,
+          isEditMode && styles.recordingItemEdit,
+          isActive && styles.draggingItem
+        ]}
+      >
+        <View style={styles.recordingContent}>
+          {isEditMode && (
+            <MaterialCommunityIcons 
+              name="menu" 
+              size={24} 
+              color="#FFFFFF" 
+              style={styles.dragHandle}
+            />
+          )}
+          <View style={styles.recordingInfo}>
+            <Text 
+              style={[
+                styles.recordingText,
+                isEditMode && { marginLeft: 0 }
+              ]}
+              numberOfLines={2}
+            >
+              {item?.text || 'No text available'}
+            </Text>
           </View>
-        </TouchableOpacity>
-      </ScaleDecorator>
+          {isEditMode && (
+            <View style={styles.editActions}>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleEditIncantation(item)}
+              >
+                <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleDeleteIncantation(item)}
+              >
+                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -301,6 +310,15 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     setEditModalVisible(true);
   };
 
+  const renderListenAllButton = () => (
+    <TouchableOpacity
+      style={styles.listenAllButton}
+      onPress={() => {/* handle listen all */}}
+    >
+      <Text style={styles.listenAllText}>Listen All</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
@@ -308,18 +326,30 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
           {renderHeader()}
           <View style={{ flex: 1 }}>
             <DraggableFlatList<IncantationItem>
+              ref={scrollRef}
               data={incantations}
               onDragEnd={handleDragEnd}
               keyExtractor={item => item.id}
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
-              dragItemOverflow={true}
-              activationDistance={5}
+              dragItemOverflow={false}
+              activationDistance={8}
               simultaneousHandlers={[]}
-              autoscrollSpeed={200}
-              autoscrollThreshold={60}
+              autoscrollSpeed={100}
+              autoscrollThreshold={40}
+              dragHitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              containerStyle={{ flex: 1 }}
+              animationConfig={{
+                damping: 30,
+                mass: 0.3,
+                stiffness: 200,
+                overshootClamping: true,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 0.01
+              }}
             />
           </View>
+          {renderListenAllButton()}
           
           <Modal
             visible={showExitModal}
@@ -445,12 +475,12 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-    transform: [{ scale: 1.02 }],
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 999,
   },
   dragHandle: {
     padding: 8,
@@ -584,6 +614,19 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  listenAllButton: {
+    backgroundColor: '#E6B800',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    marginHorizontal: 16,
+  },
+  listenAllText: {
+    color: '#000000',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
