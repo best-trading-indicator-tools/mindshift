@@ -102,7 +102,7 @@ const DAILY_MISSIONS = [
   {
     title: 'The Sun Breath',
     subtitle: 'Absorb light, release darkness',
-    duration: '3-5 min',
+    duration: '1-3 min',
     type: 'Training',
     icon: 'white-balance-sunny',
   },
