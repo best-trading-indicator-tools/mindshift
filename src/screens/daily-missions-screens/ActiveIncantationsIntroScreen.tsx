@@ -33,7 +33,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.replace('ManageActiveIncantations');
+      navigation.push('ManageActiveIncantations');
     }
   };
 
@@ -50,13 +50,15 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
         currentStep={currentStep}
         totalSteps={totalSteps}
         onExit={handleExit}
-        onNext={handleNext}
-        showNext={!isLastStep}
+        onNext={() => navigation.replace('ManageActiveIncantations')}
+        showNext={true}
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>{currentContent.title}</Text>
-        <Text style={styles.description}>{currentContent.content}</Text>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{currentContent.title}</Text>
+          <Text style={styles.description}>{currentContent.content}</Text>
+        </View>
         
         {isLastStep && (
           <TouchableOpacity
@@ -81,6 +83,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 40,
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textContainer: {
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
@@ -101,9 +107,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 30,
-    marginTop: 40,
     width: '100%',
     maxWidth: 300,
+    marginBottom: 40,
   },
   startButtonText: {
     color: '#FFFFFF',

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions, Modal, SafeAreaView, StatusBar } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -47,81 +47,90 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.exitButton} 
-        onPress={handleExitPress}
-      >
-        <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <TouchableOpacity 
+            style={styles.exitButton} 
+            onPress={handleExitPress}
+          >
+            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.contentContainer} 
-        activeOpacity={1} 
-        onPress={togglePause}
-      >
-        <View style={styles.header}>
-          <Text style={styles.pauseHint}>
-            {isPaused ? 'Tap to Resume' : 'Tap to Pause'}
-          </Text>
-        </View>
-
-        <Animated.View
-          style={[
-            styles.scrollContainer,
-            {
-              transform: [{ translateY: scrollY.interpolate({
-                inputRange: [0, SCREEN_HEIGHT * incantations.length],
-                outputRange: [0, -SCREEN_HEIGHT * incantations.length],
-              })}],
-            },
-          ]}
-        >
-          {incantations.map((incantation, index) => (
-            <View key={index} style={styles.incantationContainer}>
-              <Text style={[
-                styles.incantationText,
-                index === currentIndex && styles.activeIncantation
-              ]}>
-                {incantation}
+          <TouchableOpacity 
+            style={styles.contentContainer} 
+            activeOpacity={1} 
+            onPress={togglePause}
+          >
+            <View style={styles.header}>
+              <Text style={styles.pauseHint}>
+                {isPaused ? 'Tap to Resume' : 'Tap to Pause'}
               </Text>
             </View>
-          ))}
-        </Animated.View>
-      </TouchableOpacity>
 
-      <Modal
-        visible={isExitModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsExitModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
-            <Text style={styles.modalText}>
-              You're making progress! Continue practicing to maintain your results.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => setIsExitModalVisible(false)}
+            <Animated.View
+              style={[
+                styles.scrollContainer,
+                {
+                  transform: [{ translateY: scrollY.interpolate({
+                    inputRange: [0, SCREEN_HEIGHT * incantations.length],
+                    outputRange: [0, -SCREEN_HEIGHT * incantations.length],
+                  })}],
+                },
+              ]}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.exitButton}
-              onPress={() => navigation.navigate('MainTabs')}
-            >
-              <Text style={styles.exitText}>Exit</Text>
-            </TouchableOpacity>
-          </View>
+              {incantations.map((incantation, index) => (
+                <View key={index} style={styles.incantationContainer}>
+                  <Text style={[
+                    styles.incantationText,
+                    index === currentIndex && styles.activeIncantation
+                  ]}>
+                    {incantation}
+                  </Text>
+                </View>
+              ))}
+            </Animated.View>
+          </TouchableOpacity>
+
+          <Modal
+            visible={isExitModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setIsExitModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+                <Text style={styles.modalText}>
+                  You're making progress! Continue practicing to maintain your results.
+                </Text>
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={() => setIsExitModalVisible(false)}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.exitButton}
+                  onPress={() => navigation.navigate('MainTabs')}
+                >
+                  <Text style={styles.exitText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
-      </Modal>
-    </View>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
   container: {
     flex: 1,
     backgroundColor: '#000000',
@@ -132,7 +141,7 @@ const styles = StyleSheet.create({
 
   header: {
     position: 'absolute',
-    top: 40,
+    top: 20,
     left: 0,
     right: 0,
     zIndex: 1,
@@ -210,10 +219,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   exitButton: {
-    backgroundColor: '#E31837',
-    paddingVertical: 16,
-    borderRadius: 30,
-    width: '100%',
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    zIndex: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   exitText: {
     color: '#FFFFFF',
