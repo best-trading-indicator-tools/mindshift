@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal } from 'react-native';
 import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -145,21 +145,38 @@ const defaultIncantations = [
 
 const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   const [incantations, setIncantations] = useState(defaultIncantations);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.title}>Manage Incantations</Text>
+      <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
+        <Text style={styles.editButton}>
+          {isEditMode ? 'Done' : 'Edit'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<string>) => (
     <ScaleDecorator>
-      <ListItem
+      <TouchableOpacity
         onLongPress={drag}
-        containerStyle={[
-          styles.itemContainer,
+        disabled={!isEditMode}
+        delayLongPress={200}
+        style={[
+          styles.recordingItem,
           isActive && styles.draggingItem
         ]}
       >
-        <MaterialCommunityIcons name="drag" size={24} color="#666" />
-        <ListItem.Content>
-          <ListItem.Title style={styles.itemText}>{item}</ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
+        <View style={styles.recordingContent}>
+          <MaterialCommunityIcons name="drag" size={24} color="#666" />
+          <View style={styles.recordingInfo}>
+            <Text style={styles.recordingText}>{item}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
     </ScaleDecorator>
   );
 
@@ -167,14 +184,21 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
+          <TouchableOpacity 
+            style={styles.exitButton} 
+            onPress={() => setShowExitModal(true)}
+          >
+            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {renderHeader()}
           <DraggableFlatList
             data={incantations}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => `incantation-${index}`}
             onDragEnd={({ data }) => setIncantations(data)}
+            keyExtractor={(item, index) => `incantation-${index}`}
+            renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             dragItemOverflow={true}
-            activationDistance={5}
           />
           
           <View style={styles.buttonContainer}>
@@ -186,6 +210,34 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
               })} 
             />
           </View>
+
+          <Modal
+            visible={showExitModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowExitModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+                <Text style={styles.modalText}>
+                  You're making progress! Continue practicing to maintain your results.
+                </Text>
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={() => setShowExitModal(false)}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.exitModalButton}
+                  onPress={() => navigation.navigate('MainTabs')}
+                >
+                  <Text style={styles.exitModalButtonText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -223,9 +275,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
   },
+  recordingItem: {
+    backgroundColor: '#2A3744',
+    borderRadius: 12,
+    marginVertical: 6,
+    marginHorizontal: 16,
+    overflow: 'hidden',
+  },
+  recordingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  recordingInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  recordingText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
   draggingItem: {
-    backgroundColor: '#3B3B3B',
-    elevation: 8,
+    backgroundColor: '#1E1E1E',
+    borderColor: '#FFD700',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -233,6 +306,85 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
+    elevation: 8,
+    transform: [{ scale: 1.02 }],
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3744',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  editButton: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  exitButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 2,
+    padding: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#1F2937',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+  },
+  continueButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  exitModalButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  exitModalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 
