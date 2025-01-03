@@ -15,6 +15,7 @@ import { tutorialSteps } from './SunBreathTutorialScreen';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
+
 const { width, height } = Dimensions.get('window');
 
 const TOTAL_STEPS = tutorialSteps.length + 2; // Tutorial + Exercise + Complete
