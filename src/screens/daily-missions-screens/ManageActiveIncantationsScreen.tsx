@@ -206,16 +206,16 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.headerIcon}
+          style={styles.nextButton}
           onPress={() => navigation.navigate('ActiveIncantationsExercise', { incantations })}
         >
-          <MaterialCommunityIcons name="play-circle" size={24} color="#FFD700" />
+          <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.headerIcon}
-          onPress={() => setShowExitModal(true)}
+          onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="door-exit" size={24} color="#E31837" />
+          <MaterialCommunityIcons name="close" size={24} color="#E31837" />
         </TouchableOpacity>
       </View>
     </View>
@@ -226,16 +226,23 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       <TouchableOpacity
         onLongPress={drag}
         disabled={!isEditMode}
-        delayLongPress={200}
+        delayLongPress={100}
         style={[
           styles.recordingItem,
           isActive && styles.draggingItem
         ]}
       >
         <View style={styles.recordingContent}>
-          <MaterialCommunityIcons name="drag" size={24} color="#666" />
+          {isEditMode && (
+            <MaterialCommunityIcons name="drag" size={24} color="#666" />
+          )}
           <View style={styles.recordingInfo}>
-            <Text style={styles.recordingText}>{item}</Text>
+            <Text style={[
+              styles.recordingText,
+              isEditMode && { marginLeft: 0 }
+            ]}>
+              {item}
+            </Text>
           </View>
           {isEditMode && (
             <View style={styles.editActions}>
@@ -279,6 +286,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             dragItemOverflow={true}
+            activationDistance={1}
+            dragHitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           />
           
           <Modal
@@ -300,10 +309,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.continueButtonText}>Continue</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.exitModalButton}
+                  style={styles.exitButton}
                   onPress={() => navigation.navigate('MainTabs')}
                 >
-                  <Text style={styles.exitModalButtonText}>Exit</Text>
+                  <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -418,14 +427,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   editButton: {
-    fontSize: 16,
+    fontSize: 17,
     color: '#FFFFFF',
     fontWeight: '600',
+    marginRight: 8,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+  },
+  nextButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  nextButtonText: {
+    color: '#000000',
+    fontSize: 15,
+    fontWeight: '600',
   },
   headerIcon: {
     padding: 4,
@@ -443,12 +464,13 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 400,
+    alignItems: 'stretch',
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 16,
     textAlign: 'center',
   },
   modalText: {
@@ -457,12 +479,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    opacity: 0.8,
   },
   continueButton: {
     backgroundColor: '#FFD700',
     paddingVertical: 16,
     borderRadius: 30,
     marginBottom: 12,
+    width: '100%',
   },
   continueButtonText: {
     color: '#000000',
@@ -470,13 +494,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  exitModalButton: {
-    backgroundColor: '#E31837',
+  exitButton: {
+    backgroundColor: 'transparent',
     paddingVertical: 16,
     borderRadius: 30,
+    width: '100%',
   },
-  exitModalButtonText: {
-    color: '#FFFFFF',
+  exitText: {
+    color: '#666',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
