@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ProgressHeader from '../../components/ProgressHeader';
@@ -33,7 +33,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.replace('ManageIncantationsIntro');
+      navigation.replace('ManageActiveIncantations');
     }
   };
 
@@ -42,6 +42,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const currentContent = introContent[currentStep - 1];
+  const isLastStep = currentStep === totalSteps;
 
   return (
     <View style={styles.container}>
@@ -50,12 +51,21 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
         totalSteps={totalSteps}
         onExit={handleExit}
         onNext={handleNext}
-        showNext={true}
+        showNext={!isLastStep}
       />
 
       <View style={styles.content}>
         <Text style={styles.title}>{currentContent.title}</Text>
         <Text style={styles.description}>{currentContent.content}</Text>
+        
+        {isLastStep && (
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={() => navigation.replace('ManageActiveIncantations')}
+          >
+            <Text style={styles.startButtonText}>Start Practice</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -85,6 +95,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
     opacity: 0.8,
+  },
+  startButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    marginTop: 40,
+    width: '100%',
+    maxWidth: 300,
+  },
+  startButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 
