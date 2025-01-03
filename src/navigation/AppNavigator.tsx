@@ -19,7 +19,6 @@ import PassiveIncantationsScreen from '../screens/daily-missions-screens/Passive
 import GoldenChecklistScreen from '../screens/daily-missions-screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/caroussel-challenges-screens/VisionBoardScreen';
 import VisionBoardSectionsScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionsScreen';
-import VisionBoardSectionScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionScreen';
 import VisionBoardSectionPhotosScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionPhotosScreen';
 import MusicSelectionScreen from '../screens/daily-missions-screens/MusicSelectionScreen';
 import NewVisionBoardSection from '../screens/caroussel-challenges-screens/NewVisionBoardSection';
@@ -73,7 +72,6 @@ export type RootStackParamList = {
     boardId: string;
     refresh?: number;
   };
-  VisionBoardSection: { boardId: string; sectionId: string; sectionName: string };
   VisionBoardSectionPhotos: { boardId: string; sectionId: string; sectionName: string };
   NewVisionBoardSection: { boardId: string };
   VisionBoardEditSectionName: { boardId: string; sectionId: string; currentName: string };
@@ -260,7 +258,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />
         <Stack.Screen name="MentorBoard" component={MentorBoardScreen} />
         <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
-        <Stack.Screen name="VisionBoardSection" component={VisionBoardSectionScreen} />
         <Stack.Screen name="VisionBoardSectionPhotos" component={VisionBoardSectionPhotosScreen} />
         <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
         <Stack.Screen name="VisionBoardEditSectionName" component={VisionBoardEditSectionNameScreen} />

@@ -312,7 +312,7 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
             style={styles.addPhotosButton}
             onPress={handleAddPhotos}
           >
-            <MaterialCommunityIcons name="image-plus" size={24} color="#FF4B8C" />
+            <MaterialCommunityIcons name="image-plus" size={24} color="#FF4B4B" />
             <Text style={styles.addPhotosText}>Add Photos</Text>
           </TouchableOpacity>
 
@@ -413,37 +413,37 @@ const styles = StyleSheet.create({
   bottomButtons: {
     flexDirection: 'row',
     padding: 16,
-    paddingBottom: 34,
+    paddingBottom: 50,
     gap: 12,
+    justifyContent: 'flex-end',
   },
   addPhotosButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 75, 140, 0.1)',
-    paddingVertical: 16,
-    borderRadius: 100,
-    gap: 8,
+    backgroundColor: '#FFE4E4',
+    padding: 12,
+    borderRadius: 8,
+    width: '45%',
   },
   addPhotosText: {
-    color: '#FF4B8C',
-    fontSize: 17,
+    color: '#FF4B4B',
+    marginLeft: 8,
+    fontSize: 16,
     fontWeight: '600',
   },
   doneButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF4B8C',
-    paddingVertical: 16,
-    borderRadius: 100,
-    gap: 8,
+    backgroundColor: '#FF0000',
+    padding: 12,
+    borderRadius: 8,
+    width: '45%',
   },
   doneButtonText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    marginLeft: 8,
+    fontSize: 16,
     fontWeight: '600',
   },
   modalOverlay: {
