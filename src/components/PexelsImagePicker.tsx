@@ -16,6 +16,10 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PEXELS_API_KEY } from '@env';
 
+console.log('PEXELS_API_KEY:', PEXELS_API_KEY);
+console.log('PEXELS_API_KEY length:', PEXELS_API_KEY?.length);
+console.log('PEXELS_API_KEY first 5 chars:', PEXELS_API_KEY?.substring(0, 5));
+
 interface PexelsPhoto {
   id: string;
   src: {
@@ -56,7 +60,6 @@ const PexelsImagePicker: React.FC<Props> = ({
         const suggestionsData = await suggestionsResponse.json();
         console.log('Datamuse response:', suggestionsData);
         const suggestions = suggestionsData.map((item: { word: string }) => 
-          // Capitalize first letter of each word
           item.word.split(' ').map((word: string) => 
             word.charAt(0).toUpperCase() + word.slice(1)
           ).join(' ')
@@ -67,22 +70,44 @@ const PexelsImagePicker: React.FC<Props> = ({
         console.error('Datamuse API error:', suggestionsResponse.status);
       }
 
+      // Log the headers being sent with Bearer token
+      console.log('Sending request to Pexels with headers:', {
+        'Authorization': `Bearer ${PEXELS_API_KEY}`
+      });
+
       // Fetch photos from Pexels
       const response = await fetch(
         `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=30`,
         {
+          method: 'GET',
           headers: {
             'Authorization': PEXELS_API_KEY,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
         }
       );
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Pexels API error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const data = await response.json();
+      console.log('Pexels response:', data);
       setPhotos(data.photos || []);
     } catch (error) {
       console.error('Error fetching photos:', error);
+      Alert.alert(
+        'Error',
+        'Failed to fetch photos. Please check your internet connection and try again.'
+      );
     } finally {
       setLoading(false);
     }
