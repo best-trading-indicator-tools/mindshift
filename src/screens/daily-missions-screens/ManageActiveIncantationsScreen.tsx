@@ -14,9 +14,14 @@ import { runOnJS } from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
 
+type IncantationItem = {
+  id: string;
+  text: string;
+};
+
 const STORAGE_KEY = '@active_incantations';
 
-const defaultIncantations = [
+const defaultIncantationsText = [
   "I am a beacon of positivity",
   "I am always in motion",
   "I live each day as if it were my last",
@@ -146,12 +151,21 @@ const defaultIncantations = [
   "I am the master of my thoughts and actions"
 ];
 
+// Create default incantations with unique IDs
+const createDefaultIncantations = () => {
+  const timestamp = Date.now();
+  return defaultIncantationsText.map((text, index) => ({
+    id: `incantation-${timestamp}-${index}`,
+    text,
+  }));
+};
+
 const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
-  const [incantations, setIncantations] = useState<string[]>([]);
+  const [incantations, setIncantations] = useState<IncantationItem[]>(createDefaultIncantations());
   const [isEditMode, setIsEditMode] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingIncantation, setEditingIncantation] = useState('');
+  const [editingIncantation, setEditingIncantation] = useState<IncantationItem | null>(null);
   const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
@@ -160,20 +174,22 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadIncantations = async () => {
     try {
-      const saved = await AsyncStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setIncantations(JSON.parse(saved));
-      } else {
-        setIncantations(defaultIncantations);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(defaultIncantations));
-      }
+      // Clear storage for testing
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      
+      console.log('Default incantations:', incantations);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(incantations));
+      
+      // Debug logging
+      console.log('First incantation:', incantations[0]);
+      console.log('Current incantations state:', incantations);
     } catch (error) {
       console.error('Error loading incantations:', error);
-      setIncantations(defaultIncantations);
+      setIncantations(createDefaultIncantations());
     }
   };
 
-  const saveNewOrder = async (recordingsToSave: string[]) => {
+  const saveNewOrder = async (recordingsToSave: IncantationItem[]) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recordingsToSave));
     } catch (error) {
@@ -181,20 +197,20 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDragEnd = ({ data }: { data: string[] }) => {
+  const handleDragEnd = ({ data }: { data: IncantationItem[] }) => {
     setIncantations(data);
     saveNewOrder(data).catch(console.error);
   };
 
-  const handleDeleteIncantation = async (item: string) => {
-    const newIncantations = incantations.filter(i => i !== item);
+  const handleDeleteIncantation = async (item: IncantationItem) => {
+    const newIncantations = incantations.filter(i => i.id !== item.id);
     setIncantations(newIncantations);
     await saveNewOrder(newIncantations);
   };
 
   const handleSaveEdit = async () => {
     const newIncantations = incantations.map(item => 
-      item === editingIncantation ? editingText : item
+      item.id === editingIncantation?.id ? { ...item, text: editingText } : item
     );
     setIncantations(newIncantations);
     await saveNewOrder(newIncantations);
@@ -212,7 +228,9 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.nextButton}
-          onPress={() => navigation.navigate('ActiveIncantationsExercise', { incantations })}
+          onPress={() => navigation.navigate('ActiveIncantationsExercise', { 
+            incantations: incantations.map(item => item.text) 
+          })}
         >
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
@@ -226,11 +244,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<string>) => {
-    const index = incantations.indexOf(item);
-    if (index === 0 || index === 1) {
-      console.log(`Rendering item at index ${index}:`, item, 'isActive:', isActive);
-    }
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
+    console.log('Rendering item:', item);  // Debug log
     return (
       <ScaleDecorator>
         <TouchableOpacity
@@ -248,11 +263,14 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="menu" size={24} color="#FFFFFF" style={styles.dragHandle} />
             )}
             <View style={styles.recordingInfo}>
-              <Text style={[
-                styles.recordingText,
-                isEditMode && { marginLeft: 0 }
-              ]}>
-                {item}
+              <Text 
+                style={[
+                  styles.recordingText,
+                  isEditMode && { marginLeft: 0 }
+                ]}
+                numberOfLines={2}
+              >
+                {item?.text || 'No text available'}
               </Text>
             </View>
             {isEditMode && (
@@ -277,9 +295,9 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
-  const handleEditIncantation = (item: string) => {
+  const handleEditIncantation = (item: IncantationItem) => {
     setEditingIncantation(item);
-    setEditingText(item);
+    setEditingText(item.text);
     setEditModalVisible(true);
   };
 
@@ -289,19 +307,17 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.container}>
           {renderHeader()}
           <View style={{ flex: 1 }}>
-            <DraggableFlatList<string>
+            <DraggableFlatList<IncantationItem>
               data={incantations}
               onDragEnd={handleDragEnd}
-              keyExtractor={(item, index) => `${item}-${index}`}
+              keyExtractor={item => item.id}
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               dragItemOverflow={true}
               activationDistance={5}
-              animationConfig={{
-                damping: 20,
-                mass: 0.2,
-                stiffness: 100
-              }}
+              simultaneousHandlers={[]}
+              autoscrollSpeed={200}
+              autoscrollThreshold={60}
             />
           </View>
           
@@ -415,10 +431,12 @@ const styles = StyleSheet.create({
   },
   recordingInfo: {
     flex: 1,
+    marginLeft: 8,
   },
   recordingText: {
     fontSize: 16,
     color: '#FFFFFF',
+    lineHeight: 24,
   },
   draggingItem: {
     backgroundColor: '#1E1E1E',
