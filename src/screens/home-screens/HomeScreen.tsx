@@ -431,7 +431,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const handleActiveIncantationsNavigation = async () => {
     const mission = dailyMissions.find(m => m.title === 'Active Incantations');
     if (mission) {
-      navigation.navigate('ActiveIncantations');
+      // Always navigate to intro screens
+      navigation.navigate('ActiveIncantationsIntro');
     }
   };
 

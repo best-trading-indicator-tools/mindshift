@@ -10,15 +10,15 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsIntro
 const introContent = [
   {
     title: "Active Incantations",
-    content: "Active incantations are powerful positive affirmations spoken with conviction and purpose. By speaking these statements aloud, you actively program your mind for success and positivity, creating an immediate shift in your mental state."
+    content: "Active incantations are powerful positive affirmations spoken with conviction and purpose.\n\nBy speaking these statements aloud, you actively program your mind for success and positivity, creating an immediate shift in your mental state."
   },
   {
     title: "The Power of Daily Practice",
-    content: "In just over 5 minutes each day, you'll speak 100 carefully crafted affirmations. This concentrated burst of positive self-talk has been shown to boost confidence, energy, and motivation instantly. The key is to speak each affirmation with genuine conviction and belief."
+    content: "In just over 5 minutes each day, you'll speak 100 carefully crafted affirmations.\n\nThis concentrated burst of positive self-talk has been shown to boost confidence, energy, and motivation instantly. The key is to speak each affirmation with genuine conviction and belief."
   },
   {
     title: "How It Works",
-    content: "Speak these affirmations with conviction. Take deep breaths between affirmations and visualize yourself embodying these statements. You can tap the screen to pause/resume the auto-scroll whenever you need."
+    content: "Speak these affirmations with conviction.\n\nTake deep breaths between affirmations and visualize yourself embodying these statements.\n\nYou can tap the screen to pause/resume the auto-scroll whenever you need."
   }
 ];
 
@@ -30,12 +30,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      try {
-        await AsyncStorage.setItem('active_incantations_intro_seen', 'true');
-      } catch (error) {
-        console.error('Error saving intro state:', error);
-      }
-      navigation.navigate('ActiveIncantations');
+      navigation.navigate('ManageActiveIncantations');
     }
   };
 

@@ -43,6 +43,8 @@ import SunBreathTutorialScreen from '../screens/daily-missions-screens/SunBreath
 import SunBreathExerciseScreen from '../screens/daily-missions-screens/SunBreathExerciseScreen';
 import SunBreathCompleteScreen from '../screens/daily-missions-screens/SunBreathCompleteScreen';
 import SunBreathSettingsScreen from '../screens/daily-missions-screens/SunBreathSettingsScreen';
+import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/ManageActiveIncantationsScreen';
+import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/ActiveIncantationsExerciseScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -96,6 +98,10 @@ export type RootStackParamList = {
   SunBreathExercise: undefined;
   SunBreathComplete: undefined;
   SunBreathSettings: undefined;
+  ManageActiveIncantations: undefined;
+  ActiveIncantationsExercise: {
+    incantations: string[];
+  };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -344,6 +350,14 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
+        <Stack.Screen 
+          name="ManageActiveIncantations" 
+          component={ManageActiveIncantationsScreen} 
+        />
+        <Stack.Screen 
+          name="ActiveIncantationsExercise" 
+          component={ActiveIncantationsExerciseScreen} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
