@@ -185,7 +185,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <TouchableOpacity 
-            style={styles.exitButton} 
+            style={styles.closeButton}
             onPress={() => setShowExitModal(true)}
           >
             <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
@@ -201,14 +201,22 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             dragItemOverflow={true}
           />
           
-          <View style={styles.buttonContainer}>
-            <Button 
-              title="Start Practice" 
-              buttonStyle={styles.startButton}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              style={styles.startButton}
               onPress={() => navigation.navigate('ActiveIncantationsExercise', {
                 incantations
-              })} 
-            />
+              })}
+            >
+              <Text style={styles.startButtonText}>Start Practice</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exitButton}
+              onPress={() => setShowExitModal(true)}
+            >
+              <Text style={styles.exitButtonText}>Exit</Text>
+            </TouchableOpacity>
           </View>
 
           <Modal
@@ -255,6 +263,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingTop: 8,
+    paddingBottom: 140,
   },
   itemContainer: {
     backgroundColor: '#1E1E1E',
@@ -266,14 +275,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
-  buttonContainer: {
+  buttonsContainer: {
     padding: 16,
+    paddingBottom: 32,
     backgroundColor: '#000000',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   startButton: {
-    backgroundColor: '#FFD700',  // Yellow color
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+  },
+  startButtonText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  exitButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  exitButtonText: {
+    color: '#666',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   recordingItem: {
     backgroundColor: '#2A3744',
@@ -328,7 +360,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  exitButton: {
+  closeButton: {
     position: 'absolute',
     top: 40,
     left: 20,
