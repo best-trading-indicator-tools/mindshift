@@ -14,7 +14,6 @@ import NotificationsScreen from '../screens/home-screens/NotificationsScreen';
 import SupportScreen from '../screens/profile-page-screens/SupportScreen';
 import LoginScreen from '../screens/onboarding-screens/LoginScreen';
 import DeepBreathingScreen from '../screens/daily-missions-screens/DeepBreathingScreen';
-import ActiveIncantationsScreen from '../screens/daily-missions-screens/ActiveIncantationsScreen';
 import PassiveIncantationsScreen from '../screens/daily-missions-screens/PassiveIncantationsScreen';
 import GoldenChecklistScreen from '../screens/daily-missions-screens/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/caroussel-challenges-screens/VisionBoardScreen';
@@ -29,7 +28,6 @@ import MentorBoardIntroScreen from '../screens/caroussel-challenges-screens/Ment
 import VisionBoardIntroScreen from '../screens/caroussel-challenges-screens/VisionBoardIntroScreen';
 import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/daily-missions-screens/DeepBreathingIntroScreen';
-import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
 import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/PassiveIncantationsIntroScreen';
 import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/GoldenChecklistIntroScreen';
 import QuestionnaireScreen from '../screens/onboarding-screens/QuestionnaireScreen';
@@ -45,6 +43,7 @@ import SunBreathCompleteScreen from '../screens/daily-missions-screens/SunBreath
 import SunBreathSettingsScreen from '../screens/daily-missions-screens/SunBreathSettingsScreen';
 import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/ManageActiveIncantationsScreen';
 import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/ActiveIncantationsExerciseScreen';
+import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -61,7 +60,7 @@ export type RootStackParamList = {
   Course: undefined;
   Notifications: undefined;
   DeepBreathing: undefined;
-  ActiveIncantations: undefined;
+  ActiveIncantationsIntro: undefined;
   PassiveIncantations: undefined;
   Gratitude: undefined;
   GoldenChecklist: undefined;
@@ -86,7 +85,6 @@ export type RootStackParamList = {
   MentorBoardDetails: { boardId: string };
   DailyGratitudeIntro: undefined;
   DeepBreathingIntro: undefined;
-  ActiveIncantationsIntro: undefined;
   PassiveIncantationsIntro: undefined;
   Questionnaire: undefined;
   Trial: undefined;
@@ -223,14 +221,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen 
-          name="ActiveIncantations" 
-          component={ActiveIncantationsScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
           name="PassiveIncantations" 
           component={PassiveIncantationsScreen}
           options={{
@@ -280,14 +270,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen 
           name="DeepBreathingIntro" 
           component={DeepBreathingIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="ActiveIncantationsIntro" 
-          component={ActiveIncantationsIntroScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',
@@ -352,11 +334,27 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
         <Stack.Screen 
           name="ManageActiveIncantations" 
-          component={ManageActiveIncantationsScreen} 
+          component={ManageActiveIncantationsScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
         />
         <Stack.Screen 
           name="ActiveIncantationsExercise" 
-          component={ActiveIncantationsExerciseScreen} 
+          component={ActiveIncantationsExerciseScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="ActiveIncantationsIntro" 
+          component={ActiveIncantationsIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

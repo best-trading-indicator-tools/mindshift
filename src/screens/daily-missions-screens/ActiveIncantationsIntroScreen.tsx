@@ -30,7 +30,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.navigate('ManageActiveIncantations');
+      navigation.push('ManageActiveIncantations');
     }
   };
 
