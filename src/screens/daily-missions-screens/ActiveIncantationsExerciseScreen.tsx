@@ -40,6 +40,12 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
       activeOpacity={1} 
       onPress={togglePause}
     >
+      <View style={styles.header}>
+        <Text style={styles.pauseHint}>
+          {isPaused ? 'Tap to Resume' : 'Tap to Pause'}
+        </Text>
+      </View>
+
       <Animated.View
         style={[
           styles.scrollContainer,
@@ -53,7 +59,12 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
       >
         {incantations.map((incantation, index) => (
           <View key={index} style={styles.incantationContainer}>
-            <Text style={styles.incantationText}>{incantation}</Text>
+            <Text style={[
+              styles.incantationText,
+              index === currentIndex && styles.activeIncantation
+            ]}>
+              {incantation}
+            </Text>
           </View>
         ))}
       </Animated.View>
@@ -65,6 +76,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  header: {
+    position: 'absolute',
+    top: 40,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    alignItems: 'center',
+  },
+  pauseHint: {
+    color: '#666',
+    fontSize: 16,
   },
   scrollContainer: {
     position: 'absolute',
@@ -79,10 +102,16 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   incantationText: {
-    color: '#FFFFFF',
+    color: '#666', // Dimmed color for non-active incantations
     fontSize: 32,
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  activeIncantation: {
+    color: '#FFFFFF', // Bright white for active incantation
+    textShadowColor: 'rgba(255,255,255,0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
 });
 

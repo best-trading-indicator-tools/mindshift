@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -158,31 +158,41 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <DraggableFlatList
-        data={incantations}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => `incantation-${index}`}
-        onDragEnd={({ data }) => setIncantations(data)}
-      />
-      
-      <View style={styles.buttonContainer}>
-        <Button 
-          title="Start Practice" 
-          buttonStyle={styles.startButton}
-          onPress={() => navigation.navigate('ActiveIncantationsExercise', {
-            incantations
-          })} 
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <DraggableFlatList
+          data={incantations}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => `incantation-${index}`}
+          onDragEnd={({ data }) => setIncantations(data)}
+          contentContainerStyle={styles.listContent}
         />
+        
+        <View style={styles.buttonContainer}>
+          <Button 
+            title="Start Practice" 
+            buttonStyle={styles.startButton}
+            onPress={() => navigation.navigate('ActiveIncantationsExercise', {
+              incantations
+            })} 
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  listContent: {
+    paddingTop: 8,
   },
   itemContainer: {
     backgroundColor: '#1E1E1E',
