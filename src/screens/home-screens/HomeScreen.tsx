@@ -438,7 +438,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const handlePassiveIncantationsNavigation = async () => {
     const mission = dailyMissions.find(m => m.title === 'Passive Incantations');
     if (mission) {
-      navigation.navigate('PassiveIncantations');
+      navigation.navigate('PassiveIncantationsIntro');
     }
   };
 
