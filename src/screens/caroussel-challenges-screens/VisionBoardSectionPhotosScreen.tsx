@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     width: '45%',
-  },
+  }, 
   addPhotosText: {
     color: '#FF4B4B',
     marginLeft: 8,
