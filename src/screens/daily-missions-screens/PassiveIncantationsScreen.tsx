@@ -1850,7 +1850,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   style={styles.exitModalButton}
                   onPress={() => {
                     setShowExitModal(false);
-                    navigation.goBack();
+                    navigation.navigate('MainTabs');
                   }}
                 >
                   <Text style={styles.exitModalButtonText}>Exit</Text>
