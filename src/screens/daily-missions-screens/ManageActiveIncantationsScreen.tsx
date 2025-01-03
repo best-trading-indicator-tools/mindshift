@@ -4,10 +4,7 @@ import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import DraggableFlatList, { 
-  ScaleDecorator,
-  RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { runOnJS } from 'react-native-reanimated';
@@ -177,15 +174,14 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadIncantations = async () => {
     try {
-      // Clear storage for testing
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      
-      console.log('Default incantations:', incantations);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(incantations));
-      
-      // Debug logging
-      console.log('First incantation:', incantations[0]);
-      console.log('Current incantations state:', incantations);
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setIncantations(JSON.parse(stored));
+      } else {
+        const defaults = createDefaultIncantations();
+        setIncantations(defaults);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
+      }
     } catch (error) {
       console.error('Error loading incantations:', error);
       setIncantations(createDefaultIncantations());
@@ -201,12 +197,16 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDragEnd = ({ data, from, to }: { data: IncantationItem[], from: number, to: number }) => {
-    // Create new objects to avoid reanimated warning
-    const newData = data.map(item => ({ ...item }));
-    if (from !== to) {
-      setIncantations(newData);
+    if (from === to) return; // Don't update if position hasn't changed
+    
+    // Create a new array reference to avoid mutation
+    const newData = [...data];
+    setIncantations(newData);
+    
+    // Debounce the storage update
+    setTimeout(() => {
       saveNewOrder(newData).catch(console.error);
-    }
+    }, 0);
   };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
@@ -224,7 +224,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     setEditModalVisible(false);
   };
 
-  const renderHeader = () => (
+  const Header = React.memo(() => (
     <View style={styles.header}>
       <Text style={styles.title}>Incantations</Text>
       <View style={styles.headerActions}>
@@ -249,56 +249,59 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
     </View>
-  );
+  ));
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
+    if (!isEditMode) {
+      return (
+        <View style={styles.recordingItem}>
+          <View style={styles.recordingContent}>
+            <View style={styles.recordingInfo}>
+              <Text style={styles.recordingText} numberOfLines={2}>
+                {item?.text || 'No text available'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <TouchableOpacity
         onLongPress={drag}
-        disabled={!isEditMode}
-        delayLongPress={150}
+        disabled={isActive}
         style={[
           styles.recordingItem,
-          isEditMode && styles.recordingItemEdit,
+          styles.recordingItemEdit,
           isActive && styles.draggingItem
         ]}
       >
         <View style={styles.recordingContent}>
-          {isEditMode && (
-            <MaterialCommunityIcons 
-              name="menu" 
-              size={24} 
-              color="#FFFFFF" 
-              style={styles.dragHandle}
-            />
-          )}
+          <MaterialCommunityIcons 
+            name="menu" 
+            size={24} 
+            color="#FFFFFF" 
+            style={styles.dragHandle}
+          />
           <View style={styles.recordingInfo}>
-            <Text 
-              style={[
-                styles.recordingText,
-                isEditMode && { marginLeft: 0 }
-              ]}
-              numberOfLines={2}
-            >
+            <Text style={styles.recordingText} numberOfLines={2}>
               {item?.text || 'No text available'}
             </Text>
           </View>
-          {isEditMode && (
-            <View style={styles.editActions}>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleEditIncantation(item)}
-              >
-                <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleDeleteIncantation(item)}
-              >
-                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.editActions}>
+            <TouchableOpacity 
+              style={styles.editIcon}
+              onPress={() => handleEditIncantation(item)}
+            >
+              <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.editIcon}
+              onPress={() => handleDeleteIncantation(item)}
+            >
+              <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -323,32 +326,16 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-          {renderHeader()}
-          <View style={{ flex: 1 }}>
-            <DraggableFlatList<IncantationItem>
-              ref={scrollRef}
-              data={incantations}
-              onDragEnd={handleDragEnd}
-              keyExtractor={item => item.id}
-              renderItem={renderItem}
-              contentContainerStyle={styles.listContent}
-              dragItemOverflow={false}
-              activationDistance={8}
-              simultaneousHandlers={[]}
-              autoscrollSpeed={100}
-              autoscrollThreshold={40}
-              dragHitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              containerStyle={{ flex: 1 }}
-              animationConfig={{
-                damping: 30,
-                mass: 0.3,
-                stiffness: 200,
-                overshootClamping: true,
-                restDisplacementThreshold: 0.01,
-                restSpeedThreshold: 0.01
-              }}
-            />
-          </View>
+          <Header />
+          <DraggableFlatList<IncantationItem>
+            data={incantations}
+            onDragEnd={handleDragEnd}
+            keyExtractor={item => item.id}
+            renderItem={renderItem}
+            autoscrollSpeed={0}
+            activationDistance={1}
+            contentContainerStyle={styles.listContent}
+          />
           {renderListenAllButton()}
           
           <Modal
@@ -444,15 +431,12 @@ const styles = StyleSheet.create({
   },
   recordingItem: {
     backgroundColor: '#2A3744',
-    borderRadius: 12,
+    padding: 0,
     marginVertical: 6,
     marginHorizontal: 16,
-    overflow: 'hidden',
   },
   recordingItemEdit: {
     backgroundColor: '#1F2937',
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A3744',
   },
   recordingContent: {
     flexDirection: 'row',
@@ -470,17 +454,6 @@ const styles = StyleSheet.create({
   },
   draggingItem: {
     backgroundColor: '#1E1E1E',
-    borderColor: '#FFD700',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    zIndex: 999,
   },
   dragHandle: {
     padding: 8,
@@ -630,6 +603,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  dragHandleContainer: {
+    padding: 8,
+    marginRight: 4,
   },
 });
 
