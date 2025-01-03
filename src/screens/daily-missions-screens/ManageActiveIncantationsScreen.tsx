@@ -148,16 +148,8 @@ const defaultIncantationsText = [
   "I am the master of my thoughts and actions"
 ];
 
-// Create default incantations with stable IDs
-const createDefaultIncantations = () => {
-  return defaultIncantationsText.map((text, index) => ({
-    id: `incantation-${index}`,  // Stable ID based only on index
-    text,
-  }));
-};
-
 const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
-  const [incantations, setIncantations] = useState<IncantationItem[]>(createDefaultIncantations());
+  const [incantations, setIncantations] = useState<IncantationItem[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -177,13 +169,15 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       if (stored) {
         setIncantations(JSON.parse(stored));
       } else {
-        const defaults = createDefaultIncantations();
+        const defaults = defaultIncantationsText.map((text, index) => ({
+          id: `incantation-${Date.now()}-${index}`,
+          text,
+        }));
         setIncantations(defaults);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
       }
     } catch (error) {
       console.error('Error loading incantations:', error);
-      setIncantations(createDefaultIncantations());
     }
   };
 
@@ -195,15 +189,13 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDragEnd = ({ data, from, to }: { data: IncantationItem[], from: number, to: number }) => {
-    if (from === to) return; // Don't update if position hasn't changed
-    
-    // Create a new array reference to avoid mutation
-    const newData = [...data];
+  const updateState = useCallback((newData: IncantationItem[]) => {
     setIncantations(newData);
-    
-    // Save directly without setTimeout
     saveNewOrder(newData).catch(console.error);
+  }, []);
+
+  const handleDragEnd = ({ data }: { data: IncantationItem[], from: number, to: number }) => {
+    runOnJS(updateState)(data);
   };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
@@ -331,8 +323,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             onDragEnd={handleDragEnd}
             keyExtractor={item => item.id}
             renderItem={renderItem}
-            dragItemOverflow={true}
-            activationDistance={3}  // Reduced for easier activation
+            dragItemOverflow={false}
+            activationDistance={3}
             autoscrollSpeed={50}
           />
           {renderListenAllButton()}
@@ -430,9 +422,10 @@ const styles = StyleSheet.create({
   },
   recordingItem: {
     backgroundColor: '#2A3744',
-    padding: 0,
-    marginVertical: 6,
+    padding: 12,
+    marginVertical: 0,
     marginHorizontal: 16,
+    height: 64,
   },
   recordingItemEdit: {
     backgroundColor: '#1F2937',
@@ -440,7 +433,7 @@ const styles = StyleSheet.create({
   recordingContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    height: '100%',
   },
   recordingInfo: {
     flex: 1,
