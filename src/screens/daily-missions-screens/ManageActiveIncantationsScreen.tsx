@@ -175,11 +175,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const saveNewOrder = async (recordingsToSave: string[]) => {
     try {
-      console.log('Starting to save new order...');
+      console.log('💾 Saving order...');
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recordingsToSave));
-      console.log('Successfully saved new order');
     } catch (error) {
-      console.error('Failed to save new order:', error);
+      console.error('❌ Failed to save:', error);
     }
   };
 
@@ -215,7 +214,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.headerIcon}
-          onPress={() => navigation.navigate('MainTabs')}
+          onPress={() => setShowExitModal(true)}
         >
           <MaterialCommunityIcons name="logout" size={24} color="#E31837" />
         </TouchableOpacity>
@@ -283,30 +282,30 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             <DraggableFlatList<string>
               data={incantations}
               onDragBegin={() => {
-                console.log('Drag started');
+                console.log('🔄 Drag started');
               }}
               onDragEnd={({ data }) => {
-                console.log('Drag ended, new data:', data);
-                console.log('Current incantations before update:', incantations);
-                setIncantations(data);
-                console.log('Saving new order...');
-                saveNewOrder(data);
+                console.log('✅ Drag endeeed');
+                requestAnimationFrame(() => {
+                  setIncantations(data);
+                  saveNewOrder(data);
+                });
               }}
-              onPlaceholderIndexChange={(index) => {
-                console.log('Placeholder index changed to:', index);
-              }}
-              keyExtractor={(item, index) => {
-                const key = `${item}-${index}`;
-                console.log('Generated key:', key, 'for item:', item, 'at index:', index);
-                return key;
-              }}
-              renderItem={(params: RenderItemParams<string>) => {
-                console.log('Rendering item:', params.item, 'isActive:', params.isActive, 'index:', params.getIndex());
-                return renderItem(params);
-              }}
+              keyExtractor={(item, index) => `${item}-${index}`}
+              renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               dragItemOverflow={true}
               activationDistance={5}
+              simultaneousHandlers={[]}
+              autoscrollThreshold={100}
+              animationConfig={{
+                damping: 20,
+                mass: 0.2,
+                stiffness: 100,
+                overshootClamping: false,
+                restSpeedThreshold: 0.2,
+                restDisplacementThreshold: 0.2,
+              }}
             />
           </View>
           
@@ -330,7 +329,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.exitButton}
-                  onPress={() => navigation.push('MainTabs')}
+                  onPress={() => navigation.navigate('MainTabs')}
                 >
                   <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
@@ -519,13 +518,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   exitButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#E31837',
     paddingVertical: 16,
     borderRadius: 30,
-    width: '100%',
   },
   exitText: {
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
