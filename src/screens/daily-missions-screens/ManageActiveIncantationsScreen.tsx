@@ -4,7 +4,10 @@ import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import DraggableFlatList, { 
+  RenderItemParams,
+  ScaleDecorator 
+} from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { runOnJS } from 'react-native-reanimated';
@@ -170,7 +173,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         setIncantations(JSON.parse(stored));
       } else {
         const defaults = defaultIncantationsText.map((text, index) => ({
-          id: `incantation-${Date.now()}-${index}`,
+          id: `incantation-${index}`,
           text,
         }));
         setIncantations(defaults);
@@ -196,6 +199,12 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       saveNewOrder(data).catch(console.error);
     });
   }, []);
+
+  const handleEditIncantation = (item: IncantationItem) => {
+    setEditingIncantation(item);
+    setEditingText(item.text);
+    setEditModalVisible(true);
+  };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
     const newIncantations = incantations.filter(i => i.id !== item.id);
@@ -239,11 +248,11 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   ));
 
-  // Memoize renderItem function
-  const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
+  // Memoize renderItem function with all dependencies
+  const renderItem = useCallback(({ item, drag, isActive, getIndex }: RenderItemParams<IncantationItem>) => {
     if (!isEditMode) {
       return (
-        <View style={[styles.recordingItem, { opacity: isActive ? 0.5 : 1 }]}>
+        <View style={styles.recordingItem}>
           <View style={styles.recordingContent}>
             <View style={styles.recordingInfo}>
               <Text style={styles.recordingText} numberOfLines={2}>
@@ -263,7 +272,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         style={[
           styles.recordingItem,
           styles.recordingItemEdit,
-          isActive && styles.draggingItem
+          isActive && { opacity: 0.7, elevation: 0, shadowOpacity: 0 }
         ]}
       >
         <View style={styles.recordingContent}>
@@ -278,30 +287,26 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
               {item?.text || 'No text available'}
             </Text>
           </View>
-          <View style={styles.editActions}>
-            <TouchableOpacity 
-              style={styles.editIcon}
-              onPress={() => handleEditIncantation(item)}
-            >
-              <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.editIcon}
-              onPress={() => handleDeleteIncantation(item)}
-            >
-              <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
-            </TouchableOpacity>
-          </View>
+          {!isActive && (
+            <View style={styles.editActions}>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleEditIncantation(item)}
+              >
+                <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.editIcon}
+                onPress={() => handleDeleteIncantation(item)}
+              >
+                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
-  }, [isEditMode]); // Only re-create when isEditMode changes
-
-  const handleEditIncantation = (item: IncantationItem) => {
-    setEditingIncantation(item);
-    setEditingText(item.text);
-    setEditModalVisible(true);
-  };
+  }, [isEditMode, handleEditIncantation, handleDeleteIncantation]);
 
   const renderListenAllButton = () => (
     <TouchableOpacity
@@ -325,6 +330,29 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             dragItemOverflow={false}
             activationDistance={3}
             autoscrollSpeed={50}
+            renderPlaceholder={({ item }) => (
+              <View
+                style={[
+                  styles.recordingItem,
+                  styles.recordingItemEdit,
+                  { backgroundColor: '#1A232D' }
+                ]}
+              >
+                <View style={styles.recordingContent}>
+                  <MaterialCommunityIcons 
+                    name="menu" 
+                    size={24} 
+                    color="#FFFFFF" 
+                    style={styles.dragHandle}
+                  />
+                  <View style={styles.recordingInfo}>
+                    <Text style={styles.recordingText} numberOfLines={2}>
+                      {item?.text || 'No text available'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
           />
           {renderListenAllButton()}
           

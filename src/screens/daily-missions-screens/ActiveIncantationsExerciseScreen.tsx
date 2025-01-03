@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions, Modal, 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Slider from '@react-native-community/slider';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsExercise'>;
 
@@ -15,12 +16,14 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
   const scrollY = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
+  const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+  const [scrollDuration, setScrollDuration] = useState(SCROLL_DURATION / 1000); // Convert to seconds
 
   useEffect(() => {
     if (!isPaused && currentIndex < incantations.length) {
       const animation = Animated.timing(scrollY, {
         toValue: (currentIndex + 1) * SCREEN_HEIGHT,
-        duration: SCROLL_DURATION,
+        duration: scrollDuration * 1000, // Convert seconds to milliseconds
         useNativeDriver: true,
       });
 
@@ -32,7 +35,7 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
 
       return () => animation.stop();
     }
-  }, [currentIndex, isPaused]);
+  }, [currentIndex, isPaused, scrollDuration]);
 
   const togglePause = () => setIsPaused(!isPaused);
 
@@ -46,6 +49,30 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
     setIsPaused(false);
   };
 
+  const handleNextIncantation = () => {
+    if (currentIndex < incantations.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      scrollY.setValue((currentIndex + 1) * SCREEN_HEIGHT);
+    }
+  };
+
+  const handleSettingsPress = () => {
+    setIsPaused(true);
+    setIsSettingsModalVisible(true);
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsModalVisible(false);
+    setIsPaused(false);
+  };
+
+  const handleSpeedChange = (value: string) => {
+    const newDuration = parseInt(value);
+    if (!isNaN(newDuration) && newDuration > 0) {
+      setScrollDuration(newDuration);
+    }
+  };
+
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -56,6 +83,20 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
             onPress={handleExitPress}
           >
             <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingsButton} 
+            onPress={handleSettingsPress}
+          >
+            <MaterialCommunityIcons name="dots-vertical" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.nextButton} 
+            onPress={handleNextIncantation}
+          >
+            <MaterialCommunityIcons name="chevron-right" size={36} color="#FFFFFF" />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -121,6 +162,42 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
                   onPress={() => navigation.navigate('MainTabs')}
                 >
                   <Text style={styles.modalExitText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={isSettingsModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={handleSettingsClose}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Settings</Text>
+                <Text style={styles.modalText}>
+                  Set interval between incantations:
+                </Text>
+                <Text style={styles.durationText}>
+                  {scrollDuration} seconds
+                </Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1}
+                  maximumValue={10}
+                  step={1}
+                  value={scrollDuration}
+                  onValueChange={setScrollDuration}
+                  minimumTrackTintColor="#FFD700"
+                  maximumTrackTintColor="#4A5568"
+                  thumbTintColor="#FFD700"
+                />
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={handleSettingsClose}
+                >
+                  <Text style={styles.continueButtonText}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -252,6 +329,43 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 10,
+    right: 16,
+    zIndex: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nextButton: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    zIndex: 2,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
+    alignItems: 'center',
+    transform: [{ translateY: -25 }],
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginBottom: 20,
+  },
+  durationText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
 
