@@ -268,6 +268,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
       <TouchableOpacity
         onLongPress={drag}
         disabled={isActive}
+        delayLongPress={150}
         style={[
           styles.recordingItem,
           styles.recordingItemEdit,
@@ -331,8 +332,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             keyExtractor={item => item.id}
             renderItem={renderItem}
             dragItemOverflow={true}
-            activationDistance={10}  // Increased from 1 to 10 for more natural drag activation
-            autoscrollSpeed={50}  // Added non-zero autoscroll speed
+            activationDistance={3}  // Reduced for easier activation
+            autoscrollSpeed={50}
           />
           {renderListenAllButton()}
           
