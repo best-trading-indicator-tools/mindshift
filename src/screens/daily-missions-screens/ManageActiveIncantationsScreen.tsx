@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Button, ListItem } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import DraggableFlatList, { 
+  ScaleDecorator,
+  RenderItemParams,
+} from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
 
@@ -143,42 +147,48 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   const [incantations, setIncantations] = useState(defaultIncantations);
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<string>) => (
-    <ListItem
-      onLongPress={drag}
-      containerStyle={[
-        styles.itemContainer,
-        { backgroundColor: isActive ? '#3B3B3B' : '#1E1E1E' }
-      ]}
-    >
-      <MaterialCommunityIcons name="drag" size={24} color="#666" />
-      <ListItem.Content>
-        <ListItem.Title style={styles.itemText}>{item}</ListItem.Title>
-      </ListItem.Content>
-    </ListItem>
+    <ScaleDecorator>
+      <ListItem
+        onLongPress={drag}
+        containerStyle={[
+          styles.itemContainer,
+          isActive && styles.draggingItem
+        ]}
+      >
+        <MaterialCommunityIcons name="drag" size={24} color="#666" />
+        <ListItem.Content>
+          <ListItem.Title style={styles.itemText}>{item}</ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+    </ScaleDecorator>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <DraggableFlatList
-          data={incantations}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => `incantation-${index}`}
-          onDragEnd={({ data }) => setIncantations(data)}
-          contentContainerStyle={styles.listContent}
-        />
-        
-        <View style={styles.buttonContainer}>
-          <Button 
-            title="Start Practice" 
-            buttonStyle={styles.startButton}
-            onPress={() => navigation.navigate('ActiveIncantationsExercise', {
-              incantations
-            })} 
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <DraggableFlatList
+            data={incantations}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => `incantation-${index}`}
+            onDragEnd={({ data }) => setIncantations(data)}
+            contentContainerStyle={styles.listContent}
+            dragItemOverflow={true}
+            activationDistance={5}
           />
+          
+          <View style={styles.buttonContainer}>
+            <Button 
+              title="Start Practice" 
+              buttonStyle={styles.startButton}
+              onPress={() => navigation.navigate('ActiveIncantationsExercise', {
+                incantations
+              })} 
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
@@ -212,7 +222,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',  // Yellow color
     borderRadius: 8,
     paddingVertical: 12,
-  }
+  },
+  draggingItem: {
+    backgroundColor: '#3B3B3B',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
 });
 
 export default ManageActiveIncantationsScreen; 
