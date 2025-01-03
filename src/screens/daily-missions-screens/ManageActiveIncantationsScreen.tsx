@@ -182,9 +182,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDragEnd = ({ data }: { data: string[] }) => {
-    'worklet';
-    runOnJS(setIncantations)(data);
-    runOnJS(saveNewOrder)(data);
+    setIncantations(data);
+    saveNewOrder(data).catch(console.error);
   };
 
   const handleDeleteIncantation = async (item: string) => {
@@ -227,50 +226,56 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<string>) => (
-    <ScaleDecorator>
-      <TouchableOpacity
-        onLongPress={drag}
-        disabled={!isEditMode}
-        delayLongPress={200}
-        style={[
-          styles.recordingItem,
-          isEditMode && styles.recordingItemEdit,
-          isActive && styles.draggingItem
-        ]}
-      >
-        <View style={styles.recordingContent}>
-          {isEditMode && (
-            <MaterialCommunityIcons name="drag" size={24} color="#666" />
-          )}
-          <View style={styles.recordingInfo}>
-            <Text style={[
-              styles.recordingText,
-              isEditMode && { marginLeft: 0 }
-            ]}>
-              {item}
-            </Text>
-          </View>
-          {isEditMode && (
-            <View style={styles.editActions}>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleEditIncantation(item)}
-              >
-                <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleDeleteIncantation(item)}
-              >
-                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
-              </TouchableOpacity>
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<string>) => {
+    const index = incantations.indexOf(item);
+    if (index === 0 || index === 1) {
+      console.log(`Rendering item at index ${index}:`, item, 'isActive:', isActive);
+    }
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          onLongPress={drag}
+          disabled={!isEditMode}
+          delayLongPress={200}
+          style={[
+            styles.recordingItem,
+            isEditMode && styles.recordingItemEdit,
+            isActive && styles.draggingItem
+          ]}
+        >
+          <View style={styles.recordingContent}>
+            {isEditMode && (
+              <MaterialCommunityIcons name="menu" size={24} color="#FFFFFF" style={styles.dragHandle} />
+            )}
+            <View style={styles.recordingInfo}>
+              <Text style={[
+                styles.recordingText,
+                isEditMode && { marginLeft: 0 }
+              ]}>
+                {item}
+              </Text>
             </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    </ScaleDecorator>
-  );
+            {isEditMode && (
+              <View style={styles.editActions}>
+                <TouchableOpacity 
+                  style={styles.editIcon}
+                  onPress={() => handleEditIncantation(item)}
+                >
+                  <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.editIcon}
+                  onPress={() => handleDeleteIncantation(item)}
+                >
+                  <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
 
   const handleEditIncantation = (item: string) => {
     setEditingIncantation(item);
@@ -287,11 +292,16 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
             <DraggableFlatList<string>
               data={incantations}
               onDragEnd={handleDragEnd}
-              keyExtractor={(_, index) => index.toString()}
+              keyExtractor={item => item}
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               dragItemOverflow={true}
               activationDistance={5}
+              animationConfig={{
+                damping: 20,
+                mass: 0.2,
+                stiffness: 100
+              }}
             />
           </View>
           
@@ -315,7 +325,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.exitButton}
-                  onPress={() => navigation.push('MainTabs')}
+                  onPress={() => navigation.navigate('MainTabs')}
                 >
                   <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
@@ -420,6 +430,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
     transform: [{ scale: 1.02 }],
+  },
+  dragHandle: {
+    padding: 8,
   },
   header: {
     flexDirection: 'row',

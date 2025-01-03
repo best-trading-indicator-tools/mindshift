@@ -333,6 +333,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
+        
         <Stack.Screen 
           name="ManageActiveIncantations" 
           component={ManageActiveIncantationsScreen}
