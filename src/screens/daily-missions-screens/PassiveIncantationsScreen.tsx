@@ -361,6 +361,12 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             {isEditMode ? 'Done' : 'Edit'}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => setShowExitModal(true)}
+        >
+          <MaterialCommunityIcons name="logout" size={24} color="#E31837" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -1772,12 +1778,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
             >
               <Text style={styles.doneButtonText}>I'm done</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.exitButton}
-              onPress={() => setShowExitModal(true)}
-            >
-              <Text style={styles.exitButtonText}>Exit</Text>
-            </TouchableOpacity>
           </View>
 
           {/* New Affirmation Modal */}
@@ -2020,13 +2020,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   listenAllButton: {
-    backgroundColor: '#2A3744',
+    backgroundColor: '#E6B800',  // Changed from '#2A3744' to '#E6B800'
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
   },
   listenAllButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',  // Changed from '#FFFFFF' to '#000000'
     fontSize: 18,
     fontWeight: '600',
   },
