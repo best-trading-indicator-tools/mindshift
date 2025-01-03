@@ -213,9 +213,9 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.headerIcon}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('MainTabs')}
         >
-          <MaterialCommunityIcons name="close" size={24} color="#E31837" />
+          <MaterialCommunityIcons name="logout" size={24} color="#E31837" />
         </TouchableOpacity>
       </View>
     </View>
@@ -310,7 +310,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.exitButton}
-                  onPress={() => navigation.navigate('MainTabs')}
+                  onPress={() => navigation.push('MainTabs')}
                 >
                   <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>

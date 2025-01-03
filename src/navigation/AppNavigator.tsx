@@ -44,6 +44,7 @@ import SunBreathSettingsScreen from '../screens/daily-missions-screens/SunBreath
 import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/ManageActiveIncantationsScreen';
 import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/ActiveIncantationsExerciseScreen';
 import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
+import ManageIncantationsIntroScreen from '../screens/daily-missions-screens/ManageIncantationsIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -100,6 +101,7 @@ export type RootStackParamList = {
   ActiveIncantationsExercise: {
     incantations: string[];
   };
+  ManageIncantationsIntro: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -351,6 +353,14 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen 
           name="ActiveIncantationsIntro" 
           component={ActiveIncantationsIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="ManageIncantationsIntro" 
+          component={ManageIncantationsIntroScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',

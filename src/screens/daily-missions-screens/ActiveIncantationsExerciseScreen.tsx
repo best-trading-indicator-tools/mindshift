@@ -92,7 +92,7 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
 
       <Modal
         visible={isExitModalVisible}
-        transparent
+        transparent={true}
         animationType="fade"
         onRequestClose={() => setIsExitModalVisible(false)}
       >
@@ -106,11 +106,11 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
               style={styles.continueButton}
               onPress={() => setIsExitModalVisible(false)}
             >
-              <Text style={styles.continueText}>Continue</Text>
+              <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.exitButton}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('MainTabs')}
             >
               <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>
@@ -129,13 +129,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
   },
-  exitButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 2,
-    padding: 8,
-  },
+
   header: {
     position: 'absolute',
     top: 40,
@@ -174,21 +168,23 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
+    backgroundColor: '#1F2937',
+    borderRadius: 20,
     padding: 24,
-    width: '80%',
-    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'stretch',
   },
   modalTitle: {
-    color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -197,26 +193,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
+    lineHeight: 24,
     opacity: 0.8,
   },
   continueButton: {
     backgroundColor: '#FFD700',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
     marginBottom: 12,
+    width: '100%',
   },
-  continueText: {
+  continueButtonText: {
     color: '#000000',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     textAlign: 'center',
   },
+  exitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
   exitText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
     textAlign: 'center',
   },
 });

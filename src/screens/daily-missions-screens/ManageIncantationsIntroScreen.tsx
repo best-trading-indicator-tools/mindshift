@@ -4,24 +4,24 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ProgressHeader from '../../components/ProgressHeader';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsIntro'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'ManageIncantationsIntro'>;
 
 const introContent = [
   {
-    title: "Active Incantations",
-    content: "Active incantations are powerful positive affirmations spoken with conviction and purpose.\n\nBy speaking these statements aloud, you actively program your mind for success and positivity."
+    title: "Customize Your Incantations",
+    content: "Make these affirmations truly yours by managing them in the next screen.\n\nYou can reorder, edit, or remove any incantation to match your personal goals and beliefs."
   },
   {
-    title: "Customize Your Practice",
-    content: "You can personalize your incantations by:\n\n• Reordering them with drag & drop\n• Adding your own affirmations\n• Removing ones that don't resonate\n\nMake this practice truly yours."
+    title: "Easy Drag & Drop",
+    content: "Tap 'Edit' to start organizing.\n\nPress and hold any incantation to drag it to a new position.\n\nArrange them in the order that feels most powerful to you."
   },
   {
-    title: "Daily Practice",
-    content: "Speak each affirmation with conviction.\n\nTake deep breaths between statements and visualize yourself embodying these truths.\n\nJust 5 minutes a day can create lasting change."
+    title: "Edit & Delete",
+    content: "While in edit mode, you'll see two icons:\n\n✏️ Yellow pencil to modify text\n🗑️ Red trash to remove\n\nCreate a set of incantations that resonates with your journey."
   }
 ];
 
-const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
+const ManageIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
 
@@ -29,7 +29,7 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.navigate('ManageIncantationsIntro');
+      navigation.navigate('ManageActiveIncantations');
     }
   };
 
@@ -84,4 +84,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ActiveIncantationsIntroScreen; 
+export default ManageIncantationsIntroScreen; 
