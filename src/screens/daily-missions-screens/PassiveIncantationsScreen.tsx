@@ -58,7 +58,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showAudioSettings, setShowAudioSettings] = useState(false);
-  const [backgroundVolume, setBackgroundVolume] = useState(0);
+  const [backgroundVolume, setBackgroundVolume] = useState(0.2);
   const [affirmationsVolume, setAffirmationsVolume] = useState(1);
   const [intervalBetweenAffirmations, setIntervalBetweenAffirmations] = useState(3);
   const [shuffleAffirmations, setShuffleAffirmations] = useState(false);
@@ -160,6 +160,13 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
     );
   }, [currentBackgroundIndex]);
 
+  // Add effect to handle background volume changes
+  useEffect(() => {
+    if (backgroundMusic.current) {
+      backgroundMusic.current.setVolume(backgroundVolume);
+    }
+  }, [backgroundVolume]);
+
   useEffect(() => {
     loadAffirmations();
     loadSavedTags();
@@ -220,7 +227,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         );
 
         if (backgroundMusic.current) {
-          backgroundMusic.current.setVolume(0.3);
+          backgroundMusic.current.setVolume(0.2);
           backgroundMusic.current.setNumberOfLoops(-1);
           backgroundMusic.current.play((success) => {
             if (!success) {
