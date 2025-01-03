@@ -189,14 +189,13 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const updateState = useCallback((newData: IncantationItem[]) => {
-    setIncantations(newData);
-    saveNewOrder(newData).catch(console.error);
+  const handleDragEnd = useCallback(({ data }: { data: IncantationItem[], from: number, to: number }) => {
+    setIncantations(data);
+    // Defer the storage operation
+    requestAnimationFrame(() => {
+      saveNewOrder(data).catch(console.error);
+    });
   }, []);
-
-  const handleDragEnd = ({ data }: { data: IncantationItem[], from: number, to: number }) => {
-    runOnJS(updateState)(data);
-  };
 
   const handleDeleteIncantation = async (item: IncantationItem) => {
     const newIncantations = incantations.filter(i => i.id !== item.id);
@@ -244,7 +243,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
   const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
     if (!isEditMode) {
       return (
-        <View style={styles.recordingItem}>
+        <View style={[styles.recordingItem, { opacity: isActive ? 0.5 : 1 }]}>
           <View style={styles.recordingContent}>
             <View style={styles.recordingInfo}>
               <Text style={styles.recordingText} numberOfLines={2}>
@@ -423,9 +422,18 @@ const styles = StyleSheet.create({
   recordingItem: {
     backgroundColor: '#2A3744',
     padding: 12,
-    marginVertical: 0,
+    marginVertical: 8,
     marginHorizontal: 16,
     height: 64,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   recordingItemEdit: {
     backgroundColor: '#1F2937',
