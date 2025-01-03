@@ -358,6 +358,17 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity 
+          onPress={handleListenAll} 
+          style={styles.headerButton}
+          disabled={recordings.length === 0}
+        >
+          <MaterialCommunityIcons 
+            name="play-circle" 
+            size={24} 
+            color={recordings.length > 0 ? "#FFD700" : "#4B5563"} 
+          />
+        </TouchableOpacity>
+        <TouchableOpacity 
           onPress={() => setShowAudioSettings(true)} 
           style={styles.headerButton}
         >
@@ -1771,14 +1782,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
           </View>
 
           <View style={styles.buttonContainer}>
-            {recordings.length > 0 && (
-              <TouchableOpacity 
-                style={styles.listenAllButton}
-                onPress={handleListenAll}
-              >
-                <Text style={styles.listenAllButtonText}>Listen All</Text>
-              </TouchableOpacity>
-            )}
             <TouchableOpacity 
               style={styles.doneButton}
               onPress={handleComplete}
@@ -1902,7 +1905,7 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 4,
-  },
+  } as ViewStyle,
   recordingItem: {
     backgroundColor: '#2A3744',
     borderRadius: 12,
