@@ -63,11 +63,16 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
             activeOpacity={1} 
             onPress={togglePause}
           >
-            <View style={styles.header}>
-              <Text style={styles.pauseHint}>
-                {isPaused ? 'Tap to Resume' : 'Tap to Pause'}
-              </Text>
-            </View>
+            {isPaused && (
+              <View style={styles.pauseIconContainer}>
+                <MaterialCommunityIcons 
+                  name="pause-circle" 
+                  size={80} 
+                  color="#FFFFFF" 
+                  style={styles.pauseIcon}
+                />
+              </View>
+            )}
 
             <Animated.View
               style={[
@@ -112,10 +117,10 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
                   <Text style={styles.continueButtonText}>Continue</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.exitButton}
+                  style={styles.modalExitButton}
                   onPress={() => navigation.navigate('MainTabs')}
                 >
-                  <Text style={styles.exitText}>Exit</Text>
+                  <Text style={styles.modalExitText}>Exit</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -139,18 +144,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  header: {
-    position: 'absolute',
-    top: 20,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    alignItems: 'center',
-  },
-  pauseHint: {
-    color: '#666',
-    fontSize: 16,
-  },
   scrollContainer: {
     position: 'absolute',
     top: 0,
@@ -230,11 +223,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  exitText: {
+  modalExitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  modalExitText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  pauseIconContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Optional: adds a slight dim effect
+  },
+  pauseIcon: {
+    opacity: 0.9,
+    // Optional: add shadow for better visibility
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
 
