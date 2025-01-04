@@ -83,6 +83,7 @@ export type RootStackParamList = {
   };
   MentorBoardDetails: { boardId: string };
   DailyGratitudeIntro: undefined;
+  DailyGratitude: undefined;
   DeepBreathingIntro: undefined;
   PassiveIncantationsIntro: undefined;
   Questionnaire: undefined;
@@ -229,7 +230,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen
-          name="Gratitude"
+          name="DailyGratitude"
           component={DailyGratitudeScreen}
           options={{ headerShown: false }}
         />

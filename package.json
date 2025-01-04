@@ -27,7 +27,6 @@
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
     "@types/react-native-video": "^5.0.20",
-    "expo-linear-gradient": "^14.0.1",
     "lottie-react-native": "^7.1.0",
     "openai": "^4.77.0",
     "pexels": "^1.4.0",

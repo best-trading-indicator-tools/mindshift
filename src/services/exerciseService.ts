@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addNotification } from './notificationService';
 import firestore from '@react-native-firebase/firestore';
 
-const EXERCISE_COMPLETION_KEY = 'exercise_completions';
+export const EXERCISE_COMPLETION_KEY = 'exercise_completions';
 
 export type ExerciseType = 
   | 'deep-breathing'
@@ -18,35 +18,30 @@ export type ExerciseType =
   | 'sun-breath';
 
 export interface ExerciseCompletion {
-  userId: string;
-  exerciseType: string;
-  completedAt: Date;
+  exerciseId: string;
+  exerciseName: string;
+  completedAt: string;
 }
-
-const getStorageKey = (exerciseType: string, date: Date) => {
-  const userId = auth().currentUser?.uid || 'local-user';
-  return `exercise_${userId}_${exerciseType}_${date.toISOString().split('T')[0]}`;
-};
 
 export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string): Promise<boolean> => {
   try {
-    const user = auth().currentUser;
-    if (!user) return false;
-
     const today = new Date();
-    const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    const dateString = today.toISOString().split('T')[0];
     
-    await firestore()
-      .collection('users')
-      .doc(user.uid)
-      .collection('exerciseCompletions')
-      .doc(exerciseId)
-      .set({
-        lastCompletedDate: dateString,
-        exerciseName,
-        timestamp: firestore.FieldValue.serverTimestamp()
-      });
-
+    // Get existing completions
+    const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
+    const completions = completionsJson ? JSON.parse(completionsJson) : {};
+    
+    // Update completions with new exercise
+    completions[exerciseId] = {
+      date: today.toDateString(),
+      exerciseName,
+      completedAt: today.toISOString()
+    };
+    
+    // Save back to AsyncStorage
+    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify(completions));
+    
     return true;
   } catch (error) {
     console.error('Error marking exercise as completed:', error);

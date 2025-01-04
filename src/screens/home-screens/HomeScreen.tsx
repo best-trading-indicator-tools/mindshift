@@ -12,7 +12,7 @@ import { NotificationBell } from '../../components/NotificationBell';
 import CircularProgress from '../../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../../components/MissionItem';
-import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../../services/exerciseService';
+import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData, EXERCISE_COMPLETION_KEY } from '../../services/exerciseService';
 import { clearNotifications } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResourcePreloadService } from '../../services/resourcePreloadService';
@@ -29,6 +29,11 @@ interface Mission {
   type: string;
   Illustration: React.ComponentType<any>;
   onPress?: () => void;
+}
+
+interface MissionMapping {
+  key: string;
+  name: string;
 }
 
 const renderIcon = (name: string, size: string | number, color: string) => {
@@ -285,42 +290,61 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const checkExerciseCompletions = async () => {
     try {
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        console.log('No user found, skipping exercise completion check');
+      // Get today's selected missions
+      const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+      if (!storedMissions) {
+        console.log('No stored missions found');
         return;
       }
 
-      const exerciseIds = dailyMissions.map(mission => {
-        switch (mission.title) {
-          case 'The Sun Breath':
-            return 'sun-breath';
-          case 'Deep Breathing':
-            return 'deep-breathing';
-          case 'Daily Gratitude':
-            return 'gratitude';
-          case 'Active Incantations':
-            return 'active-incantations';
-          case 'Passive Incantations':
-            return 'passive-incantations';
-          case 'Golden Checklist':
-            return 'golden-checklist';
-          case 'Gratitude Beads':
-            return 'gratitude-beads';
-          default:
-            return null;
-        }
-      }).filter(Boolean) as string[];
+      interface CompletionStatus {
+        date: string;
+        exerciseName: string;
+        completedAt: string;
+      }
 
-      const results = await Promise.all(
-        exerciseIds.map(id => isExerciseCompletedToday(id))
-      );
-      
-      const completed = exerciseIds.filter((id, index) => results[index]);
+      interface Completions {
+        [key: string]: CompletionStatus;
+      }
+
+      const missions = JSON.parse(storedMissions).map((mission: typeof DAILY_MISSIONS[0]): MissionMapping => ({
+        key: mission.title === 'Deep Breathing' 
+          ? 'deep-breathing'
+          : mission.title === 'Active Incantations'
+          ? 'active-incantations'
+          : mission.title === 'Passive Incantations'
+          ? 'passive-incantations'
+          : mission.title === 'Daily Gratitude'
+          ? 'gratitude'
+          : mission.title === 'Golden Checklist'
+          ? 'golden-checklist'
+          : mission.title === 'Gratitude Beads'
+          ? 'gratitude-beads'
+          : mission.title === 'The Sun Breath'
+          ? 'sun-breath'
+          : '',
+        name: mission.title
+      }));
+
+      // Get completion status for each mission
+      const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
+      const completions: Completions = completionsJson ? JSON.parse(completionsJson) : {};
+      const today = new Date().toDateString();
+
+      const completed = missions
+        .filter((mission: MissionMapping) => completions[mission.key]?.date === today)
+        .map((mission: MissionMapping) => mission.key);
+
       setCompletedExercises(completed);
       
-      const percentage = (completed.length / exerciseIds.length) * 100;
+      const percentage = (completed.length / missions.length) * 100;
       setProgressPercentage(percentage);
+
+      console.log('Exercise completions updated:', {
+        completed,
+        percentage,
+        today
+      });
     } catch (error) {
       console.error('Error checking exercise completions:', error);
     }
