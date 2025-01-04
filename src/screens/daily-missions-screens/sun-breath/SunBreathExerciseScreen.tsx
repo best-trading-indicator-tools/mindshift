@@ -49,6 +49,64 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [breatheInSound, setBreatheInSound] = useState<Sound | null>(null);
   const [breatheOutSound, setBreatheOutSound] = useState<Sound | null>(null);
+  const soundsRef = useRef<{ in: Sound | null; out: Sound | null }>({ in: null, out: null });
+
+  const initializeSounds = async () => {
+    try {
+      console.log('🎵 Starting to initialize breath sounds...');
+      
+      // Get the cached sounds from audioService
+      const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
+      console.log('✅ Loaded breathe in sound');
+      
+      const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
+      console.log('✅ Loaded breathe out sound');
+      
+      // Set volume
+      inSound.setVolume(1.0);
+      outSound.setVolume(1.0);
+      console.log('✅ Set volumes to 1.0');
+      
+      // Set number of loops to 0 (play once)
+      inSound.setNumberOfLoops(0);
+      outSound.setNumberOfLoops(0);
+      console.log('✅ Set loops to 0');
+      
+      // Keep reference to sounds
+      soundsRef.current = { in: inSound, out: outSound };
+      
+      // Set the sounds in state
+      setBreatheInSound(inSound);
+      setBreatheOutSound(outSound);
+      
+      // Wait a moment for state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🎵 Breath sounds initialization complete');
+    } catch (error) {
+      console.error('❌ Failed to initialize breath sounds:', error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    // Call initialization
+    console.log('🚀 Starting sound initialization process');
+    initializeSounds();
+
+    // Cleanup on unmount
+    return () => {
+      console.log('🧹 Cleaning up breath sounds');
+      if (breatheInSound) {
+        breatheInSound.stop();
+        console.log('✅ Stopped breathe in sound');
+      }
+      if (breatheOutSound) {
+        breatheOutSound.stop();
+        console.log('✅ Stopped breathe out sound');
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -58,42 +116,6 @@ const SunBreathExerciseScreen: React.FC = () => {
       setCountdown(savedSettings.inhaleSeconds);
     };
     loadSettings();
-  }, []);
-
-  useEffect(() => {
-    const initializeSounds = async () => {
-      try {
-        // Get the cached sounds from audioService
-        const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
-        const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
-        
-        // Set volume
-        inSound.setVolume(1.0);
-        outSound.setVolume(1.0);
-        
-        // Set number of loops to 0 (play once)
-        inSound.setNumberOfLoops(0);
-        outSound.setNumberOfLoops(0);
-        
-        setBreatheInSound(inSound);
-        setBreatheOutSound(outSound);
-        
-        console.log('🎵 Breath sounds initialized in exercise screen');
-      } catch (error) {
-        console.error('Failed to initialize breath sounds:', error);
-      }
-    };
-    initializeSounds();
-
-    // Don't release sounds on unmount since they're managed by audioService
-    return () => {
-      if (breatheInSound) {
-        breatheInSound.stop();
-      }
-      if (breatheOutSound) {
-        breatheOutSound.stop();
-      }
-    };
   }, []);
 
   const handleExit = () => {
@@ -273,37 +295,67 @@ const SunBreathExerciseScreen: React.FC = () => {
   };
 
   const playBreathInSound = () => {
-    if (breatheInSound) {
-      console.log('Playing breathe in sound...');
-      breatheInSound.stop(); // Stop any existing playback
-      breatheInSound.setCurrentTime(0); // Reset to start
-      breatheInSound.play((success) => {
+    const sound = soundsRef.current.in || breatheInSound;
+    if (!sound) {
+      console.error('❌ Cannot play breathe in sound - not initialized');
+      return;
+    }
+
+    console.log('🎵 Playing breathe in sound...');
+    sound.stop(); // Stop any existing playback
+    sound.setCurrentTime(0); // Reset to start
+    
+    // Calculate rate based on user's selected duration (audio is 5s)
+    const rate = 5 / settings.inhaleSeconds;
+    sound.setSpeed(rate);
+    console.log(`🎵 Adjusted breathe in sound speed to ${rate}x for ${settings.inhaleSeconds}s duration`);
+    
+    // Add a small delay before playing
+    setTimeout(() => {
+      if (!sound) {
+        console.error('❌ Breathe in sound was lost during delay');
+        return;
+      }
+      sound.play((success) => {
         if (!success) {
-          console.error('Failed to play breathe in sound');
+          console.error('❌ Failed to play breathe in sound');
         } else {
           console.log('✅ Breathe in sound played successfully');
         }
       });
-    } else {
-      console.warn('Breathe in sound not initialized');
-    }
+    }, 100); // 100ms delay
   };
 
   const playBreathOutSound = () => {
-    if (breatheOutSound) {
-      console.log('Playing breathe out sound...');
-      breatheOutSound.stop(); // Stop any existing playback
-      breatheOutSound.setCurrentTime(0); // Reset to start
-      breatheOutSound.play((success) => {
+    const sound = soundsRef.current.out || breatheOutSound;
+    if (!sound) {
+      console.error('❌ Cannot play breathe out sound - not initialized');
+      return;
+    }
+
+    console.log('🎵 Playing breathe out sound...');
+    sound.stop(); // Stop any existing playback
+    sound.setCurrentTime(0); // Reset to start
+    
+    // Calculate rate based on user's selected duration (audio is 5s)
+    const rate = 5 / settings.exhaleSeconds;
+    sound.setSpeed(rate);
+    console.log(`🎵 Adjusted breathe out sound speed to ${rate}x for ${settings.exhaleSeconds}s duration`);
+    
+    // Add a small delay before playing
+    setTimeout(() => {
+      if (!sound) {
+        console.error('❌ Breathe out sound was lost during delay');
+        return;
+      }
+      sound.play((success) => {
         if (!success) {
-          console.error('Failed to play breathe out sound');
+          console.error('❌ Failed to play breathe out sound');
         } else {
           console.log('✅ Breathe out sound played successfully');
         }
       });
-    } else {
-      console.warn('Breathe out sound not initialized');
-    }
+    }, 100); // 100ms delay
   };
 
   const startBreathingCycle = async (delay = 0, currentSettings = settings) => {
@@ -364,20 +416,25 @@ const SunBreathExerciseScreen: React.FC = () => {
     // Preload both videos before starting
     const preloadVideos = async () => {
       try {
+        console.log('🎥 Starting to preload videos...');
         // Load both videos in parallel
         await Promise.all([
           videoService.getBreathingVideo('inhale', setLoadingState),
           videoService.getBreathingVideo('exhale', setLoadingState)
         ]);
         
-        // Once videos are loaded, start the exercise
+        // Initialize sounds before starting
+        await initializeSounds();
+        
+        // Once everything is loaded, start the exercise
+        console.log('🚀 Starting breathing cycle...');
         startBreathingCycle();
       } catch (error) {
-        console.error('Error preloading videos:', error);
+        console.error('❌ Error preloading resources:', error);
         setLoadingState({
           isLoading: false,
           progress: 0,
-          error: 'Failed to load videos'
+          error: 'Failed to load resources'
         });
       }
     };
