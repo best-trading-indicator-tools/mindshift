@@ -29,6 +29,7 @@ const SunBreathCompleteScreen: React.FC = () => {
     }
   };
 
+  
   return (
     <LinearGradient
       colors={['#F4A261', '#FFB347', '#FFD700']}

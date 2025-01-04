@@ -52,7 +52,6 @@ const SunBreathTutorialScreen: React.FC = () => {
         setIsAudioLoading(false);
       } catch (error) {
         console.error('Error preloading audio:', error);
-        // Handle error appropriately
       }
     };
 
