@@ -28,6 +28,8 @@ export interface VideoLoadingState {
 
 class VideoService {
   private downloadPromises: Map<string, Promise<string>> = new Map();
+  private memoryCache: Map<string, string> = new Map();
+  private preloadComplete: boolean = false;
 
   async setupVideoFile(
     videoFile: VideoFile,
@@ -35,6 +37,17 @@ class VideoService {
   ): Promise<string> {
     const { url, filename } = videoFile;
     const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
+
+    // Check memory cache first for instant access
+    const memoryCached = this.memoryCache.get(filename);
+    if (memoryCached) {
+      onProgress?.({
+        isLoading: false,
+        progress: 1,
+        error: null
+      });
+      return memoryCached;
+    }
 
     try {
       // Check if we already have a download in progress
@@ -50,6 +63,8 @@ class VideoService {
         try {
           const stats = await RNFS.stat(localPath);
           if (stats.size > 0) {
+            // Add to memory cache
+            this.memoryCache.set(filename, localPath);
             return localPath;
           }
           // If file exists but is empty/corrupted, delete it
@@ -74,8 +89,9 @@ class VideoService {
       // Wait for download to complete
       const result = await downloadPromise;
       
-      // Clear the promise from the map
+      // Clear the promise from the map and add to memory cache
       this.downloadPromises.delete(filename);
+      this.memoryCache.set(filename, result);
       
       return result;
     } catch (error) {
@@ -87,6 +103,32 @@ class VideoService {
       });
       throw error;
     }
+  }
+
+  async preloadAllBreathingVideos(): Promise<boolean> {
+    if (this.preloadComplete) return true;
+
+    try {
+      const [inhaleVideo, exhaleVideo] = await Promise.all([
+        this.getBreathingVideo('inhale'),
+        this.getBreathingVideo('exhale')
+      ]);
+
+      // Verify both videos are in memory cache
+      const inhaleInCache = this.memoryCache.has(BREATHING_VIDEOS.RAY_OF_LIGHTS.filename);
+      const exhaleInCache = this.memoryCache.has(BREATHING_VIDEOS.DARK_CLOUDS.filename);
+
+      this.preloadComplete = inhaleInCache && exhaleInCache;
+      return this.preloadComplete;
+    } catch (error) {
+      console.error('Error preloading breathing videos:', error);
+      this.preloadComplete = false;
+      return false;
+    }
+  }
+
+  isPreloadComplete(): boolean {
+    return this.preloadComplete;
   }
 
   private async downloadWithRetry(
@@ -155,8 +197,15 @@ class VideoService {
           const age = now - new Date(stats.mtime).getTime();
           if (age > maxAge) {
             await RNFS.unlink(file.path);
+            // Also clear from memory cache
+            this.memoryCache.delete(file.name);
           }
         }
+      }
+      
+      // If cache was cleared, reset preload status
+      if (this.memoryCache.size === 0) {
+        this.preloadComplete = false;
       }
     } catch (error) {
       console.error('Error cleaning up cache:', error);
