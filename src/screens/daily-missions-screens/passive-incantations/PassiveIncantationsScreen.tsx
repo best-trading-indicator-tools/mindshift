@@ -630,8 +630,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
       const success = await markExerciseAsCompleted(
         'passive-incantations', 
-        'Passive Incantations',
-        validationData
+        'Passive Incantations'        
       );
 
       if (!success) {
