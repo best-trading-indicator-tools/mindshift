@@ -12,8 +12,6 @@ import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../../
 import BreathSettingsModal from '../../../components/BreathSettingsModal';
 import ProgressHeader from '../../../components/ProgressHeader';
 import { tutorialSteps } from './SunBreathTutorialScreen';
-import { audioService, AUDIO_FILES } from '../../../services/audioService';
-import Sound from 'react-native-sound';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -47,66 +45,6 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [breatheInSound, setBreatheInSound] = useState<Sound | null>(null);
-  const [breatheOutSound, setBreatheOutSound] = useState<Sound | null>(null);
-  const soundsRef = useRef<{ in: Sound | null; out: Sound | null }>({ in: null, out: null });
-
-  const initializeSounds = async () => {
-    try {
-      console.log('🎵 Starting to initialize breath sounds...');
-      
-      // Get the cached sounds from audioService
-      const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
-      console.log('✅ Loaded breathe in sound');
-      
-      const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
-      console.log('✅ Loaded breathe out sound');
-      
-      // Set volume
-      inSound.setVolume(1.0);
-      outSound.setVolume(1.0);
-      console.log('✅ Set volumes to 1.0');
-      
-      // Set number of loops to 0 (play once)
-      inSound.setNumberOfLoops(0);
-      outSound.setNumberOfLoops(0);
-      console.log('✅ Set loops to 0');
-      
-      // Keep reference to sounds
-      soundsRef.current = { in: inSound, out: outSound };
-      
-      // Set the sounds in state
-      setBreatheInSound(inSound);
-      setBreatheOutSound(outSound);
-      
-      // Wait a moment for state to update
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('🎵 Breath sounds initialization complete');
-    } catch (error) {
-      console.error('❌ Failed to initialize breath sounds:', error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    // Call initialization
-    console.log('🚀 Starting sound initialization process');
-    initializeSounds();
-
-    // Cleanup on unmount
-    return () => {
-      console.log('🧹 Cleaning up breath sounds');
-      if (breatheInSound) {
-        breatheInSound.stop();
-        console.log('✅ Stopped breathe in sound');
-      }
-      if (breatheOutSound) {
-        breatheOutSound.stop();
-        console.log('✅ Stopped breathe out sound');
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -119,12 +57,6 @@ const SunBreathExerciseScreen: React.FC = () => {
   }, []);
 
   const handleExit = () => {
-    if (breatheInSound) {
-      breatheInSound.stop();
-    }
-    if (breatheOutSound) {
-      breatheOutSound.stop();
-    }
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -204,58 +136,8 @@ const SunBreathExerciseScreen: React.FC = () => {
   const handleExitCancel = () => {
     setShowExitModal(false);
     setIsPaused(false);
-    
-    // Resume video and countdown from current phase
-    if (instruction === 'Breathe In') {
-      loadVideo('inhale');
-      startCountdown(settings.inhaleSeconds * 1000, countdown);
-      
-      // Schedule the remaining phases
-      const remainingInhaleTime = countdown * 1000;
-      
-      const holdTimer = setTimeout(() => {
-        setInstruction('Hold');
-        startCountdown(settings.holdSeconds * 1000);
-      }, remainingInhaleTime);
-      cycleTimersRef.current.push(holdTimer);
-
-      const exhaleTimer = setTimeout(() => {
-        setIsInhaling(false);
-        setInstruction('Breathe Out');
-        startCountdown(settings.exhaleSeconds * 1000);
-        loadVideo('exhale');
-      }, remainingInhaleTime + settings.holdSeconds * 1000);
-      cycleTimersRef.current.push(exhaleTimer);
-
-    } else if (instruction === 'Hold') {
-      startCountdown(settings.holdSeconds * 1000, countdown);
-      
-      const remainingHoldTime = countdown * 1000;
-      
-      const exhaleTimer = setTimeout(() => {
-        setIsInhaling(false);
-        setInstruction('Breathe Out');
-        startCountdown(settings.exhaleSeconds * 1000);
-        loadVideo('exhale');
-      }, remainingHoldTime);
-      cycleTimersRef.current.push(exhaleTimer);
-
-    } else if (instruction === 'Breathe Out') {
-      loadVideo('exhale');
-      startCountdown(settings.exhaleSeconds * 1000, countdown);
-      
-      // If this is the last cycle, schedule completion
-      if (currentCycle === settings.cycles) {
-        const remainingExhaleTime = countdown * 1000;
-        const completeTimer = setTimeout(() => {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-          navigation.push('SunBreathComplete');
-        }, remainingExhaleTime);
-        cycleTimersRef.current.push(completeTimer);
-      }
-    }
+    const elapsedTime = Date.now() - pauseTime;
+    startBreathingCycle(elapsedTime);
   };
 
   const loadVideo = async (type: 'inhale' | 'exhale') => {
@@ -294,70 +176,6 @@ const SunBreathExerciseScreen: React.FC = () => {
     }, 1000);
   };
 
-  const playBreathInSound = () => {
-    const sound = soundsRef.current.in || breatheInSound;
-    if (!sound) {
-      console.error('❌ Cannot play breathe in sound - not initialized');
-      return;
-    }
-
-    console.log('🎵 Playing breathe in sound...');
-    sound.stop(); // Stop any existing playback
-    sound.setCurrentTime(0); // Reset to start
-    
-    // Calculate rate based on user's selected duration (audio is 5s)
-    const rate = 5 / settings.inhaleSeconds;
-    sound.setSpeed(rate);
-    console.log(`🎵 Adjusted breathe in sound speed to ${rate}x for ${settings.inhaleSeconds}s duration`);
-    
-    // Add a small delay before playing
-    setTimeout(() => {
-      if (!sound) {
-        console.error('❌ Breathe in sound was lost during delay');
-        return;
-      }
-      sound.play((success) => {
-        if (!success) {
-          console.error('❌ Failed to play breathe in sound');
-        } else {
-          console.log('✅ Breathe in sound played successfully');
-        }
-      });
-    }, 100); // 100ms delay
-  };
-
-  const playBreathOutSound = () => {
-    const sound = soundsRef.current.out || breatheOutSound;
-    if (!sound) {
-      console.error('❌ Cannot play breathe out sound - not initialized');
-      return;
-    }
-
-    console.log('🎵 Playing breathe out sound...');
-    sound.stop(); // Stop any existing playback
-    sound.setCurrentTime(0); // Reset to start
-    
-    // Calculate rate based on user's selected duration (audio is 5s)
-    const rate = 5 / settings.exhaleSeconds;
-    sound.setSpeed(rate);
-    console.log(`🎵 Adjusted breathe out sound speed to ${rate}x for ${settings.exhaleSeconds}s duration`);
-    
-    // Add a small delay before playing
-    setTimeout(() => {
-      if (!sound) {
-        console.error('❌ Breathe out sound was lost during delay');
-        return;
-      }
-      sound.play((success) => {
-        if (!success) {
-          console.error('❌ Failed to play breathe out sound');
-        } else {
-          console.log('✅ Breathe out sound played successfully');
-        }
-      });
-    }, 100); // 100ms delay
-  };
-
   const startBreathingCycle = async (delay = 0, currentSettings = settings) => {
     try {
       console.log(`🔄 Starting cycle ${currentCycle} of ${currentSettings.cycles}`);
@@ -372,7 +190,6 @@ const SunBreathExerciseScreen: React.FC = () => {
         setInstruction('Breathe In');
         loadVideo('inhale');
         startCountdown(currentSettings.inhaleSeconds * 1000);
-        playBreathInSound();
       }, delay);
       cycleTimersRef.current.push(inhaleTimer);
 
@@ -389,7 +206,6 @@ const SunBreathExerciseScreen: React.FC = () => {
         setInstruction('Breathe Out');
         loadVideo('exhale');
         startCountdown(currentSettings.exhaleSeconds * 1000);
-        playBreathOutSound();
       }, delay + (currentSettings.inhaleSeconds + currentSettings.holdSeconds) * 1000);
       cycleTimersRef.current.push(exhaleTimer);
 
@@ -422,9 +238,6 @@ const SunBreathExerciseScreen: React.FC = () => {
           videoService.getBreathingVideo('inhale', setLoadingState),
           videoService.getBreathingVideo('exhale', setLoadingState)
         ]);
-        
-        // Initialize sounds before starting
-        await initializeSounds();
         
         // Once everything is loaded, start the exercise
         console.log('🚀 Starting breathing cycle...');
