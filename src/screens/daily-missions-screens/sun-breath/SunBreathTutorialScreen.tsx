@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -43,19 +43,25 @@ const SunBreathTutorialScreen: React.FC = () => {
   const [isAudioLoading, setIsAudioLoading] = useState(true);
 
   useEffect(() => {
-    const preloadAudio = async () => {
+    const preloadResources = async () => {
       try {
-        await Promise.all([
+        const [inSound, outSound] = await Promise.all([
           audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN),
           audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT)
         ]);
+
+        // No need for prepare, just release after loading
+        inSound.release();
+        outSound.release();
+
         setIsAudioLoading(false);
       } catch (error) {
-        console.error('Error preloading audio:', error);
+        console.error('Error preloading resources:', error);
+        setIsAudioLoading(false); // Set loading to false even on error
       }
     };
 
-    preloadAudio();
+    preloadResources();
   }, []);
 
   const handleNext = () => {
@@ -95,12 +101,24 @@ const SunBreathTutorialScreen: React.FC = () => {
         <Text style={styles.description}>{currentTutorial.content}</Text>
 
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, isAudioLoading && styles.buttonDisabled]}
           onPress={handleNext}
+          disabled={isAudioLoading}
         >
           <Text style={styles.buttonText}>
-            {currentStep === tutorialSteps.length - 1 ? "Start Exercise" : "Next"}
+            {currentStep === tutorialSteps.length - 1 
+              ? isAudioLoading 
+                ? "Loading..." 
+                : "Start Exercise" 
+              : "Next"}
           </Text>
+          {isAudioLoading && (
+            <ActivityIndicator 
+              size="small" 
+              color="#000" 
+              style={styles.loadingIndicator} 
+            />
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -145,6 +163,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  loadingIndicator: {
+    marginLeft: 8,
   },
 });
 

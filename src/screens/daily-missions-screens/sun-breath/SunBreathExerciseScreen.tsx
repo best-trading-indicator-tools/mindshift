@@ -235,6 +235,28 @@ const SunBreathExerciseScreen: React.FC = () => {
     }, 1000);
   };
 
+  const playBreathInSound = () => {
+    if (breatheInSound) {
+      breatheInSound.stop();
+      breatheInSound.play((success) => {
+        if (!success) {
+          console.error('Failed to play breathe in sound');
+        }
+      });
+    }
+  };
+
+  const playBreathOutSound = () => {
+    if (breatheOutSound) {
+      breatheOutSound.stop();
+      breatheOutSound.play((success) => {
+        if (!success) {
+          console.error('Failed to play breathe out sound');
+        }
+      });
+    }
+  };
+
   const startBreathingCycle = (pauseDuration: number = 0, overrideSettings?: BreathSettings) => {
     // Clear any existing timers
     cycleTimersRef.current.forEach(timer => clearTimeout(timer));
@@ -252,21 +274,17 @@ const SunBreathExerciseScreen: React.FC = () => {
     const holdMs = activeSettings.holdSeconds * 1000;
     const exhaleMs = activeSettings.exhaleSeconds * 1000;
 
+    // Play sound first, then update states
+    playBreathInSound();
+    
     // Start with inhale
     setIsInhaling(true);
     setInstruction('Breathe In');
     loadVideo('inhale');
     startCountdown(inhaleMs);
-    if (breatheInSound) {
-      breatheInSound.stop();
-      breatheInSound.play();
-    }
     
     // Schedule the state changes with adjusted times
     const holdTimer = setTimeout(() => {
-      if (breatheInSound) {
-        breatheInSound.stop();
-      }
       setInstruction('Hold');
       startCountdown(holdMs);
     }, inhaleMs - pauseDuration);
@@ -277,10 +295,7 @@ const SunBreathExerciseScreen: React.FC = () => {
       setInstruction('Breathe Out');
       startCountdown(exhaleMs);
       loadVideo('exhale');
-      if (breatheOutSound) {
-        breatheOutSound.stop();
-        breatheOutSound.play();
-      }
+      playBreathOutSound(); // Play exhale sound
       
       // If this is the last cycle, schedule navigation after exhale
       if (currentCycle === activeSettings.cycles) {
@@ -341,22 +356,26 @@ const SunBreathExerciseScreen: React.FC = () => {
       try {
         const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
         const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
+        
+        // Configure sounds
+        inSound.setVolume(1.0);
+        outSound.setVolume(1.0);
+        
         setBreatheInSound(inSound);
         setBreatheOutSound(outSound);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading breath sounds:', error);
       }
     };
 
     initAudio();
 
-    // Cleanup
     return () => {
       if (breatheInSound) {
-        audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_IN.filename);
+        breatheInSound.release();
       }
       if (breatheOutSound) {
-        audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_OUT.filename);
+        breatheOutSound.release();
       }
     };
   }, []);

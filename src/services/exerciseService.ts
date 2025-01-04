@@ -1,6 +1,7 @@
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addNotification } from './notificationService';
+import firestore from '@react-native-firebase/firestore';
 
 const EXERCISE_COMPLETION_KEY = 'exercise_completions';
 
@@ -27,41 +28,25 @@ const getStorageKey = (exerciseType: string, date: Date) => {
   return `exercise_${userId}_${exerciseType}_${date.toISOString().split('T')[0]}`;
 };
 
-export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string, validationData?: { hasRecordings?: boolean; hasListened?: boolean }) => {
+export const markExerciseAsCompleted = async (exerciseId: string, exerciseName: string): Promise<boolean> => {
   try {
-    // For passive-incantations, validate the required conditions
-    if (exerciseId === 'passive-incantations') {
-      if (!validationData?.hasRecordings || !validationData?.hasListened) {
-        return false; // Return false instead of throwing error
-      }
-    }
+    const user = auth().currentUser;
+    if (!user) return false;
 
-    const today = new Date().toDateString();
-    const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
-    const completions = completionsJson ? JSON.parse(completionsJson) : {};
+    const today = new Date();
+    const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
     
-    // Check if already completed today before doing anything
-    if (completions[exerciseId]?.date === today) {
-      return true; // Already completed today, just return success without sending notification
-    }
+    await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('exerciseCompletions')
+      .doc(exerciseId)
+      .set({
+        lastCompletedDate: dateString,
+        exerciseName,
+        timestamp: firestore.FieldValue.serverTimestamp()
+      });
 
-    // Update completion status first
-    completions[exerciseId] = { date: today };
-    await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify(completions));
-    
-    // Send completion notification if this is the first completion today
-    await addNotification({
-      id: `completion-${exerciseId}-${Date.now()}`,
-      title: exerciseId === 'vision-board' ? 'Vision Board Created!' : 'Well Done!',
-      message: exerciseId === 'vision-board' 
-        ? `Congratulations on creating your vision board! You're one step closer to manifesting your dreams.`
-        : `You've completed your ${exerciseName} exercise. Keep up the great work!`,
-      type: 'success'
-    });
-
-    // Check overall daily progress after both storage update and completion notification
-    await checkDailyProgress();
-    
     return true;
   } catch (error) {
     console.error('Error marking exercise as completed:', error);

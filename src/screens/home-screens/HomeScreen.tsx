@@ -15,6 +15,7 @@ import MissionItem from '../../components/MissionItem';
 import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData } from '../../services/exerciseService';
 import { clearNotifications } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ResourcePreloadService } from '../../services/resourcePreloadService';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -185,28 +186,29 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Function to select random missions for the day
   const selectDailyMissions = async () => {
     try {
-      // Check if we already have missions selected for today
+      const today = getTodayString();
+      
+      // Select new missions only if we don't have today's missions
       const lastUpdateDate = await AsyncStorage.getItem('lastMissionsUpdateDate');
       const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
-      const today = getTodayString();
 
       if (lastUpdateDate === today && storedMissions) {
-        // If we have missions for today, use them
+        // Use existing missions
         setDailyMissions(JSON.parse(storedMissions));
-      } else {
-        // Select 5 random missions
-        const shuffledMissions = shuffleArray(DAILY_MISSIONS);
-        const selectedMissions = shuffledMissions.slice(0, MISSIONS_PER_DAY);
-        
-        // Store the selected missions and update date
-        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(selectedMissions));
-        await AsyncStorage.setItem('lastMissionsUpdateDate', today);
-        
-        setDailyMissions(selectedMissions);
+        return;
       }
+
+      // Select new missions
+      const shuffledMissions = shuffleArray(DAILY_MISSIONS);
+      const selectedMissions = shuffledMissions.slice(0, MISSIONS_PER_DAY);
+      
+      // Store the selected missions and update date
+      await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(selectedMissions));
+      await AsyncStorage.setItem('lastMissionsUpdateDate', today);
+      
+      setDailyMissions(selectedMissions);
     } catch (error) {
       console.error('Error selecting daily missions:', error);
-      // Fallback to first 5 missions if there's an error
       setDailyMissions(DAILY_MISSIONS.slice(0, MISSIONS_PER_DAY));
     }
   };
@@ -230,18 +232,31 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     getCurrentUser();
   }, []);
 
-  // Update initial load useEffect
+  // Update initializeApp to only call selectDailyMissions if needed
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Force clear stored missions to ensure we start fresh
-        await AsyncStorage.removeItem('selectedDailyMissions');
-        await AsyncStorage.removeItem('lastMissionsUpdateDate');
-        
+        // First check if we have today's missions
+        const lastUpdateDate = await AsyncStorage.getItem('lastMissionsUpdateDate');
+        const today = getTodayString();
+
+        // Only select new missions if it's a new day or no missions exist
+        if (lastUpdateDate !== today) {
+          await selectDailyMissions();
+        } else {
+          // Load existing missions
+          const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+          if (storedMissions) {
+            setDailyMissions(JSON.parse(storedMissions));
+          } else {
+            // If somehow we have a date but no missions, select new ones
+            await selectDailyMissions();
+          }
+        }
+
         await checkExerciseCompletions();
         await loadStreak();
         await updateProgress();
-        await selectDailyMissions();
       } catch (error) {
         console.error('Error initializing app:', error);
       }
@@ -250,7 +265,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     initializeApp();
   }, []);
 
-  // Update focus listener useEffect
+  // Update focus listener to NOT select new missions
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (auth().currentUser && !isCheckingRef.current) {
@@ -258,8 +273,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         Promise.all([
           checkExerciseCompletions(),
           loadStreak(),
-          updateProgress(),
-          selectDailyMissions()
+          updateProgress()
         ]).finally(() => {
           isCheckingRef.current = false;
         });
@@ -277,11 +291,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      console.log('Checking exercise completions for user:', currentUser.uid);
-      
-      // Get completion status for all exercises
       const exerciseIds = dailyMissions.map(mission => {
         switch (mission.title) {
+          case 'The Sun Breath':
+            return 'sun-breath';
           case 'Deep Breathing':
             return 'deep-breathing';
           case 'Daily Gratitude':
@@ -294,8 +307,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             return 'golden-checklist';
           case 'Gratitude Beads':
             return 'gratitude-beads';
-          case 'The Sun Breath':
-            return 'sun-breath';
           default:
             return null;
         }
@@ -308,9 +319,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       const completed = exerciseIds.filter((id, index) => results[index]);
       setCompletedExercises(completed);
       
+      const percentage = (completed.length / exerciseIds.length) * 100;
+      setProgressPercentage(percentage);
     } catch (error) {
-      console.error('Error checking exercise completion:', error);
-      console.error('Error details:', JSON.stringify(error));
+      console.error('Error checking exercise completions:', error);
     }
   };
 
@@ -510,6 +522,20 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       </TouchableOpacity>
     ));
   };
+
+  useEffect(() => {
+    const preloadResourcesIfNeeded = async () => {
+      if (dailyMissions.some(mission => mission.title === 'The Sun Breath')) {
+        try {
+          await ResourcePreloadService.preloadSunBreathResources();
+        } catch (error) {
+          console.error('Failed to preload sun breath resources:', error);
+        }
+      }
+    };
+
+    preloadResourcesIfNeeded();
+  }, [dailyMissions]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
