@@ -215,13 +215,17 @@ const SunBreathExerciseScreen: React.FC = () => {
       // Schedule next cycle or completion
       const cycleTime = (currentSettings.inhaleSeconds + currentSettings.holdSeconds + currentSettings.exhaleSeconds) * 1000;
       const nextCycleTimer = setTimeout(() => {
+        console.log(`🔄 Current cycle: ${currentCycle}, Total cycles: ${currentSettings.cycles}`);
         if (currentCycle < currentSettings.cycles) {
-          //console.log(`✅ Completed cycle ${currentCycle}, starting next cycle`);
+          console.log(`✅ Starting cycle ${currentCycle + 1}`);
           setCurrentCycle(prev => prev + 1);
           startBreathingCycle(0, currentSettings);
         } else {
-          //console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
-          navigation.push('SunBreathComplete');
+          console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
+          if (!isNavigating.current) {
+            isNavigating.current = true;
+            navigation.push('SunBreathComplete');
+          }
         }
       }, delay + cycleTime);
       cycleTimersRef.current.push(nextCycleTimer);
