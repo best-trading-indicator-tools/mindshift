@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Video from 'react-native-video';
@@ -45,6 +45,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const isNavigating = useRef(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -57,16 +58,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   }, []);
 
   const handleExit = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    // Clear all scheduled timers
-    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
-    cycleTimersRef.current = [];
-    
-    setPauseTime(Date.now());
-    setIsPaused(true);
-    setShowExitModal(true);
+    navigation.navigate('MainTabs');
   };
 
   const handleSettings = () => {
@@ -126,11 +118,9 @@ const SunBreathExerciseScreen: React.FC = () => {
   };
 
   const handleExitConfirm = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    setIsPaused(true);
-    navigation.navigate('MainTabs');
+    isNavigating.current = true;
+    setShowExitModal(false);
+    navigation.goBack();
   };
 
   const handleExitCancel = () => {
