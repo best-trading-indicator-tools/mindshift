@@ -194,23 +194,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         // If we have missions for today, use them
         setDailyMissions(JSON.parse(storedMissions));
       } else {
-        // Get all missions except The Sun Breath
-        const otherMissions = DAILY_MISSIONS.filter(m => m.title !== 'The Sun Breath');
-        // Get The Sun Breath
-        const sunBreath = DAILY_MISSIONS.find(m => m.title === 'The Sun Breath')!;
-        
-        // Select 5 random missions from other missions
-        const shuffledMissions = shuffleArray(otherMissions);
+        // Select 5 random missions
+        const shuffledMissions = shuffleArray(DAILY_MISSIONS);
         const selectedMissions = shuffledMissions.slice(0, MISSIONS_PER_DAY);
         
-        // Add The Sun Breath as the 6th mission
-        const finalMissions = [...selectedMissions, sunBreath];
-        
         // Store the selected missions and update date
-        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(finalMissions));
+        await AsyncStorage.setItem('selectedDailyMissions', JSON.stringify(selectedMissions));
         await AsyncStorage.setItem('lastMissionsUpdateDate', today);
         
-        setDailyMissions(finalMissions);
+        setDailyMissions(selectedMissions);
       }
     } catch (error) {
       console.error('Error selecting daily missions:', error);
@@ -240,10 +232,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Update initial load useEffect
   useEffect(() => {
-    checkExerciseCompletions();
-    loadStreak();
-    updateProgress();
-    selectDailyMissions();
+    const initializeApp = async () => {
+      try {
+        // Force clear stored missions to ensure we start fresh
+        await AsyncStorage.removeItem('selectedDailyMissions');
+        await AsyncStorage.removeItem('lastMissionsUpdateDate');
+        
+        await checkExerciseCompletions();
+        await loadStreak();
+        await updateProgress();
+        await selectDailyMissions();
+      } catch (error) {
+        console.error('Error initializing app:', error);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   // Update focus listener useEffect
