@@ -60,12 +60,19 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.description}>{currentContent.content}</Text>
         </View>
         
-        {isLastStep && (
+        {isLastStep ? (
           <TouchableOpacity
             style={styles.startButton}
             onPress={() => navigation.push('ManageActiveIncantations')}
           >
             <Text style={styles.startButtonText}>Start Practice</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextButtonText}>Next</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -109,9 +116,24 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: '100%',
     maxWidth: 300,
-    marginBottom: 80,
+    marginBottom: 40,
   },
   startButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  nextButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    width: '100%',
+    maxWidth: 300,
+    marginBottom: 100,
+  },
+  nextButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
