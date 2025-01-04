@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -12,6 +12,7 @@ import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../../
 import BreathSettingsModal from '../../../components/BreathSettingsModal';
 import ProgressHeader from '../../../components/ProgressHeader';
 import { tutorialSteps } from './SunBreathTutorialScreen';
+import LinearGradient from 'react-native-linear-gradient';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -42,7 +43,6 @@ const SunBreathExerciseScreen: React.FC = () => {
   const videoRef = useRef<React.ComponentRef<typeof Video>>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const isNavigating = useRef(false);
@@ -58,7 +58,22 @@ const SunBreathExerciseScreen: React.FC = () => {
   }, []);
 
   const handleExit = () => {
-    navigation.navigate('MainTabs');
+    console.log('🔴 Exit button clicked');
+    
+    // Pause video immediately
+    setIsPaused(true);
+    
+    // Clear timers
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      console.log('🔴 Cleared timer ref');
+    }
+    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+    cycleTimersRef.current = [];
+    console.log('🔴 Cleared cycle timers');
+    
+    setShowExitModal(true);
+    console.log('🔴 Showed exit modal');
   };
 
   const handleSettings = () => {
@@ -69,7 +84,6 @@ const SunBreathExerciseScreen: React.FC = () => {
     cycleTimersRef.current.forEach(timer => clearTimeout(timer));
     cycleTimersRef.current = [];
     
-    setPauseTime(Date.now());
     setIsPaused(true);
     setShowSettingsModal(true);
   };
@@ -126,8 +140,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   const handleExitCancel = () => {
     setShowExitModal(false);
     setIsPaused(false);
-    const elapsedTime = Date.now() - pauseTime;
-    startBreathingCycle(elapsedTime);
+    startBreathingCycle(0);
   };
 
   const loadVideo = async (type: 'inhale' | 'exhale') => {
@@ -203,11 +216,11 @@ const SunBreathExerciseScreen: React.FC = () => {
       const cycleTime = (currentSettings.inhaleSeconds + currentSettings.holdSeconds + currentSettings.exhaleSeconds) * 1000;
       const nextCycleTimer = setTimeout(() => {
         if (currentCycle < currentSettings.cycles) {
-          console.log(`✅ Completed cycle ${currentCycle}, starting next cycle`);
+          //console.log(`✅ Completed cycle ${currentCycle}, starting next cycle`);
           setCurrentCycle(prev => prev + 1);
           startBreathingCycle(0, currentSettings);
         } else {
-          console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
+          //console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
           navigation.push('SunBreathComplete');
         }
       }, delay + cycleTime);
@@ -260,6 +273,29 @@ const SunBreathExerciseScreen: React.FC = () => {
       : 'Release dark clouds of negativity, letting go of any tension or stress.';
   };
 
+  // Add useEffect to monitor isPaused changes
+  useEffect(() => {
+    console.log('🔄 isPaused changed to:', isPaused);
+  }, [isPaused]);
+
+  // Add effect to monitor video state
+  useEffect(() => {
+    console.log('🎥 Video state changed:', {
+      isPaused,
+      videoPath,
+      hasVideoRef: !!videoRef.current
+    });
+  }, [isPaused, videoPath]);
+
+  // Add effect to handle video state changes
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPaused) {
+        videoRef.current.seek(0);
+      }
+    }
+  }, [isPaused]);
+
   if (loadingState.error) {
     return (
       <SafeAreaView style={styles.container}>
@@ -296,17 +332,51 @@ const SunBreathExerciseScreen: React.FC = () => {
             repeat={true}
             muted={true}
             paused={isPaused}
+            onPlaybackRateChange={(event) => {
+              console.log('🎥 Video playback rate changed:', event);
+            }}
+            onLoad={() => {
+              console.log('🎥 Video loaded, current isPaused:', isPaused);
+            }}
+            onError={(error) => console.log('🎥 Video error:', error)}
           />
         )}
       </View>
       
       <SafeAreaView style={styles.overlay}>
-        <ProgressHeader
-          currentStep={tutorialSteps.length + 1}
-          totalSteps={TOTAL_STEPS}
-          onExit={handleExit}
-          showNext={false}
-        />
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => {
+              console.log('🔴 Exit button clicked');
+              setIsPaused(true);
+              setShowExitModal(true);
+            }}
+          >
+            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBackground}>
+              <View style={[styles.progressWrapper, { width: `${((tutorialSteps.length + 1) / TOTAL_STEPS) * 100}%` }]}>
+                <View style={styles.progressBase} />
+                <LinearGradient
+                  colors={[
+                    'rgba(255, 255, 255, 0.7)',
+                    'rgba(255, 255, 255, 0.3)',
+                    'rgba(255, 215, 0, 0)',
+                  ]}
+                  locations={[0, 0.3, 1]}
+                  style={styles.progressSheen}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.headerButtonPlaceholder} />
+        </View>
 
         <TouchableOpacity 
           style={styles.settingsButton}
@@ -345,11 +415,36 @@ const SunBreathExerciseScreen: React.FC = () => {
         onSave={handleSettingsSave}
       />
 
-      <ExitModal
+      <Modal
         visible={showExitModal}
-        onContinue={handleExitCancel}
-        onExit={handleExitConfirm}
-      />
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowExitModal(false);
+          setIsPaused(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              You're making progress! Continue practicing to maintain your results.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleExitCancel}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exitButton}
+              onPress={handleExitConfirm}
+            >
+              <Text style={styles.exitText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -464,6 +559,110 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  exitButton: {
+    backgroundColor: '#E31837',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingTop: 52,
+    width: '100%',
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2C2C2E',
+    borderRadius: 22,
+  },
+  headerButtonPlaceholder: {
+    width: 44,
+    height: 44,
+  },
+  progressContainer: {
+    flex: 1,
+    marginHorizontal: 16,
+  },
+  progressBackground: {
+    height: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  progressWrapper: {
+    height: '100%',
+    borderRadius: 6,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  progressBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFD700',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  progressSheen: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.7,
   },
 });
 
