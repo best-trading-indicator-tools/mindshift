@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-na
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import ProgressHeader from '../../components/ProgressHeader';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import ProgressHeader from '../../../components/ProgressHeader';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTutorial'>;
 

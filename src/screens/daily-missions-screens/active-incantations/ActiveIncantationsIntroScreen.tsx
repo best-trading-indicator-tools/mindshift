@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import ProgressHeader from '../../components/ProgressHeader';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import ProgressHeader from '../../../components/ProgressHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsIntro'>;
 
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: '100%',
     maxWidth: 300,
-    marginBottom: 40,
+    marginBottom: 120,
   },
   startButtonText: {
     color: '#FFFFFF',

@@ -26,8 +26,8 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../../services/exerciseService';
-import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../../services/affirmationService';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
+import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../../../services/affirmationService';
 import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,
   AVEncodingOption,
@@ -44,7 +44,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Sound from 'react-native-sound';
-import { audioService, AUDIO_FILES } from '../../services/audioService';
+import { audioService, AUDIO_FILES } from '../../../services/audioService';
 
 const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
@@ -94,9 +94,9 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [showExitModal, setShowExitModal] = useState(false);
 
   const backgroundImages = [
-    require('../../assets/illustrations/zen1.jpg'),
-    require('../../assets/illustrations/zen2.jpg'),
-    require('../../assets/illustrations/zen3.jpg'),
+    require('../../../assets/illustrations/zen1.jpg'),
+    require('../../../assets/illustrations/zen2.jpg'),
+    require('../../../assets/illustrations/zen3.jpg'),
   ];
 
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
@@ -1647,7 +1647,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../../assets/illustrations/icons/spotify.png')}
+                source={require('../../../assets/illustrations/icons/spotify.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>Spotify</Text>
@@ -1667,7 +1667,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../../assets/illustrations/icons/applemusic.png')}
+                source={require('../../../assets/illustrations/icons/applemusic.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>Apple Music</Text>
@@ -1687,7 +1687,7 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <Image
-                source={require('../../assets/illustrations/icons/soundcloud.png')}
+                source={require('../../../assets/illustrations/icons/soundcloud.png')}
                 style={styles.musicAppIcon}
               />
               <Text style={styles.musicAppName}>SoundCloud</Text>

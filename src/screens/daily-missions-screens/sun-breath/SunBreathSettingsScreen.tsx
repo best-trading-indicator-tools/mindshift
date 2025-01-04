@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
-import { getBreathSettings, saveBreathSettings, resetBreathSettings, BreathSettings } from '../../services/breathSettingsService';
-import { RootStackParamList } from '../../navigation/AppNavigator';
+import { getBreathSettings, saveBreathSettings, resetBreathSettings, BreathSettings } from '../../../services/breathSettingsService';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathSettings'>;
 

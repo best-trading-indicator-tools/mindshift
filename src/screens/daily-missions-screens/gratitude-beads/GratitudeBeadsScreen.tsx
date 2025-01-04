@@ -13,12 +13,12 @@ import {
   Vibration,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import Svg, { Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
-import { audioService, AUDIO_FILES } from '../../services/audioService';
+import { audioService, AUDIO_FILES } from '../../../services/audioService';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');

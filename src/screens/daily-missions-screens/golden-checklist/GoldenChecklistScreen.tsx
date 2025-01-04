@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;

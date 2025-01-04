@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
 

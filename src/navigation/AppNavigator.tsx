@@ -14,12 +14,12 @@ import NotificationsScreen from '../screens/home-screens/NotificationsScreen';
 import SupportScreen from '../screens/profile-page-screens/SupportScreen';
 import LoginScreen from '../screens/onboarding-screens/LoginScreen';
 import DeepBreathingScreen from '../screens/daily-missions-screens/DeepBreathingScreen';
-import PassiveIncantationsScreen from '../screens/daily-missions-screens/PassiveIncantationsScreen';
-import GoldenChecklistScreen from '../screens/daily-missions-screens/GoldenChecklistScreen';
+import PassiveIncantationsScreen from '../screens/daily-missions-screens/passive-incantations/PassiveIncantationsScreen';
+import GoldenChecklistScreen from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistScreen';
 import VisionBoardScreen from '../screens/caroussel-challenges-screens/VisionBoardScreen';
 import VisionBoardSectionsScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionsScreen';
 import VisionBoardSectionPhotosScreen from '../screens/caroussel-challenges-screens/VisionBoardSectionPhotosScreen';
-import MusicSelectionScreen from '../screens/daily-missions-screens/MusicSelectionScreen';
+import MusicSelectionScreen from '../screens/daily-missions-screens/passive-incantations/MusicSelectionScreen';
 import NewVisionBoardSection from '../screens/caroussel-challenges-screens/NewVisionBoardSection';
 import { default as VisionBoardEditSectionNameScreen } from '../screens/caroussel-challenges-screens/VisionBoardEditSectionNameScreen';
 import MentorBoardScreen from '../screens/caroussel-challenges-screens/MentorBoardScreen';
@@ -28,22 +28,22 @@ import MentorBoardIntroScreen from '../screens/caroussel-challenges-screens/Ment
 import VisionBoardIntroScreen from '../screens/caroussel-challenges-screens/VisionBoardIntroScreen';
 import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/daily-missions-screens/DeepBreathingIntroScreen';
-import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/PassiveIncantationsIntroScreen';
-import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/GoldenChecklistIntroScreen';
+import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/passive-incantations/PassiveIncantationsIntroScreen';
+import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistIntroScreen';
 import QuestionnaireScreen from '../screens/onboarding-screens/QuestionnaireScreen';
 import TrialScreen from '../screens/onboarding-screens/TrialScreen';
 import PostQuestionnaireScreen from '../screens/onboarding-screens/PostQuestionnaireScreen';
 import PreQuestionnaireScreen from '../screens/onboarding-screens/PreQuestionnaireScreen';
 import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
-import GratitudeBeadsScreen from '../screens/daily-missions-screens/GratitudeBeadsScreen';
-import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/GratitudeBeadsIntroScreen';
-import SunBreathTutorialScreen from '../screens/daily-missions-screens/SunBreathTutorialScreen';
-import SunBreathExerciseScreen from '../screens/daily-missions-screens/SunBreathExerciseScreen';
-import SunBreathCompleteScreen from '../screens/daily-missions-screens/SunBreathCompleteScreen';
-import SunBreathSettingsScreen from '../screens/daily-missions-screens/SunBreathSettingsScreen';
-import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/ManageActiveIncantationsScreen';
-import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/ActiveIncantationsExerciseScreen';
-import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/ActiveIncantationsIntroScreen';
+import GratitudeBeadsScreen from '../screens/daily-missions-screens/gratitude-beads/GratitudeBeadsScreen';
+import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/gratitude-beads/GratitudeBeadsIntroScreen';
+import SunBreathTutorialScreen from '../screens/daily-missions-screens/sun-breath/SunBreathTutorialScreen';
+import SunBreathExerciseScreen from '../screens/daily-missions-screens/sun-breath/SunBreathExerciseScreen';
+import SunBreathCompleteScreen from '../screens/daily-missions-screens/sun-breath/SunBreathCompleteScreen';
+import SunBreathSettingsScreen from '../screens/daily-missions-screens/sun-breath/SunBreathSettingsScreen';
+import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/active-incantations/ManageActiveIncantationsScreen';
+import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/active-incantations/ActiveIncantationsExerciseScreen';
+import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/active-incantations/ActiveIncantationsIntroScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -333,7 +333,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
-        
+
         <Stack.Screen 
           name="ManageActiveIncantations" 
           component={ManageActiveIncantationsScreen}
