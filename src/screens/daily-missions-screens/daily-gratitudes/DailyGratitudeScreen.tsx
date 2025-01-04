@@ -16,7 +16,7 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../../../services/exerciseService';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitude'>;
 
 const MIN_ENTRIES = 10;
 

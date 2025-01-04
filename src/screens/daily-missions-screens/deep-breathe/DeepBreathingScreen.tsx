@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import BreathingAnimation from '../../components/BreathingAnimation';
-import ExitExerciseButton from '../../components/ExitExerciseButton';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import BreathingAnimation from '../../../components/BreathingAnimation';
+import ExitExerciseButton from '../../../components/ExitExerciseButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
