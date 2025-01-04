@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity, Act
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Video, { VideoRef } from 'react-native-video';
+import Video from 'react-native-video';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ExitModal from '../../../components/ExitModal';
 import { videoService, VideoLoadingState } from '../../../services/videoService';
@@ -41,7 +41,7 @@ const SunBreathExerciseScreen: React.FC = () => {
     exhaleSeconds: 6,
     cycles: 1,
   });
-  const videoRef = useRef<VideoRef>(null);
+  const videoRef = useRef<React.ComponentRef<typeof Video>>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pauseTime, setPauseTime] = useState<number>(0);
