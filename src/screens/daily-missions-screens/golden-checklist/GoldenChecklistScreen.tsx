@@ -361,7 +361,7 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
   const handleComplete = async () => {
     if (checkedItems.length === CHECKLIST_ITEMS.length) {
       await markExerciseAsCompleted('golden-checklist', 'Golden Checklist');
-      navigation.goBack();
+      navigation.navigate('MainTabs');
     }
   };
 
