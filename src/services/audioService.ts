@@ -187,7 +187,16 @@ class AudioService {
             reject(error);
             return;
           }
+          
+          // Configure sound
+          sound.setCategory('Playback');
+          sound.setVolume(1.0);
+          sound.setNumberOfLoops(0);
+          
+          // Cache the sound instance
           this.soundInstances.set(audioFile.filename, sound);
+          console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
+          
           resolve(sound);
         });
       });

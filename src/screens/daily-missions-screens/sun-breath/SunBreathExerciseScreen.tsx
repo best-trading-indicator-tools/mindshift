@@ -39,7 +39,7 @@ const SunBreathExerciseScreen: React.FC = () => {
     inhaleSeconds: 4,
     holdSeconds: 1,
     exhaleSeconds: 6,
-    cycles: 1,
+    cycles: 5,
   });
   const videoRef = useRef<React.ComponentRef<typeof Video>>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,6 +53,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   useEffect(() => {
     const loadSettings = async () => {
       const savedSettings = await getBreathSettings();
+      console.log('📱 Loaded breath settings:', savedSettings);
       setSettings(savedSettings);
       setCountdown(savedSettings.inhaleSeconds);
     };
@@ -62,20 +63,36 @@ const SunBreathExerciseScreen: React.FC = () => {
   useEffect(() => {
     const initializeSounds = async () => {
       try {
+        // Get the cached sounds from audioService
         const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
         const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
+        
+        // Set volume
+        inSound.setVolume(1.0);
+        outSound.setVolume(1.0);
+        
+        // Set number of loops to 0 (play once)
+        inSound.setNumberOfLoops(0);
+        outSound.setNumberOfLoops(0);
+        
         setBreatheInSound(inSound);
         setBreatheOutSound(outSound);
+        
+        console.log('🎵 Breath sounds initialized in exercise screen');
       } catch (error) {
         console.error('Failed to initialize breath sounds:', error);
       }
     };
     initializeSounds();
 
-    // Cleanup sounds when component unmounts
+    // Don't release sounds on unmount since they're managed by audioService
     return () => {
-      audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_IN.filename);
-      audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_OUT.filename);
+      if (breatheInSound) {
+        breatheInSound.stop();
+      }
+      if (breatheOutSound) {
+        breatheOutSound.stop();
+      }
     };
   }, []);
 
@@ -257,28 +274,42 @@ const SunBreathExerciseScreen: React.FC = () => {
 
   const playBreathInSound = () => {
     if (breatheInSound) {
-      breatheInSound.stop();
+      console.log('Playing breathe in sound...');
+      breatheInSound.stop(); // Stop any existing playback
+      breatheInSound.setCurrentTime(0); // Reset to start
       breatheInSound.play((success) => {
         if (!success) {
           console.error('Failed to play breathe in sound');
+        } else {
+          console.log('✅ Breathe in sound played successfully');
         }
       });
+    } else {
+      console.warn('Breathe in sound not initialized');
     }
   };
 
   const playBreathOutSound = () => {
     if (breatheOutSound) {
-      breatheOutSound.stop();
+      console.log('Playing breathe out sound...');
+      breatheOutSound.stop(); // Stop any existing playback
+      breatheOutSound.setCurrentTime(0); // Reset to start
       breatheOutSound.play((success) => {
         if (!success) {
           console.error('Failed to play breathe out sound');
+        } else {
+          console.log('✅ Breathe out sound played successfully');
         }
       });
+    } else {
+      console.warn('Breathe out sound not initialized');
     }
   };
 
   const startBreathingCycle = async (delay = 0, currentSettings = settings) => {
     try {
+      console.log(`🔄 Starting cycle ${currentCycle} of ${currentSettings.cycles}`);
+      
       // Clear any existing timers
       cycleTimersRef.current.forEach(timer => clearTimeout(timer));
       cycleTimersRef.current = [];
@@ -314,9 +345,11 @@ const SunBreathExerciseScreen: React.FC = () => {
       const cycleTime = (currentSettings.inhaleSeconds + currentSettings.holdSeconds + currentSettings.exhaleSeconds) * 1000;
       const nextCycleTimer = setTimeout(() => {
         if (currentCycle < currentSettings.cycles) {
+          console.log(`✅ Completed cycle ${currentCycle}, starting next cycle`);
           setCurrentCycle(prev => prev + 1);
           startBreathingCycle(0, currentSettings);
         } else {
+          console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
           navigation.push('SunBreathComplete');
         }
       }, delay + cycleTime);

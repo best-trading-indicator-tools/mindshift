@@ -204,7 +204,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         
         // Check if Sun Breath is in today's missions and preload if needed
         if (missions.some((mission: { title: string }) => mission.title === 'The Sun Breath')) {
-          ResourcePreloadService.preloadSunBreathResources().catch(console.error);
+          console.log('🌞 Sun Breath found in today\'s missions, starting resource preload...');
+          ResourcePreloadService.preloadSunBreathResources().catch(error => {
+            console.error('❌ Failed to preload Sun Breath resources:', error);
+          });
+        } else {
+          console.log('ℹ️ Sun Breath not in today\'s missions, skipping preload');
         }
         return;
       }
@@ -221,7 +226,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       // If Sun Breath is selected, preload its resources
       if (selectedMissions.some((mission: { title: string }) => mission.title === 'The Sun Breath')) {
-        ResourcePreloadService.preloadSunBreathResources().catch(console.error);
+        console.log('🌞 Sun Breath selected for today\'s missions, starting resource preload...');
+        ResourcePreloadService.preloadSunBreathResources().catch(error => {
+          console.error('❌ Failed to preload Sun Breath resources:', error);
+        });
+      } else {
+        console.log('ℹ️ Sun Breath not selected for today\'s missions, skipping preload');
       }
     } catch (error) {
       console.error('Error selecting daily missions:', error);
