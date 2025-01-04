@@ -26,7 +26,7 @@ import MentorBoardScreen from '../screens/caroussel-challenges-screens/MentorBoa
 import MentorBoardDetailsScreen from '../screens/caroussel-challenges-screens/MentorBoardDetailsScreen';
 import MentorBoardIntroScreen from '../screens/caroussel-challenges-screens/MentorBoardIntroScreen';
 import VisionBoardIntroScreen from '../screens/caroussel-challenges-screens/VisionBoardIntroScreen';
-import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/DailyGratitudeIntroScreen';
+import DailyGratitudeIntroScreen from '../screens/daily-missions-screens/daily-gratitude/DailyGratitudeIntroScreen';
 import DeepBreathingIntroScreen from '../screens/daily-missions-screens/DeepBreathingIntroScreen';
 import PassiveIncantationsIntroScreen from '../screens/daily-missions-screens/passive-incantations/PassiveIncantationsIntroScreen';
 import GoldenChecklistIntroScreen from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistIntroScreen';
@@ -34,7 +34,7 @@ import QuestionnaireScreen from '../screens/onboarding-screens/QuestionnaireScre
 import TrialScreen from '../screens/onboarding-screens/TrialScreen';
 import PostQuestionnaireScreen from '../screens/onboarding-screens/PostQuestionnaireScreen';
 import PreQuestionnaireScreen from '../screens/onboarding-screens/PreQuestionnaireScreen';
-import DailyGratitudeScreen from '../screens/daily-missions-screens/DailyGratitudeScreen';
+import DailyGratitudeScreen from '../screens/daily-missions-screens/daily-gratitude/DailyGratitudeScreen';
 import GratitudeBeadsScreen from '../screens/daily-missions-screens/gratitude-beads/GratitudeBeadsScreen';
 import GratitudeBeadsIntroScreen from '../screens/daily-missions-screens/gratitude-beads/GratitudeBeadsIntroScreen';
 import SunBreathTutorialScreen from '../screens/daily-missions-screens/sun-breath/SunBreathTutorialScreen';

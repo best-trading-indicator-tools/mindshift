@@ -12,13 +12,13 @@ import {
   Modal,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Gratitude'>;
 
-const MIN_ENTRIES = 5;
+const MIN_ENTRIES = 10;
 
 interface GratitudeEntry {
   what: string;
