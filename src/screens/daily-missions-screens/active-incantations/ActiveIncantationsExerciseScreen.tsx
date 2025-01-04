@@ -56,6 +56,13 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
     }
   };
 
+  const handlePreviousIncantation = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      scrollY.setValue((currentIndex - 1) * SCREEN_HEIGHT);
+    }
+  };
+
   const handleSettingsPress = () => {
     setIsPaused(true);
     setIsSettingsModalVisible(true);
@@ -93,6 +100,13 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
           </TouchableOpacity>
 
           <TouchableOpacity 
+            style={styles.previousButton} 
+            onPress={handlePreviousIncantation}
+          >
+            <MaterialCommunityIcons name="chevron-left" size={36} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
             style={styles.nextButton} 
             onPress={handleNextIncantation}
           >
@@ -121,7 +135,7 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
                 {
                   transform: [{ translateY: scrollY.interpolate({
                     inputRange: [0, SCREEN_HEIGHT * incantations.length],
-                    outputRange: [0, -SCREEN_HEIGHT * incantations.length],
+                    outputRange: [-SCREEN_HEIGHT * (incantations.length - 1), 0],
                   })}],
                 },
               ]}
@@ -234,16 +248,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   incantationText: {
-    color: '#666', // Dimmed color for non-active incantations
-    fontSize: 32,
+    color: '#FFFFFF',
+    fontSize: 36,
     textAlign: 'center',
     fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 4,
+    opacity: 1, // Full opacity for all states
   },
   activeIncantation: {
-    color: '#FFFFFF', // Bright white for active incantation
-    textShadowColor: 'rgba(255,255,255,0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 4,
+    transform: [{ scale: 1.1 }], // Slightly larger for active state
   },
   modalOverlay: {
     flex: 1,
@@ -342,18 +360,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  previousButton: {
+    position: 'absolute',
+    left: 20,
+    top: '50%',
+    transform: [{ translateY: -18 }],
+    zIndex: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
   nextButton: {
     position: 'absolute',
-    right: 16,
+    right: 20,
     top: '50%',
-    zIndex: 2,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#1F2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [{ translateY: -25 }],
+    transform: [{ translateY: -18 }],
+    zIndex: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
   },
   slider: {
     width: '100%',
