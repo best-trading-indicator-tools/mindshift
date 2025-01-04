@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
+import { audioService, AUDIO_FILES } from '../../../services/audioService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTutorial'>;
 
@@ -39,12 +40,32 @@ export const tutorialSteps = [
 const SunBreathTutorialScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isAudioLoading, setIsAudioLoading] = useState(true);
+
+  useEffect(() => {
+    const preloadAudio = async () => {
+      try {
+        await Promise.all([
+          audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN),
+          audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT)
+        ]);
+        setIsAudioLoading(false);
+      } catch (error) {
+        console.error('Error preloading audio:', error);
+        // Handle error appropriately
+      }
+    };
+
+    preloadAudio();
+  }, []);
 
   const handleNext = () => {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.navigate('SunBreathExercise');
+      if (!isAudioLoading) {
+        navigation.navigate('SunBreathExercise');
+      }
     }
   };
 

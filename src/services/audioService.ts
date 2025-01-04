@@ -26,6 +26,22 @@ export const AUDIO_FILES = {
   NECKLACE_BEADS: {
     url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fnecklace-beads.wav?alt=media&token=eccad8d7-1ac2-48da-ab0d-188462ed0557',
     filename: 'necklace-beads.wav'
+  },
+  DEEP_BREATHE_IN: {
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fdeep-breathe-in-5s.wav?alt=media&token=1d763e41-fc27-4194-a577-db890e2b96c8',
+    filename: 'deep-breathe-in.wav'
+  },
+  DEEP_BREATHE_OUT: {
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fdeep-breathe-out-5s.wav?alt=media&token=701d3d02-54db-4fa7-b174-244d69ac64ed',
+    filename: 'deep-breathe-out.wav'
+  },
+  SUN_BREATHE_IN: {
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fdeep-breathe-in-5s.wav?alt=media&token=1d763e41-fc27-4194-a577-db890e2b96c8',
+    filename: 'sun-breathe-in.wav'
+  },
+  SUN_BREATHE_OUT: {
+    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fdeep-breathe-out-5s.wav?alt=media&token=701d3d02-54db-4fa7-b174-244d69ac64ed',
+    filename: 'sun-breathe-out.wav'
   }
 };
 

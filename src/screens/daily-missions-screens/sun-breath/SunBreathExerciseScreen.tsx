@@ -12,6 +12,8 @@ import { getBreathSettings, saveBreathSettings, BreathSettings } from '../../../
 import BreathSettingsModal from '../../../components/BreathSettingsModal';
 import ProgressHeader from '../../../components/ProgressHeader';
 import { tutorialSteps } from './SunBreathTutorialScreen';
+import { audioService, AUDIO_FILES } from '../../../services/audioService';
+import Sound from 'react-native-sound';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 
@@ -45,6 +47,8 @@ const SunBreathExerciseScreen: React.FC = () => {
   const [pauseTime, setPauseTime] = useState<number>(0);
   const cycleTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [breatheInSound, setBreatheInSound] = useState<Sound | null>(null);
+  const [breatheOutSound, setBreatheOutSound] = useState<Sound | null>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -56,6 +60,12 @@ const SunBreathExerciseScreen: React.FC = () => {
   }, []);
 
   const handleExit = () => {
+    if (breatheInSound) {
+      breatheInSound.stop();
+    }
+    if (breatheOutSound) {
+      breatheOutSound.stop();
+    }
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -247,9 +257,16 @@ const SunBreathExerciseScreen: React.FC = () => {
     setInstruction('Breathe In');
     loadVideo('inhale');
     startCountdown(inhaleMs);
+    if (breatheInSound) {
+      breatheInSound.stop();
+      breatheInSound.play();
+    }
     
     // Schedule the state changes with adjusted times
     const holdTimer = setTimeout(() => {
+      if (breatheInSound) {
+        breatheInSound.stop();
+      }
       setInstruction('Hold');
       startCountdown(holdMs);
     }, inhaleMs - pauseDuration);
@@ -260,6 +277,10 @@ const SunBreathExerciseScreen: React.FC = () => {
       setInstruction('Breathe Out');
       startCountdown(exhaleMs);
       loadVideo('exhale');
+      if (breatheOutSound) {
+        breatheOutSound.stop();
+        breatheOutSound.play();
+      }
       
       // If this is the last cycle, schedule navigation after exhale
       if (currentCycle === activeSettings.cycles) {
@@ -311,6 +332,32 @@ const SunBreathExerciseScreen: React.FC = () => {
       }
       cycleTimersRef.current.forEach(timer => clearTimeout(timer));
       cycleTimersRef.current = [];
+    };
+  }, []);
+
+  // Initialize sounds
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
+        const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
+        setBreatheInSound(inSound);
+        setBreatheOutSound(outSound);
+      } catch (error) {
+        console.error('Error loading breath sounds:', error);
+      }
+    };
+
+    initAudio();
+
+    // Cleanup
+    return () => {
+      if (breatheInSound) {
+        audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_IN.filename);
+      }
+      if (breatheOutSound) {
+        audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_OUT.filename);
+      }
     };
   }, []);
 
