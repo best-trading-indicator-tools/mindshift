@@ -134,7 +134,7 @@ const SunBreathExerciseScreen: React.FC = () => {
   const handleExitConfirm = () => {
     isNavigating.current = true;
     setShowExitModal(false);
-    navigation.goBack();
+    navigation.navigate('MainTabs');
   };
 
   const handleExitCancel = () => {
