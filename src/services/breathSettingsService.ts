@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: BreathSettings = {
   inhaleSeconds: 4,
   holdSeconds: 1,
   exhaleSeconds: 6,
-  cycles: 1,
+  cycles: 5,
 };
 
 export const getBreathSettings = async (): Promise<BreathSettings> => {

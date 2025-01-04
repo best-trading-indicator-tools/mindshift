@@ -59,6 +59,26 @@ const SunBreathExerciseScreen: React.FC = () => {
     loadSettings();
   }, []);
 
+  useEffect(() => {
+    const initializeSounds = async () => {
+      try {
+        const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
+        const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
+        setBreatheInSound(inSound);
+        setBreatheOutSound(outSound);
+      } catch (error) {
+        console.error('Failed to initialize breath sounds:', error);
+      }
+    };
+    initializeSounds();
+
+    // Cleanup sounds when component unmounts
+    return () => {
+      audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_IN.filename);
+      audioService.releaseSound(AUDIO_FILES.SUN_BREATHE_OUT.filename);
+    };
+  }, []);
+
   const handleExit = () => {
     if (breatheInSound) {
       breatheInSound.stop();
@@ -257,63 +277,53 @@ const SunBreathExerciseScreen: React.FC = () => {
     }
   };
 
-  const startBreathingCycle = (pauseDuration: number = 0, overrideSettings?: BreathSettings) => {
-    // Clear any existing timers
-    cycleTimersRef.current.forEach(timer => clearTimeout(timer));
-    cycleTimersRef.current = [];
+  const startBreathingCycle = async (delay = 0, currentSettings = settings) => {
+    try {
+      // Clear any existing timers
+      cycleTimersRef.current.forEach(timer => clearTimeout(timer));
+      cycleTimersRef.current = [];
 
-    // Use override settings if provided, otherwise use state settings
-    const activeSettings = overrideSettings || settings;
+      // Start with inhale
+      const inhaleTimer = setTimeout(() => {
+        setIsInhaling(true);
+        setInstruction('Breathe In');
+        loadVideo('inhale');
+        startCountdown(currentSettings.inhaleSeconds * 1000);
+        playBreathInSound();
+      }, delay);
+      cycleTimersRef.current.push(inhaleTimer);
 
-    // Don't start if we've exceeded cycles
-    if (currentCycle > activeSettings.cycles) {
-      return;
-    }
+      // Schedule hold
+      const holdTimer = setTimeout(() => {
+        setInstruction('Hold');
+        startCountdown(currentSettings.holdSeconds * 1000);
+      }, delay + currentSettings.inhaleSeconds * 1000);
+      cycleTimersRef.current.push(holdTimer);
 
-    const inhaleMs = activeSettings.inhaleSeconds * 1000;
-    const holdMs = activeSettings.holdSeconds * 1000;
-    const exhaleMs = activeSettings.exhaleSeconds * 1000;
+      // Schedule exhale
+      const exhaleTimer = setTimeout(() => {
+        setIsInhaling(false);
+        setInstruction('Breathe Out');
+        loadVideo('exhale');
+        startCountdown(currentSettings.exhaleSeconds * 1000);
+        playBreathOutSound();
+      }, delay + (currentSettings.inhaleSeconds + currentSettings.holdSeconds) * 1000);
+      cycleTimersRef.current.push(exhaleTimer);
 
-    // Play sound first, then update states
-    playBreathInSound();
-    
-    // Start with inhale
-    setIsInhaling(true);
-    setInstruction('Breathe In');
-    loadVideo('inhale');
-    startCountdown(inhaleMs);
-    
-    // Schedule the state changes with adjusted times
-    const holdTimer = setTimeout(() => {
-      setInstruction('Hold');
-      startCountdown(holdMs);
-    }, inhaleMs - pauseDuration);
-    cycleTimersRef.current.push(holdTimer);
-
-    const exhaleTimer = setTimeout(() => {
-      setIsInhaling(false);
-      setInstruction('Breathe Out');
-      startCountdown(exhaleMs);
-      loadVideo('exhale');
-      playBreathOutSound(); // Play exhale sound
-      
-      // If this is the last cycle, schedule navigation after exhale
-      if (currentCycle === activeSettings.cycles) {
-        const completeTimer = setTimeout(() => {
-          navigation.push('SunBreathComplete');
-        }, exhaleMs);
-        cycleTimersRef.current.push(completeTimer);
-      }
-    }, inhaleMs + holdMs - pauseDuration);
-    cycleTimersRef.current.push(exhaleTimer);
-
-    // Schedule next cycle only if not the last cycle
-    if (currentCycle < activeSettings.cycles) {
+      // Schedule next cycle or completion
+      const cycleTime = (currentSettings.inhaleSeconds + currentSettings.holdSeconds + currentSettings.exhaleSeconds) * 1000;
       const nextCycleTimer = setTimeout(() => {
-        setCurrentCycle(c => c + 1);
-        startBreathingCycle();
-      }, inhaleMs + holdMs + exhaleMs - pauseDuration);
+        if (currentCycle < currentSettings.cycles) {
+          setCurrentCycle(prev => prev + 1);
+          startBreathingCycle(0, currentSettings);
+        } else {
+          navigation.push('SunBreathComplete');
+        }
+      }, delay + cycleTime);
       cycleTimersRef.current.push(nextCycleTimer);
+
+    } catch (error) {
+      console.error('Error in breathing cycle:', error);
     }
   };
 
@@ -347,36 +357,6 @@ const SunBreathExerciseScreen: React.FC = () => {
       }
       cycleTimersRef.current.forEach(timer => clearTimeout(timer));
       cycleTimersRef.current = [];
-    };
-  }, []);
-
-  // Initialize sounds
-  useEffect(() => {
-    const initAudio = async () => {
-      try {
-        const inSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_IN);
-        const outSound = await audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT);
-        
-        // Configure sounds
-        inSound.setVolume(1.0);
-        outSound.setVolume(1.0);
-        
-        setBreatheInSound(inSound);
-        setBreatheOutSound(outSound);
-      } catch (error: unknown) {
-        console.error('Error loading breath sounds:', error);
-      }
-    };
-
-    initAudio();
-
-    return () => {
-      if (breatheInSound) {
-        breatheInSound.release();
-      }
-      if (breatheOutSound) {
-        breatheOutSound.release();
-      }
     };
   }, []);
 

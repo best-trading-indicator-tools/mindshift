@@ -199,7 +199,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       if (lastUpdateDate === today && storedMissions) {
         // Use existing missions
-        setDailyMissions(JSON.parse(storedMissions));
+        const missions = JSON.parse(storedMissions);
+        setDailyMissions(missions);
+        
+        // Check if Sun Breath is in today's missions and preload if needed
+        if (missions.some((mission: { title: string }) => mission.title === 'The Sun Breath')) {
+          ResourcePreloadService.preloadSunBreathResources().catch(console.error);
+        }
         return;
       }
 
@@ -212,6 +218,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       await AsyncStorage.setItem('lastMissionsUpdateDate', today);
       
       setDailyMissions(selectedMissions);
+
+      // If Sun Breath is selected, preload its resources
+      if (selectedMissions.some((mission: { title: string }) => mission.title === 'The Sun Breath')) {
+        ResourcePreloadService.preloadSunBreathResources().catch(console.error);
+      }
     } catch (error) {
       console.error('Error selecting daily missions:', error);
       setDailyMissions(DAILY_MISSIONS.slice(0, MISSIONS_PER_DAY));
