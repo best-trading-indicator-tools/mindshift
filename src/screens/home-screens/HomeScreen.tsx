@@ -369,6 +369,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+
   const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const newIndex = Math.round(contentOffset / (cardWidth + cardSpacing));
