@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
-import { Button, ListItem } from '@rneui/themed';
+import { Button } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import DraggableFlatList, { 
+import DraggableFlatList, {
   RenderItemParams,
-  ScaleDecorator 
+  ScaleDecorator
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { runOnJS } from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
 
@@ -192,14 +191,6 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDragEnd = useCallback(({ data }: { data: IncantationItem[], from: number, to: number }) => {
-    setIncantations(data);
-    // Defer the storage operation
-    requestAnimationFrame(() => {
-      saveNewOrder(data).catch(console.error);
-    });
-  }, []);
-
   const handleEditIncantation = (item: IncantationItem) => {
     setEditingIncantation(item);
     setEditingText(item.text);
@@ -248,8 +239,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   ));
 
-  // Memoize renderItem function with all dependencies
-  const renderItem = useCallback(({ item, drag, isActive, getIndex }: RenderItemParams<IncantationItem>) => {
+  const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<IncantationItem>) => {
     if (!isEditMode) {
       return (
         <View style={styles.recordingItem}>
@@ -265,96 +255,92 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     return (
-      <TouchableOpacity
-        onLongPress={drag}
-        disabled={isActive}
-        delayLongPress={150}
-        style={[
-          styles.recordingItem,
-          styles.recordingItemEdit,
-          isActive && { opacity: 0.7, elevation: 0, shadowOpacity: 0 }
-        ]}
-      >
-        <View style={styles.recordingContent}>
-          <MaterialCommunityIcons 
-            name="menu" 
-            size={24} 
-            color="#FFFFFF" 
-            style={styles.dragHandle}
-          />
-          <View style={styles.recordingInfo}>
-            <Text style={styles.recordingText} numberOfLines={2}>
-              {item?.text || 'No text available'}
-            </Text>
-          </View>
-          {!isActive && (
-            <View style={styles.editActions}>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleEditIncantation(item)}
-              >
-                <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => handleDeleteIncantation(item)}
-              >
-                <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
-              </TouchableOpacity>
+      <ScaleDecorator activeScale={1.02}>
+        <TouchableOpacity
+          onPressIn={drag}
+          delayPressIn={0}
+          disabled={isActive}
+          style={[
+            styles.recordingItem,
+            styles.recordingItemEdit,
+            isActive && { 
+              opacity: 0.9,
+              backgroundColor: '#1A232D', 
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              transform: [{ scale: 1.02 }],
+            }
+          ]}
+        >
+          <View style={[
+            styles.recordingContent,
+            { transform: [{ translateX: isActive ? 0 : 0 }] }
+          ]}>
+            <MaterialCommunityIcons 
+              name="menu" 
+              size={24} 
+              color="#FFFFFF" 
+              style={styles.dragHandle}
+            />
+            <View style={styles.recordingInfo}>
+              <Text style={styles.recordingText} numberOfLines={2}>
+                {item?.text || 'No text available'}
+              </Text>
             </View>
-          )}
-        </View>
-      </TouchableOpacity>
+            {!isActive && (
+              <View style={styles.editActions}>
+                <TouchableOpacity 
+                  style={styles.editIcon}
+                  onPress={() => handleEditIncantation(item)}
+                >
+                  <MaterialCommunityIcons name="pencil" size={22} color="#E6B800" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.editIcon}
+                  onPress={() => handleDeleteIncantation(item)}
+                >
+                  <MaterialCommunityIcons name="delete" size={22} color="#E31837" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      </ScaleDecorator>
     );
   }, [isEditMode, handleEditIncantation, handleDeleteIncantation]);
-
-  const renderListenAllButton = () => (
-    <TouchableOpacity
-      style={styles.listenAllButton}
-      onPress={() => {/* handle listen all */}}
-    >
-      <Text style={styles.listenAllText}>Listen All</Text>
-    </TouchableOpacity>
-  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <Header />
-          <DraggableFlatList<IncantationItem>
+          <DraggableFlatList
+            ref={scrollRef}
             data={incantations}
-            onDragEnd={handleDragEnd}
+            onDragEnd={({ data, from, to }) => {
+              if (from !== to) {
+                setIncantations(data);
+                saveNewOrder(data);
+              }
+            }}
             keyExtractor={item => item.id}
             renderItem={renderItem}
-            dragItemOverflow={false}
-            activationDistance={3}
-            autoscrollSpeed={50}
-            renderPlaceholder={({ item }) => (
-              <View
-                style={[
-                  styles.recordingItem,
-                  styles.recordingItemEdit,
-                  { backgroundColor: '#1A232D' }
-                ]}
-              >
-                <View style={styles.recordingContent}>
-                  <MaterialCommunityIcons 
-                    name="menu" 
-                    size={24} 
-                    color="#FFFFFF" 
-                    style={styles.dragHandle}
-                  />
-                  <View style={styles.recordingInfo}>
-                    <Text style={styles.recordingText} numberOfLines={2}>
-                      {item?.text || 'No text available'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
+            activationDistance={5}
+            dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            containerStyle={{ flex: 1 }}
+            animationConfig={{
+              damping: 20,
+              mass: 0.2,
+              stiffness: 100,
+              overshootClamping: false,
+              restSpeedThreshold: 0.2,
+              restDisplacementThreshold: 0.2,
+            }}
+            simultaneousHandlers={scrollRef}
           />
-          {renderListenAllButton()}
           
           <Modal
             visible={showExitModal}
@@ -450,9 +436,9 @@ const styles = StyleSheet.create({
   recordingItem: {
     backgroundColor: '#2A3744',
     padding: 12,
-    marginVertical: 8,
+    marginVertical: 4,
     marginHorizontal: 16,
-    height: 64,
+    height: 70,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
@@ -615,19 +601,6 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  listenAllButton: {
-    backgroundColor: '#E6B800',
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 12,
-    marginHorizontal: 16,
-  },
-  listenAllText: {
-    color: '#000000',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
