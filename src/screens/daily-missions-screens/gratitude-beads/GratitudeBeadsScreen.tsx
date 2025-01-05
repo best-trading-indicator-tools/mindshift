@@ -23,7 +23,7 @@ import { audioService, AUDIO_FILES } from '../../../services/audioService';
 // Enable playback in silence mode
 Sound.setCategory('Playback');
 
-const TOTAL_BEADS = 2;
+const TOTAL_BEADS = 20;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
 const HOLD_DURATION = 300; // Reduced from 500ms to 300ms for better responsiveness
@@ -282,44 +282,40 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   const [currentBead, setCurrentBead] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState(0);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
   const backgroundMusic = useRef<Sound | null>(null);
 
-  useEffect(() => {
-    // Initialize and play background music
-    const initAudio = async () => {
-      try {
-        backgroundMusic.current = await audioService.loadSound(
-          AUDIO_FILES.NECKLACE_BEADS,
-          (state) => {
-            if (state.error) {
-              console.error('Error loading background music:', state.error);
-            }
+  const initAudio = async () => {
+    try {
+      backgroundMusic.current = await audioService.loadSound(
+        AUDIO_FILES.NECKLACE_BEADS,
+        (state) => {
+          if (state.error) {
+            console.error('Error loading background music:', state.error);
           }
-        );
-
-        if (backgroundMusic.current) {
-          backgroundMusic.current.setVolume(0.3);
-          backgroundMusic.current.setNumberOfLoops(-1);
-          backgroundMusic.current.play((success) => {
-            if (!success) {
-              console.log('Playback failed');
-            }
-          });
         }
-      } catch (error) {
-        console.error('Error initializing audio:', error);
-      }
-    };
+      );
 
-    initAudio();
-
-    // Cleanup function
-    return () => {
       if (backgroundMusic.current) {
-        backgroundMusic.current.stop();
-        audioService.releaseSound(AUDIO_FILES.NECKLACE_BEADS.filename);
+        backgroundMusic.current.setVolume(0.3);
+        backgroundMusic.current.setNumberOfLoops(-1); // Loop indefinitely
+        backgroundMusic.current.play((success) => {
+          if (!success) {
+            console.log('Playback failed');
+          }
+        });
       }
+    } catch (error) {
+      console.error('Error initializing audio:', error);
+    }
+  };
+
+  useEffect(() => {
+    initAudio();
+    return () => {
+      // Cleanup all audio when component unmounts
+      audioService.releaseAllSounds();
     };
   }, []);
 
@@ -364,38 +360,28 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
       return;
     }
 
-    // Add completion vibration
+    // Stop and cleanup all sounds
+    audioService.releaseAllSounds();
+    
+    // Vibrate with completion pattern
     Vibration.vibrate(COMPLETION_VIBRATION);
-
-    try {
-      const success = await markExerciseAsCompleted(
-        'gratitude-beads',
-        'Gratitude Beads'
-      );
-
-      if (success) {
-        Alert.alert(
-          'Congratulations!',
-          'You have completed your gratitude practice for today.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('MainTabs'),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Failed to mark exercise as completed:', error);
-      Alert.alert('Error', 'Failed to complete exercise. Please try again.');
-    }
+    
+    // Mark exercise as completed
+    await markExerciseAsCompleted('gratitudeBeads', 'Gratitude Beads');
+    
+    // Show completion modal
+    setShowCompletionModal(true);
+    
+    // Navigate after a short delay
+    setTimeout(() => {
+      setShowCompletionModal(false);
+      navigation.navigate('MainTabs');
+    }, 2000);
   };
 
   const handleExit = () => {
-    // Stop music when exiting
-    if (backgroundMusic.current) {
-      backgroundMusic.current.stop();
-    }
+    // Stop and cleanup all sounds
+    audioService.releaseAllSounds();
     setShowExitModal(true);
   };
 
