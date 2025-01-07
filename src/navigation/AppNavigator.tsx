@@ -146,6 +146,7 @@ export type RootStackParamList = {
     onComplete?: () => void;
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
+    context?: 'daily' | 'challenge';
   } | undefined;
   PassiveIncantationsIntro: {
     onComplete?: () => void;

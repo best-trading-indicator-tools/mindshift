@@ -47,7 +47,11 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleStart = () => {
-    navigation.navigate('DeepBreathing');
+    navigation.navigate('DeepBreathing', {
+      context: route.params?.context || (route.params?.challengeId ? 'challenge' : 'daily'),
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
   };
 
   const handleComplete = () => {

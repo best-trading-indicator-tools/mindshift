@@ -33,46 +33,33 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     };
   }, []);
 
-  const handleExitPress = () => {
-    setShowExitModal(true);
-  };
-
-  const handleConfirmExit = () => {
-    // Handle exit based on context
-    if (route.params?.context === 'challenge') {
-      // Let the challenge flow handle the completion if needed
-      if (route.params.onComplete) {
-        route.params.onComplete();
-      }
-      
-      // Navigate back to challenge if specified
-      if (route.params.returnTo === 'ChallengeDetail') {
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId || '',
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        navigation.goBack();
-      }
-    } else {
-      // Default behavior for daily mission
-      navigation.navigate('MainTabs');
-    }
-  };
-
   const handleComplete = async () => {
-    // Navigate to completion screen with the same params
-    navigation.push('DeepBreathingComplete', {
-      context: route.params?.context,
-      challengeId: route.params?.challengeId,
-      onComplete: route.params?.onComplete,
-      returnTo: route.params?.returnTo
-    });
+    try {
+      await markDailyExerciseAsCompleted('deep-breathing');
+      
+      // Handle navigation based on context
+      if (route.params?.context === 'challenge' && route.params?.challengeId) {
+        if (route.params.returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: route.params.challengeId,
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: require('../../../assets/illustrations/challenges/challenge-21.png')
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
+      } else {
+        // Default behavior for daily mission
+        navigation.navigate('MainTabs');
+      }
+    } catch (error) {
+      console.error('Failed to mark exercise as completed:', error);
+      navigation.goBack();
+    }
   };
 
   return (
@@ -89,7 +76,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
         />
       </View>
       <View style={styles.exitButtonContainer}>
-        <ExitExerciseButton onExit={handleExitPress} />
+        <ExitExerciseButton onExit={() => setShowExitModal(true)} />
       </View>
 
       <Modal
@@ -112,7 +99,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.exitButton}
-              onPress={handleConfirmExit}
+              onPress={() => setShowExitModal(false)}
             >
               <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>

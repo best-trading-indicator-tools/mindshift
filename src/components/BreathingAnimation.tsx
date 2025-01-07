@@ -7,10 +7,10 @@ import RNFS from 'react-native-fs';
 import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
-const HOLD_DURATION = 5000;   // 5 seconds hold
+const BREATH_DURATION = 1000; // 5 seconds for a more relaxed breath
+const HOLD_DURATION = 1000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
-const INITIAL_DELAY = 2000;   // 2 seconds initial delay
+const INITIAL_DELAY = 1000;   // 2 seconds initial delay
 const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
@@ -73,10 +73,11 @@ const BreathingAnimation: React.FC<{
 
         if (isMounted.current) {
           console.log('Sound loaded successfully');
-          // Add delay before starting
+          // Start breathing cycle immediately after sound is loaded
+          startBreathingCycle();
+          // Play gong after a short delay
           setTimeout(() => {
             playGong();
-            startBreathingCycle();
           }, INITIAL_DELAY);
         }
       } catch (error) {
@@ -98,6 +99,9 @@ const BreathingAnimation: React.FC<{
       }
       animation.removeAllListeners();
       timersRef.current.forEach(timer => clearTimeout(timer));
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
     };
   }, []);
 
@@ -155,6 +159,10 @@ const BreathingAnimation: React.FC<{
     // Clear any existing timers
     timersRef.current.forEach(timer => clearTimeout(timer));
     timersRef.current = [];
+    
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
 
     // Reset animation value
     animation.setValue(0);
@@ -334,9 +342,8 @@ const BreathingAnimation: React.FC<{
 
       initAudio();
 
-      const timer = setTimeout(() => {
-        handleCompletion();
-      }, 3000);
+      // Automatically complete after 3 seconds
+      const timer = setTimeout(handleCompletion, 3000);
       
       return () => {
         clearTimeout(timer);
@@ -360,13 +367,10 @@ const BreathingAnimation: React.FC<{
 
   if (phase === 'complete') {
     return (
-      <TouchableOpacity 
-        style={styles.fullScreenButton}
-        onPress={handleCompletion}
-      >
+      <View style={styles.fullscreenContainer}>
         <LinearGradient
           colors={['#3730A3', '#6366F1', '#818CF8']}
-          style={styles.fullScreenGradient}
+          style={styles.fullscreenGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
@@ -374,7 +378,7 @@ const BreathingAnimation: React.FC<{
             Have a good day!
           </Text>
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
     );
   }
 
@@ -460,6 +464,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#000000',
   },
+  noTopPadding: {
+    paddingTop: 0,
+    marginTop: 0,
+  },
   wavesContainer: {
     position: 'absolute',
     width: SCREEN_WIDTH,
@@ -509,6 +517,7 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT,
   },
   fullScreenGradient: {
+    flex: 1,
     width: '100%',
     height: '100%',
     justifyContent: 'center',
@@ -519,7 +528,6 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: 'bold',
     textAlign: 'center',
-    padding: 20,
   },
   countdownText: {
     color: '#FFFFFF',
@@ -583,6 +591,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  fullscreenContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    left: 0,
+    top: 0,
+  },
+  fullscreenGradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
