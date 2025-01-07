@@ -195,6 +195,16 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       [exerciseId]: true
     }));
     
+    // Find and update the next unlocked exercise
+    const currentIndex = exercises.findIndex(e => e.id === exerciseId);
+    if (currentIndex < exercises.length - 1) {
+      const nextExercise = exercises[currentIndex + 1];
+      const isNextUnlocked = await isChallengeExerciseUnlocked(challenge.id, nextExercise.id, currentIndex + 1);
+      if (isNextUnlocked) {
+        setLastUnlockedExercise(nextExercise);
+      }
+    }
+    
     // Add notification for completed exercise
     const exercise = exercises.find(e => e.id === exerciseId);
     if (exercise) {
@@ -273,9 +283,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.heroSection}>
           <Image 
-            source={challenge.image}
+            source={typeof challenge.image === 'number' ? challenge.image : { uri: challenge.image }}
             style={styles.challengeImage}
             resizeMode="contain"
+            defaultSource={require('../../assets/illustrations/challenges/challenge-21.png')}
           />
           <Text style={styles.title}>{challenge.title}</Text>
           <View style={styles.durationBadge}>
