@@ -316,6 +316,21 @@ const BreathingAnimation: React.FC<{
   }, [phase, handleCompletion]);
 
   const handleExitPress = () => {
+    // Pause all animations and timers
+    if (animationRef.current) {
+      animationRef.current.stop();
+    }
+    timersRef.current.forEach(timer => clearTimeout(timer));
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+    // Pause audio
+    if (gongSound.current) {
+      gongSound.current.pause();
+    }
+    if (completionSound.current) {
+      completionSound.current.pause();
+    }
     setShowExitModal(true);
   };
 
@@ -341,6 +356,20 @@ const BreathingAnimation: React.FC<{
       // Default behavior for daily mission - go to MainTabs
       navigation.push('MainTabs');
     }
+  };
+
+  const handleContinue = () => {
+    setShowExitModal(false);
+    // Resume animations
+    if (animationRef.current) {
+      animationRef.current.start();
+    }
+    // Resume audio
+    if (gongSound.current) {
+      gongSound.current.play();
+    }
+    // Restart breathing cycle
+    startBreathingCycle();
   };
 
   if (phase === 'complete') {
@@ -418,7 +447,7 @@ const BreathingAnimation: React.FC<{
             </Text>
             <TouchableOpacity
               style={styles.continueButton}
-              onPress={() => setShowExitModal(false)}
+              onPress={handleContinue}
             >
               <Text style={styles.continueText}>Continue</Text>
             </TouchableOpacity>
