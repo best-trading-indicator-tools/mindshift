@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
-import ConfettiOverlay from '../../components/ConfettiOverlay';
+
 import { getQuestionnaireResponses } from '../../services/questionnaireService';
 import RNFS from 'react-native-fs';
 
@@ -106,7 +106,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         colors={['#121212', '#121212']}
         style={styles.gradient}
       >
-        <ConfettiOverlay />
+
         
         <View style={styles.content}>
           <View style={styles.mainContent}>

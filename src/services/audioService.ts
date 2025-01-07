@@ -45,6 +45,8 @@ export const AUDIO_FILES = {
   }
 };
 
+const CRITICAL_SOUNDS = [AUDIO_FILES.GONG];
+const MAX_CACHED_SOUNDS = 5;  // Limit number of sounds kept in memory
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 seconds
 
@@ -57,6 +59,42 @@ export interface AudioLoadingState {
 class AudioService {
   private soundInstances: Map<string, Sound> = new Map();
   private downloadPromises: Map<string, Promise<string>> = new Map();
+  private lastUsedTimestamp: Map<string, number> = new Map();  // Track sound usage
+
+  constructor() {
+    // Preload critical sounds when service is instantiated
+    this.preloadCriticalSounds();
+  }
+
+  private async preloadCriticalSounds() {
+    try {
+      await Promise.all(
+        CRITICAL_SOUNDS.map(sound => 
+          this.loadSound(sound).catch(err => 
+            console.warn(`Failed to preload ${sound.filename}:`, err)
+          )
+        )
+      );
+    } catch (error) {
+      console.warn('Error preloading critical sounds:', error);
+    }
+  }
+
+  private manageCache() {
+    if (this.soundInstances.size > MAX_CACHED_SOUNDS) {
+      // Sort by last used timestamp and remove oldest
+      const sortedEntries = Array.from(this.lastUsedTimestamp.entries())
+        .sort(([, timeA], [, timeB]) => timeA - timeB);
+      
+      while (this.soundInstances.size > MAX_CACHED_SOUNDS) {
+        const [filename] = sortedEntries.shift() || [];
+        if (filename) {
+          this.releaseSound(filename);
+          this.lastUsedTimestamp.delete(filename);
+        }
+      }
+    }
+  }
 
   async setupAudioFile(
     audioFile: AudioFile,
@@ -172,11 +210,17 @@ class AudioService {
     onProgress?: (state: AudioLoadingState) => void
   ): Promise<Sound> {
     try {
+      // Update last used timestamp
+      this.lastUsedTimestamp.set(audioFile.filename, Date.now());
+
       // Check if we already have this sound loaded
       const existingSound = this.soundInstances.get(audioFile.filename);
       if (existingSound) {
         return existingSound;
       }
+
+      // Manage cache before loading new sound
+      this.manageCache();
 
       const localPath = await this.setupAudioFile(audioFile, onProgress);
 
@@ -195,6 +239,7 @@ class AudioService {
           
           // Cache the sound instance
           this.soundInstances.set(audioFile.filename, sound);
+          this.lastUsedTimestamp.set(audioFile.filename, Date.now());
           console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
           
           resolve(sound);
@@ -211,6 +256,7 @@ class AudioService {
     if (sound) {
       sound.release();
       this.soundInstances.delete(filename);
+      this.lastUsedTimestamp.delete(filename);
     }
   }
 

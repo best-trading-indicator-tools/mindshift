@@ -2767,7 +2767,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video (6.8.2):
+  - react-native-video (6.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2780,7 +2780,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.8.2)
+    - react-native-video/Video (= 6.9.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -2789,7 +2789,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Fabric (6.8.2):
+  - react-native-video/Fabric (6.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2810,7 +2810,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.8.2):
+  - react-native-video/Video (6.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -3125,18 +3125,18 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNFBApp (21.6.1):
+  - RNFBApp (21.6.2):
     - Firebase/CoreOnly (= 11.5.0)
     - React-Core
-  - RNFBAuth (21.6.1):
+  - RNFBAuth (21.6.2):
     - Firebase/Auth (= 11.5.0)
     - React-Core
     - RNFBApp
-  - RNFBFirestore (21.6.1):
+  - RNFBFirestore (21.6.2):
     - Firebase/Firestore (= 11.5.0)
     - React-Core
     - RNFBApp
-  - RNFBStorage (21.6.1):
+  - RNFBStorage (21.6.2):
     - Firebase/Storage (= 11.5.0)
     - React-Core
     - RNFBApp
@@ -3756,7 +3756,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: f0a9899081c185db1de5bb2fdc1c88c202a059ac
   react-native-safe-area-context: 16c455e62ad9dae353281f8099a4f93800adabe6
   react-native-slider: da7c05c52827d597bb7824c5b1acb35741d41f89
-  react-native-video: 07ebee84a1b3a3ad9d2e6ba182eb5788eaf5a509
+  react-native-video: 8ac398ee627c9b7e43fd7b438e0e8af7be410094
   React-nativeconfig: 565ebf4340d9ede95b523f0e3640f48286985ef5
   React-NativeModulesApple: ea083a4663dae82c99fe4c2186b11504ac4147e1
   React-perflogger: ceb97dd4e5ca6ff20eebb5a6f9e00312dcdea872
@@ -3788,10 +3788,10 @@ SPEC CHECKSUMS:
   RNAppleAuthentication: e00c76acb03351f5544373c78fa7f359bef6d5d3
   RNAudioRecorderPlayer: 224c7de87722938aedce04000d09baa633148f5b
   RNCAsyncStorage: d494bdee892cc6a4d790c960afb7b5dd1d91abb1
-  RNFBApp: 1de631bffe154f4f8b56f8dbfb13d6305d658e97
-  RNFBAuth: aa53108a283606c560e4380d75d093c35a13d8dd
-  RNFBFirestore: 040e9607af616bec5d3903f5fa6a1a4e5dd0e4bd
-  RNFBStorage: debf79a222417a239adacd5ef2419395c33d6dd2
+  RNFBApp: 5c187f161ac2b1c258c9c099d56bf5cfdb1f0bcb
+  RNFBAuth: dc124c8219a950dc8ca10e6410000898848253ad
+  RNFBFirestore: 5f70c6e994bd86a5d771060b9808e02ef484cc83
+  RNFBStorage: 382a43cee8e34a10d04ab98090dae54a2e88f8ec
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 15ee1ab573a954c92641877ca946e2680f2e58da
   RNGoogleSignin: 27c2199f487ee08cc692d8d2c035bc9c154ddc22

@@ -258,10 +258,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     getCurrentUser();
   }, []);
 
-  // Update initializeApp to only call selectDailyMissions if needed
+  // Update initializeApp to preload resources
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('🎵 Starting to preload resources...');
+        await Promise.all([
+          ResourcePreloadService.preloadSunBreathResources(),
+          ResourcePreloadService.preloadDeepBreathResources()
+        ]);
+        console.log('✅ Resources preloaded successfully');
+
         // First check if we have today's missions
         const lastUpdateDate = await AsyncStorage.getItem('lastMissionsUpdateDate');
         const today = getTodayString();
@@ -451,6 +458,14 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       
       // Re-select missions after reset
       await selectDailyMissions();
+      
+      // Reload all audio resources
+      console.log('🎵 Reloading all audio resources after reset...');
+      await Promise.all([
+        ResourcePreloadService.preloadSunBreathResources(),
+        ResourcePreloadService.preloadDeepBreathResources()
+      ]);
+      console.log('✅ Audio resources reloaded successfully');
       
       checkExerciseCompletions();
       loadStreak();
