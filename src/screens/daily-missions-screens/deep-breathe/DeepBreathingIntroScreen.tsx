@@ -20,7 +20,7 @@ const introContent = [
 ];
 
 
-const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation }) => {
+const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length; // Match total steps with actual content
 
@@ -33,12 +33,43 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation }) => {
       } catch (error) {
         console.error('Error saving intro state:', error);
       }
-      navigation.push('DeepBreathing');
+      navigation.push('DeepBreathing', {
+        context: route.params?.challengeId ? 'challenge' : 'daily',
+        challengeId: route.params?.challengeId,
+        onComplete: route.params?.onComplete,
+        returnTo: route.params?.returnTo
+      });
     }
   };
 
   const handleExit = () => {
     navigation.goBack();
+  };
+
+  const handleStart = () => {
+    navigation.navigate('DeepBreathing');
+  };
+
+  const handleComplete = () => {
+    // If this was launched from a challenge, call the completion callback
+    if (route.params?.onComplete) {
+      route.params.onComplete();
+    }
+
+    // Navigate back to the challenge screen if specified, otherwise go back
+    if (route.params?.returnTo === 'ChallengeDetail') {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId || '',
+          title: 'Ultimate',
+          duration: 21,
+          description: '',
+          image: null
+        }
+      });
+    } else {
+      navigation.goBack();
+    }
   };
 
   const currentContent = introContent[currentStep - 1];

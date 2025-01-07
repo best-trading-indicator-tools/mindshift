@@ -19,6 +19,9 @@ import Sound from 'react-native-sound';
 import Svg, { Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -277,7 +280,9 @@ const setupAudioFile = async (url: string): Promise<string> => {
   }
 };
 
-const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeBeads'>;
+
+const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [completedBeads, setCompletedBeads] = useState<number[]>([]);
   const [currentBead, setCurrentBead] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -366,17 +371,38 @@ const GratitudeBeadsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     // Vibrate with completion pattern
     Vibration.vibrate(COMPLETION_VIBRATION);
     
-    // Mark exercise as completed
-    await markExerciseAsCompleted('gratitudeBeads', 'Gratitude Beads');
-    
-    // Show completion modal
-    setShowCompletionModal(true);
-    
-    // Navigate after a short delay
-    setTimeout(() => {
-      setShowCompletionModal(false);
-      navigation.navigate('MainTabs');
-    }, 2000);
+    try {
+      if (route.params?.context === 'challenge') {
+        if (route.params.onComplete) {
+          route.params.onComplete();
+        }
+        if (route.params.returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: route.params.challengeId || '',
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: null
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
+      } else {
+        await markDailyExerciseAsCompleted('gratitude-beads');
+        // Show completion modal
+        setShowCompletionModal(true);
+        
+        // Navigate after a short delay
+        setTimeout(() => {
+          setShowCompletionModal(false);
+          navigation.navigate('MainTabs');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error completing exercise:', error);
+    }
   };
 
   const handleExit = () => {

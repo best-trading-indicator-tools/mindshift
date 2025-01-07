@@ -14,7 +14,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../../../services/exerciseService';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitude'>;
 
@@ -25,7 +25,7 @@ interface GratitudeEntry {
   why: string;
 }
 
-const DailyGratitudeScreen: React.FC<Props> = ({ navigation }) => {
+const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showPostExercise, setShowPostExercise] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
@@ -53,8 +53,27 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation }) => {
     if (isComplete() && !isSubmitting) {
       try {
         setIsSubmitting(true);
-        await markExerciseAsCompleted('gratitude', 'Daily Gratitude');
-        setShowPostExercise(true);
+        if (route.params?.context === 'challenge') {
+          if (route.params.onComplete) {
+            route.params.onComplete();
+          }
+          if (route.params.returnTo === 'ChallengeDetail') {
+            navigation.navigate('ChallengeDetail', {
+              challenge: {
+                id: route.params.challengeId || '',
+                title: 'Ultimate',
+                duration: 21,
+                description: '',
+                image: null
+              }
+            });
+          } else {
+            navigation.goBack();
+          }
+        } else {
+          await markDailyExerciseAsCompleted('daily-gratitude');
+          setShowPostExercise(true);
+        }
       } catch (error) {
         console.error('Error completing gratitude exercise:', error);
       } finally {

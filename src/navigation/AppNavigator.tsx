@@ -57,40 +57,105 @@ export type RootStackParamList = {
   AiCoach: undefined;
   Support: undefined;
   Notifications: undefined;
-  DeepBreathing: undefined;
-  ActiveIncantationsIntro: undefined;
+  DeepBreathing: {
+    context: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
+  ActiveIncantationsIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   PassiveIncantations: undefined;
-  GoldenChecklist: undefined;
-  GoldenChecklistIntro: undefined;
+  GoldenChecklist: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
+  GoldenChecklistIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   VisionBoard: undefined;
-  VisionBoardIntro: undefined;
+  VisionBoardIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   MentorBoard: undefined;
-  MentorBoardIntro: undefined;
+  MentorBoardIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   VisionBoardSections: {
     boardId: string;
     refresh?: number;
   };
-  VisionBoardSectionPhotos: { boardId: string; sectionId: string; sectionName: string };
-  NewVisionBoardSection: { boardId: string };
-  VisionBoardEditSectionName: { boardId: string; sectionId: string; currentName: string };
+  VisionBoardSectionPhotos: { 
+    boardId: string; 
+    sectionId: string; 
+    sectionName: string 
+  };
+  NewVisionBoardSection: { 
+    boardId: string 
+  };
+  VisionBoardEditSectionName: { 
+    boardId: string; 
+    sectionId: string; 
+    currentName: string 
+  };
   MusicSelection: {
     exerciseName: string;
   };
-  Lesson: {
-    lessonId: number;
+  MentorBoardDetails: { 
+    boardId: string 
   };
-  MentorBoardDetails: { boardId: string };
-  DailyGratitudeIntro: undefined;
-  DailyGratitude: undefined;
-  DeepBreathingIntro: undefined;
-  PassiveIncantationsIntro: undefined;
+  DailyGratitudeIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
+  DailyGratitude: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
+  DeepBreathingIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
+  PassiveIncantationsIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   Questionnaire: undefined;
   Trial: undefined;
   PostQuestionnaire: undefined;
   PreQuestionnaire: undefined;
-  GratitudeBeads: undefined;
-  GratitudeBeadsIntro: undefined;
-  SunBreathTutorial: undefined;
+  GratitudeBeads: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
+  GratitudeBeadsIntro: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
+  SunBreathTutorial: {
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
   SunBreathExercise: undefined;
   SunBreathComplete: undefined;
   SunBreathSettings: undefined;
@@ -106,7 +171,7 @@ export type RootStackParamList = {
       description: string;
       image: any;
     };
-  };
+  } | undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();

@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;
 
@@ -288,7 +289,7 @@ const BenefitsModal: React.FC<{
   );
 };
 
-const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
+const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -360,8 +361,31 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleComplete = async () => {
     if (checkedItems.length === CHECKLIST_ITEMS.length) {
-      await markExerciseAsCompleted('golden-checklist', 'Golden Checklist');
-      navigation.navigate('MainTabs');
+      try {
+        if (route.params?.context === 'challenge') {
+          if (route.params.onComplete) {
+            route.params.onComplete();
+          }
+          if (route.params.returnTo === 'ChallengeDetail') {
+            navigation.navigate('ChallengeDetail', {
+              challenge: {
+                id: route.params.challengeId || '',
+                title: 'Ultimate',
+                duration: 21,
+                description: '',
+                image: null
+              }
+            });
+          } else {
+            navigation.goBack();
+          }
+        } else {
+          await markDailyExerciseAsCompleted('golden-checklist');
+          navigation.navigate('MainTabs');
+        }
+      } catch (error) {
+        console.error('Error completing exercise:', error);
+      }
     }
   };
 

@@ -52,6 +52,11 @@ const ExerciseCard: React.FC<Exercise & { challengeId: string; isCompleted: bool
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
+  
+  if (!route.params?.challenge) {
+    return null;
+  }
+  
   const { challenge } = route.params;
 
   const weeks = [
@@ -63,11 +68,50 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const exercises: Exercise[] = [
     {
-      id: '1',
-      title: 'Vocal Range',
-      description: 'Harmonize your vocal range for improved resonance and depth.',
+      id: 'deep-breathing',
+      title: 'Deep Breathing',
+      description: 'Practice deep breathing exercises to reduce stress and increase mindfulness.',
     },
-    // Add more exercises here
+    {
+      id: 'daily-gratitude',
+      title: 'Daily Gratitude',
+      description: 'Express gratitude for three things in your life to cultivate positivity and appreciation.',
+    },
+    {
+      id: 'active-incantations',
+      title: 'Active Incantations',
+      description: 'Practice powerful affirmations to reinforce positive beliefs and mindset.',
+    },
+    {
+      id: 'passive-incantations',
+      title: 'Passive Incantations',
+      description: 'Listen to guided affirmations with background music to reprogram your subconscious mind.',
+    },
+    {
+      id: 'golden-checklist',
+      title: 'Golden Checklist',
+      description: 'Create and complete your daily checklist of important tasks and habits.',
+    },
+    {
+      id: 'gratitude-beads',
+      title: 'Gratitude Beads',
+      description: 'Use meditation beads to practice mindful gratitude and positive thinking.',
+    },
+    {
+      id: 'sun-breath',
+      title: 'Sun Breath',
+      description: 'Energize your body and mind with this powerful breathing technique.',
+    },
+    {
+      id: 'vision-board',
+      title: 'Vision Board',
+      description: 'Create and visualize your goals and dreams through a digital vision board.',
+    },
+    {
+      id: 'mentor-board',
+      title: 'Mentor Board',
+      description: 'Create your personal board of mentors to guide and inspire your journey.',
+    }
   ];
 
   useEffect(() => {
@@ -93,6 +137,45 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }));
   };
 
+  const handleExerciseStart = async (exerciseId: string) => {
+    const navigationParams = {
+      onComplete: () => handleExerciseComplete(exerciseId),
+      returnTo: 'ChallengeDetail' as keyof RootStackParamList,
+      challengeId: challenge.id
+    };
+
+    // Navigate to the appropriate exercise screen based on the exercise ID
+    switch (exerciseId) {
+      case 'deep-breathing':
+        navigation.navigate('DeepBreathingIntro', navigationParams);
+        break;
+      case 'daily-gratitude':
+        navigation.navigate('DailyGratitudeIntro', navigationParams);
+        break;
+      case 'active-incantations':
+        navigation.navigate('ActiveIncantationsIntro', navigationParams);
+        break;
+      case 'passive-incantations':
+        navigation.navigate('PassiveIncantationsIntro', navigationParams);
+        break;
+      case 'golden-checklist':
+        navigation.navigate('GoldenChecklistIntro', navigationParams);
+        break;
+      case 'gratitude-beads':
+        navigation.navigate('GratitudeBeadsIntro', navigationParams);
+        break;
+      case 'sun-breath':
+        navigation.navigate('SunBreathTutorial', navigationParams);
+        break;
+      case 'vision-board':
+        navigation.navigate('VisionBoardIntro', navigationParams);
+        break;
+      case 'mentor-board':
+        navigation.navigate('MentorBoardIntro', navigationParams);
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -101,82 +184,87 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.heroSection}>
-        <Image 
-          source={challenge.image}
-          style={styles.challengeImage}
-          resizeMode="contain"
-        />
-        <Text style={styles.title}>{challenge.title}</Text>
-        <View style={styles.durationBadge}>
-          <MaterialCommunityIcons name="layers" size={20} color="#FFFFFF" />
-          <Text style={styles.durationText}>{challenge.duration} days</Text>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.continueButton}>
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
-
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'trainings' && styles.activeTab]}
-          onPress={() => setActiveTab('trainings')}
-        >
-          <Text style={[styles.tabText, activeTab === 'trainings' && styles.activeTabText]}>
-            Trainings
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'preview' && styles.activeTab]}
-          onPress={() => setActiveTab('preview')}
-        >
-          <Text style={[styles.tabText, activeTab === 'preview' && styles.activeTabText]}>
-            Preview
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {activeTab === 'trainings' && (
-        <ScrollView style={styles.content}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.weeksContainer}
-          >
-            {weeks.map((week, index) => (
-              <View 
-                key={week.id} 
-                style={[
-                  styles.weekItem,
-                  index === 0 && styles.activeWeek
-                ]}
-              >
-                <View style={styles.weekDot} />
-                <Text style={styles.weekText}>Week {week.id}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.exercisesContainer}>
-            {exercises.map(exercise => (
-              <ExerciseCard
-                key={exercise.id}
-                {...exercise}
-                challengeId={challenge.id}
-                isCompleted={completedExercises[exercise.id] || false}
-                onComplete={() => handleExerciseComplete(exercise.id)}
-              />
-            ))}
+      <ScrollView style={styles.content}>
+        <View style={styles.heroSection}>
+          <Image 
+            source={challenge.image}
+            style={styles.challengeImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>{challenge.title}</Text>
+          <View style={styles.durationBadge}>
+            <MaterialCommunityIcons name="layers" size={20} color="#FFFFFF" />
+            <Text style={styles.durationText}>{challenge.duration} days</Text>
           </View>
-        </ScrollView>
-      )}
+        </View>
 
-      {activeTab === 'preview' && (
-        <ScrollView style={styles.content}>
-          <Text style={styles.previewText}>{challenge.description}</Text>
-        </ScrollView>
-      )}
+        <TouchableOpacity style={styles.continueButton}>
+          <Text style={styles.continueButtonText}>Continue</Text>
+        </TouchableOpacity>
+
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'trainings' && styles.activeTab]}
+            onPress={() => setActiveTab('trainings')}
+          >
+            <Text style={[styles.tabText, activeTab === 'trainings' && styles.activeTabText]}>
+              Trainings
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'preview' && styles.activeTab]}
+            onPress={() => setActiveTab('preview')}
+          >
+            <Text style={[styles.tabText, activeTab === 'preview' && styles.activeTabText]}>
+              Preview
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {activeTab === 'trainings' && (
+          <>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.weeksContainer}
+            >
+              {weeks.map((week, index) => (
+                <View 
+                  key={week.id} 
+                  style={styles.weekItem}
+                >
+                  <View style={[
+                    styles.weekDot,
+                    index === 0 && styles.activeWeekDot
+                  ]} />
+                  <Text style={[
+                    styles.weekText,
+                    index === 0 && styles.activeWeekText
+                  ]}>Week {week.id}</Text>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={styles.exercisesContainer}>
+              {exercises.map(exercise => (
+                <ExerciseCard
+                  key={exercise.id}
+                  {...exercise}
+                  challengeId={challenge.id}
+                  isCompleted={completedExercises[exercise.id] || false}
+                  onComplete={() => handleExerciseStart(exercise.id)}
+                />
+              ))}
+            </View>
+          </>
+        )}
+
+        {activeTab === 'preview' && (
+          <View style={styles.previewContainer}>
+            <Text style={styles.previewText}>{challenge.description}</Text>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -266,23 +354,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   weekItem: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginRight: 24,
   },
   weekDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginBottom: 8,
+    marginRight: 8,
   },
-  activeWeek: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#FCD34D',
+  activeWeekDot: {
+    backgroundColor: '#FCD34D',
   },
   weekText: {
-    color: '#FFFFFF',
+    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 14,
+  },
+  activeWeekText: {
+    color: '#FCD34D',
   },
   exercisesContainer: {
     padding: 16,
@@ -340,6 +431,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     lineHeight: 24,
+    padding: 16,
+  },
+  previewContainer: {
     padding: 16,
   },
 });

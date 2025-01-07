@@ -13,10 +13,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
-const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
+const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,35 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('MainTabs');
   };
 
+  const handleComplete = async () => {
+    // Handle completion based on context
+    if (route.params?.context === 'challenge') {
+      // Let the challenge flow handle the completion
+      if (route.params.onComplete) {
+        route.params.onComplete();
+      }
+      
+      // Navigate back to challenge if specified
+      if (route.params.returnTo === 'ChallengeDetail') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId || '',
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: null
+          }
+        });
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      // Daily mission completion
+      await markDailyExerciseAsCompleted('deep-breathing');
+      navigation.goBack();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar 
@@ -50,7 +80,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.content}>
         <BreathingAnimation
           navigation={navigation}
-          onComplete={() => navigation.goBack()}
+          onComplete={handleComplete}
         />
       </View>
       <View style={styles.exitButtonContainer}>
