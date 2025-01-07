@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   nextButton: {
     backgroundColor: '#E31837',
     marginHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 120,
     paddingVertical: 16,
     borderRadius: 12,
     position: 'absolute',

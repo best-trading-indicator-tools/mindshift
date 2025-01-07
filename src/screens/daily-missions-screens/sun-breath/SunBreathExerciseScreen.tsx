@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, SafeAreaView, Dimensions, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Video from 'react-native-video';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -15,14 +15,13 @@ import { tutorialSteps } from './SunBreathTutorialScreen';
 import LinearGradient from 'react-native-linear-gradient';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
-
+type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathExercise'>;
 
 const { width, height } = Dimensions.get('window');
 
 const TOTAL_STEPS = tutorialSteps.length + 2; // Tutorial + Exercise + Complete
 
-const SunBreathExerciseScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+const SunBreathExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentCycle, setCurrentCycle] = useState(1);
   const [isInhaling, setIsInhaling] = useState(true);
   const [instruction, setInstruction] = useState('Breathe In');
@@ -134,7 +133,32 @@ const SunBreathExerciseScreen: React.FC = () => {
   const handleExitConfirm = () => {
     isNavigating.current = true;
     setShowExitModal(false);
-    navigation.navigate('MainTabs');
+    
+    // Handle exit based on context
+    if (route.params?.context === 'challenge') {
+      // Let the challenge flow handle the completion if needed
+      if (route.params.onComplete) {
+        route.params.onComplete();
+      }
+      
+      // Navigate back to challenge if specified
+      if (route.params.returnTo === 'ChallengeDetail') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId || '',
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: null
+          }
+        });
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      // Default behavior for daily mission
+      navigation.navigate('MainTabs');
+    }
   };
 
   const handleExitCancel = () => {
