@@ -1,3 +1,5 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -5,8 +7,6 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoard'>;
 
 const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
-  // ... rest of component ...
-
   const handleComplete = async () => {
     try {
       if (route.params?.context === 'challenge') {
@@ -34,4 +34,20 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Error completing exercise:', error);
     }
   };
-}; 
+
+  return (
+    <View style={styles.container}>
+      <Text>Mentor Board Screen</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+export default MentorBoardScreen; 

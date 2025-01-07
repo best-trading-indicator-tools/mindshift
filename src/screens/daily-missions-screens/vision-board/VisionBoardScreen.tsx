@@ -1,10 +1,12 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
 
-// ... rest of imports ...
+type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoard'>;
 
 const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
-  // ... rest of component ...
-
   const handleComplete = async () => {
     try {
       if (route.params?.context === 'challenge') {
@@ -32,4 +34,20 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Error completing exercise:', error);
     }
   };
-}; 
+
+  return (
+    <View style={styles.container}>
+      <Text>Vision Board Screen</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+export default VisionBoardScreen; 
