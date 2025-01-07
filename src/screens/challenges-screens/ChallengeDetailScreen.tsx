@@ -242,10 +242,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         >
           <MaterialCommunityIcons name="chevron-left" size={32} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>{challenge.title}</Text>
+        <View style={styles.headerButtonPlaceholder} />
         <TouchableOpacity 
           style={styles.headerButton}
-          onPress={() => navigation.push('MainTabs')}
+          onPress={() => navigation.getParent()?.navigate('MainTabs')}
         >
           <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
         </TouchableOpacity>

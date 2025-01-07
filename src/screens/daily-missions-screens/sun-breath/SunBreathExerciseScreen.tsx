@@ -149,7 +149,7 @@ const SunBreathExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
             title: 'Ultimate',
             duration: 21,
             description: '',
-            image: null
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
           }
         });
       } else {

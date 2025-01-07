@@ -40,7 +40,12 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleConfirmExit = () => {
     // Handle exit based on context
     if (route.params?.context === 'challenge') {
-      // Just navigate back to challenge if specified, without marking as complete
+      // Let the challenge flow handle the completion if needed
+      if (route.params.onComplete) {
+        route.params.onComplete();
+      }
+      
+      // Navigate back to challenge if specified
       if (route.params.returnTo === 'ChallengeDetail') {
         navigation.navigate('ChallengeDetail', {
           challenge: {
@@ -48,7 +53,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
             title: 'Ultimate',
             duration: 21,
             description: '',
-            image: null
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
           }
         });
       } else {
