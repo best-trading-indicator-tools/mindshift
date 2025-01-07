@@ -71,6 +71,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   GoldenChecklist: {
     context?: 'daily' | 'challenge';
@@ -130,6 +131,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   DeepBreathingIntro: {
     returnTo?: keyof RootStackParamList;
@@ -148,6 +150,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   GratitudeBeadsIntro: {
     returnTo?: keyof RootStackParamList;
@@ -161,6 +164,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   SunBreathComplete: {
     context?: 'daily' | 'challenge';
@@ -171,6 +175,7 @@ export type RootStackParamList = {
   ManageActiveIncantations: undefined;
   ActiveIncantationsExercise: {
     incantations: string[];
+    onComplete?: () => void;
   };
   ChallengeDetail: {
     challenge: {
