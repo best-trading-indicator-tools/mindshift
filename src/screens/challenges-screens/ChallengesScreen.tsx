@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -24,11 +24,20 @@ const challenges = [
 ];
 
 const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
+  const handleVisionBoardPress = () => {
+    navigation.navigate('VisionBoard', {
+      source: 'challenges'
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Challenges</Text>
+          <TouchableOpacity onPress={handleVisionBoardPress}>
+            {/* Your vision board navigation button/icon */}
+          </TouchableOpacity>
         </View>
 
         {challenges.map((challenge) => (

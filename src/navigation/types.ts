@@ -29,4 +29,7 @@ export type RootStackParamList = {
     source: 'challenges' | 'home';
   };
   Challenges: undefined;
+  VisionBoard: {
+    source: 'challenges' | 'home';
+  };
 }; 

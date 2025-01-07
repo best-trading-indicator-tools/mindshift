@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ProgressHeader from '../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type VisionBoardIntroScreenRouteProp = RouteProp<RootStackParamList, 'VisionBoardIntro'>;
 
 const introContent = [
   {
@@ -25,6 +26,7 @@ const introContent = [
 
 const VisionBoardIntroScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<VisionBoardIntroScreenRouteProp>();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
 
@@ -34,16 +36,38 @@ const VisionBoardIntroScreen: React.FC = () => {
     } else {
       try {
         await AsyncStorage.setItem('vision_board_intro_seen', 'true');
-        navigation.navigate('VisionBoard');
+        navigation.navigate('VisionBoard', {
+          context: route.params?.challengeId ? 'challenge' : 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo,
+          onComplete: route.params?.onComplete
+        });
       } catch (error) {
         console.error('Error saving intro state:', error);
-        navigation.navigate('VisionBoard');
+        navigation.navigate('VisionBoard', {
+          context: route.params?.challengeId ? 'challenge' : 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo,
+          onComplete: route.params?.onComplete
+        });
       }
     }
   };
 
   const handleExit = () => {
-    navigation.goBack();
+    if (route.params?.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId,
+          title: 'Ultimate',
+          duration: 21,
+          description: '',
+          image: null
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
 
   const currentContent = introContent[currentStep - 1];
@@ -136,7 +160,7 @@ const styles = StyleSheet.create({
   nextButton: {
     backgroundColor: '#E31837',
     marginHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 100,
     paddingVertical: 16,
     borderRadius: 12,
     position: 'absolute',
