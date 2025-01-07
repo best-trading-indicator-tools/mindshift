@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
 
 const { width } = Dimensions.get('window');
 
@@ -11,13 +12,19 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ChallengeDetail'>;
 
 type TabType = 'trainings' | 'preview';
 
-interface ExerciseProps {
+interface Exercise {
+  id: string;
   title: string;
   description: string;
-  isCompleted?: boolean;
 }
 
-const ExerciseCard: React.FC<ExerciseProps> = ({ title, description, isCompleted }) => (
+const ExerciseCard: React.FC<Exercise & { challengeId: string; isCompleted: boolean; onComplete: () => void }> = ({ 
+  id, 
+  title, 
+  description, 
+  isCompleted,
+  onComplete 
+}) => (
   <View style={styles.exerciseCard}>
     <View style={styles.exerciseContent}>
       <View style={styles.exerciseHeader}>
@@ -30,8 +37,13 @@ const ExerciseCard: React.FC<ExerciseProps> = ({ title, description, isCompleted
         )}
       </View>
       <Text style={styles.exerciseDescription}>{description}</Text>
-      <TouchableOpacity style={styles.startButton}>
-        <Text style={styles.startButtonText}>Start Training</Text>
+      <TouchableOpacity 
+        style={styles.startButton}
+        onPress={onComplete}
+      >
+        <Text style={styles.startButtonText}>
+          {isCompleted ? 'Restart Training' : 'Start Training'}
+        </Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -39,6 +51,7 @@ const ExerciseCard: React.FC<ExerciseProps> = ({ title, description, isCompleted
 
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
+  const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const { challenge } = route.params;
 
   const weeks = [
@@ -48,15 +61,37 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     { id: 4, title: 'Week 4' },
   ];
 
-  const exercises = [
+  const exercises: Exercise[] = [
     {
-      id: 1,
+      id: '1',
       title: 'Vocal Range',
       description: 'Harmonize your vocal range for improved resonance and depth.',
-      isCompleted: true,
     },
     // Add more exercises here
   ];
+
+  useEffect(() => {
+    // Load completion status for all exercises
+    const loadCompletionStatus = async () => {
+      const completionStatus: Record<string, boolean> = {};
+      await Promise.all(
+        exercises.map(async (exercise) => {
+          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
+        })
+      );
+      setCompletedExercises(completionStatus);
+    };
+
+    loadCompletionStatus();
+  }, [challenge.id, exercises]);
+
+  const handleExerciseComplete = async (exerciseId: string) => {
+    await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
+    setCompletedExercises(prev => ({
+      ...prev,
+      [exerciseId]: true
+    }));
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -127,9 +162,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             {exercises.map(exercise => (
               <ExerciseCard
                 key={exercise.id}
-                title={exercise.title}
-                description={exercise.description}
-                isCompleted={exercise.isCompleted}
+                {...exercise}
+                challengeId={challenge.id}
+                isCompleted={completedExercises[exercise.id] || false}
+                onComplete={() => handleExerciseComplete(exercise.id)}
               />
             ))}
           </View>
@@ -153,14 +189,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: 8,
   },
   closeButton: {
     padding: 8,
   },
   heroSection: {
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   challengeImage: {
     width: width * 0.8,
