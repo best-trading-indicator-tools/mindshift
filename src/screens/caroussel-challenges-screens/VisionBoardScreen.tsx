@@ -39,12 +39,28 @@ export interface VisionBoard {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoard'>;
 
-const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
+const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [visionBoards, setVisionBoards] = useState<VisionBoard[]>([]);
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState<VisionBoard | null>(null);
+
+  const handleExit = () => {
+    if (route.params?.context === 'challenge' && route.params.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId,
+          title: 'Ultimate',
+          duration: 21,
+          description: '',
+          image: null
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -137,12 +153,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.exitButton}
-            onPress={() => {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs' }],
-              });
-            }}
+            onPress={handleExit}
           >
             <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
           </TouchableOpacity>
