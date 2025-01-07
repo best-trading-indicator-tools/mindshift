@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,6 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
 const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
+  const breathingAnimationRef = useRef<any>();
 
   useEffect(() => {
     // Save the current status bar style
@@ -62,6 +63,32 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const handleExit = async () => {
+    if (breathingAnimationRef.current) {
+      breathingAnimationRef.current.cleanupAllAudio();
+    }
+    
+    // Handle navigation based on context
+    if (route.params?.context === 'challenge' && route.params?.challengeId) {
+      if (route.params.returnTo === 'ChallengeDetail') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      // Default behavior for daily mission
+      navigation.navigate('MainTabs');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar 
@@ -71,12 +98,21 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       />
       <View style={styles.content}>
         <BreathingAnimation
+          ref={breathingAnimationRef}
           navigation={navigation}
           onComplete={handleComplete}
+          context={route.params?.context}
+          challengeId={route.params?.challengeId}
+          returnTo={route.params?.returnTo}
         />
       </View>
       <View style={styles.exitButtonContainer}>
-        <ExitExerciseButton onExit={() => setShowExitModal(true)} />
+        <ExitExerciseButton onExit={() => {
+          if (breathingAnimationRef.current) {
+            breathingAnimationRef.current.handleExitPress();
+          }
+          setShowExitModal(true);
+        }} />
       </View>
 
       <Modal
@@ -99,7 +135,13 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.exitButton}
-              onPress={() => setShowExitModal(false)}
+              onPress={() => {
+                if (breathingAnimationRef.current) {
+                  breathingAnimationRef.current.cleanupAllAudio();
+                }
+                setShowExitModal(false);
+                navigation.navigate('MainTabs');
+              }}
             >
               <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>

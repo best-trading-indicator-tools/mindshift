@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity, Modal } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
+import { CommonActions } from '@react-navigation/native';
 import { markExerciseAsCompleted } from '../services/exerciseService';
 import { audioService, AUDIO_FILES } from '../services/audioService';
 
@@ -15,13 +16,16 @@ const TOTAL_CYCLES = 1;
 // Enable playback in silence mode
 Sound.setCategory('Playback', true);
 
-const BreathingAnimation: React.FC<{ 
-  navigation: any;
-  context?: 'daily' | 'challenge';
-  challengeId?: string;
-  returnTo?: string;
-  onComplete?: () => void;
-}> = ({ navigation, context, challengeId, returnTo, onComplete }) => {
+const BreathingAnimation = React.forwardRef<
+  { handleExitPress: () => void; cleanupAllAudio: () => void },
+  { 
+    navigation: any;
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: string;
+    onComplete?: () => void;
+  }
+>(({ navigation, context, challengeId, returnTo, onComplete }, ref) => {
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
@@ -354,7 +358,7 @@ const BreathingAnimation: React.FC<{
       }
     } else {
       // Default behavior for daily mission - go to MainTabs
-      navigation.push('MainTabs');
+      navigation.replace('MainTabs');
     }
   };
 
@@ -371,6 +375,12 @@ const BreathingAnimation: React.FC<{
     // Restart breathing cycle
     startBreathingCycle();
   };
+
+  // Expose methods via ref
+  React.useImperativeHandle(ref, () => ({
+    handleExitPress,
+    cleanupAllAudio
+  }));
 
   if (phase === 'complete') {
     return (
@@ -462,7 +472,7 @@ const BreathingAnimation: React.FC<{
       </Modal>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -615,4 +625,5 @@ const styles = StyleSheet.create({
   },
 });
 
+export { BreathingAnimation };
 export default BreathingAnimation;
