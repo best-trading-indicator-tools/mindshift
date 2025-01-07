@@ -20,7 +20,8 @@ const BreathingAnimation: React.FC<{
   context?: 'daily' | 'challenge';
   challengeId?: string;
   returnTo?: string;
-}> = ({ navigation, context, challengeId, returnTo }) => {
+  onComplete?: () => void;
+}> = ({ navigation, context, challengeId, returnTo, onComplete }) => {
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
@@ -260,34 +261,28 @@ const BreathingAnimation: React.FC<{
   };
 
   const handleCompletion = async () => {
-    cleanupAllAudio();
-
     try {
-      // Mark the exercise as completed in Firestore
+      // Clean up audio before playing completion sound
+      cleanupAllAudio();
+      
+      // Play completion sound if available
+      if (completionSound.current) {
+        completionSound.current.play();
+      }
+      
+      // Mark exercise as completed
       await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
       
-      // Handle navigation based on context
-      if (context === 'challenge' && challengeId) {
-        if (returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: require('../assets/illustrations/challenges/challenge-21.png')
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
-      } else {
-        // Default behavior for daily mission
-        navigation.navigate('MainTabs');
+      // Call onComplete callback if provided
+      if (onComplete) {
+        onComplete();
       }
     } catch (error) {
-      console.error('Failed to mark exercise as completed:', error);
-      navigation.goBack();
+      console.error('Error during completion:', error);
+      // Still call onComplete even if there was an error
+      if (onComplete) {
+        onComplete();
+      }
     }
   };
 
@@ -326,7 +321,26 @@ const BreathingAnimation: React.FC<{
 
   const handleConfirmExit = () => {
     cleanupAllAudio();
-    navigation.goBack();
+    
+    // Handle navigation based on context
+    if (context === 'challenge' && challengeId) {
+      if (returnTo === 'ChallengeDetail') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: require('../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      // Default behavior for daily mission - go to MainTabs
+      navigation.push('MainTabs');
+    }
   };
 
   if (phase === 'complete') {

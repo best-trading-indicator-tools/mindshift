@@ -72,9 +72,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.content}>
         <BreathingAnimation
           navigation={navigation}
-          context={route.params?.context}
-          challengeId={route.params?.challengeId}
-          returnTo={route.params?.returnTo}
+          onComplete={handleComplete}
         />
       </View>
       <View style={styles.exitButtonContainer}>
