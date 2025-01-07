@@ -46,8 +46,12 @@ import { runOnJS } from 'react-native-reanimated';
 import Sound from 'react-native-sound';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
 
-const PassiveIncantationsScreen: React.FC<{ navigation: any, route: any }> = ({ navigation, route }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'PassiveIncantations'>;
+
+const PassiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);

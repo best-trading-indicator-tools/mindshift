@@ -16,6 +16,7 @@ interface Exercise {
   id: string;
   title: string;
   description: string;
+  week: number;
 }
 
 const ExerciseCard: React.FC<Exercise & { challengeId: string; isCompleted: boolean; onComplete: () => void }> = ({ 
@@ -52,6 +53,7 @@ const ExerciseCard: React.FC<Exercise & { challengeId: string; isCompleted: bool
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
+  const [selectedWeek, setSelectedWeek] = useState(1);
   
   if (!route.params?.challenge) {
     return null;
@@ -67,50 +69,61 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   ];
 
   const exercises: Exercise[] = [
+    // Week 1 Exercises
     {
       id: 'deep-breathing',
       title: 'Deep Breathing',
       description: 'Practice deep breathing exercises to reduce stress and increase mindfulness.',
+      week: 1
     },
     {
       id: 'daily-gratitude',
       title: 'Daily Gratitude',
       description: 'Express gratitude for three things in your life to cultivate positivity and appreciation.',
+      week: 1
     },
     {
       id: 'active-incantations',
       title: 'Active Incantations',
       description: 'Practice powerful affirmations to reinforce positive beliefs and mindset.',
+      week: 1
     },
     {
       id: 'passive-incantations',
       title: 'Passive Incantations',
       description: 'Listen to guided affirmations with background music to reprogram your subconscious mind.',
+      week: 1
     },
     {
       id: 'golden-checklist',
       title: 'Golden Checklist',
       description: 'Create and complete your daily checklist of important tasks and habits.',
+      week: 1
     },
+    // Week 2 Exercises
     {
       id: 'gratitude-beads',
       title: 'Gratitude Beads',
       description: 'Use meditation beads to practice mindful gratitude and positive thinking.',
+      week: 2
     },
     {
       id: 'sun-breath',
       title: 'Sun Breath',
       description: 'Energize your body and mind with this powerful breathing technique.',
+      week: 2
     },
     {
       id: 'vision-board',
       title: 'Vision Board',
       description: 'Create and visualize your goals and dreams through a digital vision board.',
+      week: 2
     },
     {
       id: 'mentor-board',
       title: 'Mentor Board',
       description: 'Create your personal board of mentors to guide and inspire your journey.',
+      week: 2
     }
   ];
 
@@ -229,32 +242,35 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               style={styles.weeksContainer}
             >
               {weeks.map((week, index) => (
-                <View 
+                <TouchableOpacity 
                   key={week.id} 
                   style={styles.weekItem}
+                  onPress={() => setSelectedWeek(week.id)}
                 >
                   <View style={[
                     styles.weekDot,
-                    index === 0 && styles.activeWeekDot
+                    selectedWeek === week.id && styles.activeWeekDot
                   ]} />
                   <Text style={[
                     styles.weekText,
-                    index === 0 && styles.activeWeekText
+                    selectedWeek === week.id && styles.activeWeekText
                   ]}>Week {week.id}</Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
 
             <View style={styles.exercisesContainer}>
-              {exercises.map(exercise => (
-                <ExerciseCard
-                  key={exercise.id}
-                  {...exercise}
-                  challengeId={challenge.id}
-                  isCompleted={completedExercises[exercise.id] || false}
-                  onComplete={() => handleExerciseStart(exercise.id)}
-                />
-              ))}
+              {exercises
+                .filter(exercise => exercise.week === selectedWeek)
+                .map(exercise => (
+                  <ExerciseCard
+                    key={exercise.id}
+                    {...exercise}
+                    challengeId={challenge.id}
+                    isCompleted={completedExercises[exercise.id] || false}
+                    onComplete={() => handleExerciseStart(exercise.id)}
+                  />
+                ))}
             </View>
           </>
         )}
