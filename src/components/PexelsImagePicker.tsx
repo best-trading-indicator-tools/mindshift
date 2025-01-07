@@ -15,10 +15,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PEXELS_API_KEY } from '@env';
-
-console.log('PEXELS_API_KEY:', PEXELS_API_KEY);
-console.log('PEXELS_API_KEY length:', PEXELS_API_KEY?.length);
-console.log('PEXELS_API_KEY first 5 chars:', PEXELS_API_KEY?.substring(0, 5));
+import { launchImageLibrary } from 'react-native-image-picker';
 
 interface PexelsPhoto {
   id: string;
@@ -153,6 +150,64 @@ const PexelsImagePicker: React.FC<Props> = ({
     onClose();
   };
 
+  const handleAddFromPhone = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 10 - selectedPhotos.length,
+        quality: 1,
+      });
+
+      console.log('Image picker result:', result);
+
+      if (result.didCancel) {
+        console.log('User cancelled image picker');
+        return;
+      }
+
+      if (result.errorCode) {
+        console.error('ImagePicker Error:', result.errorMessage);
+        Alert.alert(
+          'Error',
+          result.errorMessage || 'Failed to pick image from your phone',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+
+      if (result.assets && result.assets.length > 0) {
+        console.log('Selected assets:', result.assets);
+        const newPhotos: PexelsPhoto[] = result.assets.map(asset => ({
+          id: asset.fileName || Date.now().toString(),
+          src: {
+            medium: asset.uri || '',
+            original: asset.uri || '',
+          }
+        }));
+
+        if (selectedPhotos.length + newPhotos.length > 10) {
+          Alert.alert(
+            'Photo Limit Reached',
+            'You can only add up to 10 photos per section.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+
+        console.log('Processing selected photos:', newPhotos);
+        onSelectPhotos(newPhotos);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert(
+        'Error',
+        'Failed to pick image from your phone. Please try again.',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
+  };
+
   const renderPhoto = ({ item }: { item: PexelsPhoto }) => {
     const isSelected = selectedPhotos.includes(item.src.original);
     const isDisabled = !isSelected && selectedPhotos.length >= 10;
@@ -259,7 +314,10 @@ const PexelsImagePicker: React.FC<Props> = ({
 
         <View style={styles.poweredByContainer}>
           <Text style={styles.poweredByText}>Powered by Pexels™</Text>
-          <TouchableOpacity style={styles.addFromPhone}>
+          <TouchableOpacity 
+            style={styles.addFromPhone}
+            onPress={handleAddFromPhone}
+          >
             <MaterialCommunityIcons name="plus" size={20} color="#000" />
             <Text style={styles.addFromPhoneText}>Add from Phone</Text>
           </TouchableOpacity>
