@@ -3,7 +3,6 @@ import { videoService } from './videoService';
 
 export const ResourcePreloadService = {
   preloadedSunBreathResources: false,
-  preloadedDeepBreathResources: false,
 
   async preloadSunBreathResources(): Promise<void> {
     if (this.preloadedSunBreathResources) {
@@ -41,37 +40,9 @@ export const ResourcePreloadService = {
     }
   },
 
-  async preloadDeepBreathResources(): Promise<void> {
-    if (this.preloadedDeepBreathResources) {
-      console.log('🎵 Deep Breath resources already preloaded, skipping...');
-      return;
-    }
-
-    try {
-      console.log('🎵 Starting to preload Deep Breath audio files...');
-      
-      // Load and cache audio files
-      await Promise.all([
-        audioService.loadSound(AUDIO_FILES.GONG),
-        audioService.loadSound(AUDIO_FILES.HAVE_A_GREAT_DAY)
-      ]);
-
-      console.log('✅ Successfully loaded gong audio');
-      console.log('✅ Successfully loaded completion audio');
-
-      this.preloadedDeepBreathResources = true;
-      console.log('🎉 All Deep Breath resources preloaded successfully');
-    } catch (error: unknown) {
-      this.preloadedDeepBreathResources = false;
-      console.error('❌ Error preloading Deep Breath resources:', error);
-      throw error;
-    }
-  },
-
   isPreloadComplete(): boolean {
     return (
       this.preloadedSunBreathResources && 
-      this.preloadedDeepBreathResources && 
       videoService.isPreloadComplete()
     );
   }

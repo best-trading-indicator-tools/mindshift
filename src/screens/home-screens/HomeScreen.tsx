@@ -264,8 +264,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       try {
         console.log('🎵 Starting to preload resources...');
         await Promise.all([
-          ResourcePreloadService.preloadSunBreathResources(),
-          ResourcePreloadService.preloadDeepBreathResources()
+          ResourcePreloadService.preloadSunBreathResources()
         ]);
         console.log('✅ Resources preloaded successfully');
 
@@ -462,8 +461,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       // Reload all audio resources
       console.log('🎵 Reloading all audio resources after reset...');
       await Promise.all([
-        ResourcePreloadService.preloadSunBreathResources(),
-        ResourcePreloadService.preloadDeepBreathResources()
+        ResourcePreloadService.preloadSunBreathResources()
       ]);
       console.log('✅ Audio resources reloaded successfully');
       

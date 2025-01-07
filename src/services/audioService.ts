@@ -6,13 +6,13 @@ import NetInfo from '@react-native-community/netinfo';
 Sound.setCategory('Playback');
 
 interface AudioFile {
-  url: string;
+  url: string | number;
   filename: string;
 }
 
 export const AUDIO_FILES = {
   HAVE_A_GREAT_DAY: {
-    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fhaveagreatday.wav?alt=media&token=140dd18b-06c1-45b5-acb2-c65a58b8d090',
+    url: require('../assets/audio/haveagreatday.wav'),
     filename: 'haveagreatday.wav'
   },
   MUSIC_INCANTATION: {
@@ -20,7 +20,7 @@ export const AUDIO_FILES = {
     filename: 'music-incantation-1.wav'
   },
   GONG: {
-    url: 'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/audio%2Fgong.wav?alt=media&token=c1843866-9a52-4ce6-8c24-e45a9d8188ad',
+    url: require('../assets/audio/gong.wav'),
     filename: 'gong.wav'
   },
   NECKLACE_BEADS: {
@@ -100,6 +100,10 @@ class AudioService {
     audioFile: AudioFile,
     onProgress?: (state: AudioLoadingState) => void
   ): Promise<string> {
+    if (typeof audioFile.url !== 'string') {
+      throw new Error('setupAudioFile only supports remote URLs');
+    }
+
     const { url, filename } = audioFile;
     const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
 
@@ -157,11 +161,15 @@ class AudioService {
   }
 
   private async downloadWithRetry(
-    url: string,
+    url: string | number,
     localPath: string,
     onProgress?: (state: AudioLoadingState) => void,
     retryCount = 0
   ): Promise<string> {
+    if (typeof url !== 'string') {
+      throw new Error('downloadWithRetry only supports remote URLs');
+    }
+
     try {
       onProgress?.({
         isLoading: true,
@@ -222,12 +230,38 @@ class AudioService {
       // Manage cache before loading new sound
       this.manageCache();
 
+      // Handle local audio files (using require)
+      if (typeof audioFile.url === 'number') {
+        return new Promise((resolve, reject) => {
+          const sound = new Sound(audioFile.url, (error) => {
+            if (error) {
+              console.error(`Error loading sound ${audioFile.filename}:`, error);
+              reject(error);
+              return;
+            }
+            
+            // Configure sound
+            sound.setCategory('Playback');
+            sound.setVolume(1.0);
+            sound.setNumberOfLoops(0);
+            
+            // Cache the sound instance
+            this.soundInstances.set(audioFile.filename, sound);
+            this.lastUsedTimestamp.set(audioFile.filename, Date.now());
+            console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
+            
+            resolve(sound);
+          });
+        });
+      }
+
+      // Handle remote audio files
       const localPath = await this.setupAudioFile(audioFile, onProgress);
 
       return new Promise((resolve, reject) => {
         const sound = new Sound(localPath, '', (error) => {
           if (error) {
-            console.error('Error loading sound:', error);
+            console.error(`Error loading sound ${audioFile.filename}:`, error);
             reject(error);
             return;
           }
