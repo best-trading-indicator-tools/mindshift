@@ -39,11 +39,15 @@ const BreathingAnimation: React.FC<{
     const initAudio = async () => {
       try {
         gongSound.current = await audioService.loadSound(AUDIO_FILES.GONG);
-        startBreathingCycle();
         
-        // Play initial gong after delay
-        const gongTimer = setTimeout(playGong, INITIAL_DELAY);
-        timersRef.current.push(gongTimer);
+        // Start breathing cycle after initial delay
+        const startTimer = setTimeout(() => {
+          // Play gong right before starting the cycle
+          playGong();
+          startBreathingCycle();
+        }, INITIAL_DELAY);
+        timersRef.current.push(startTimer);
+        
       } catch (error) {
         console.error('Error loading gong sound:', error);
       }
