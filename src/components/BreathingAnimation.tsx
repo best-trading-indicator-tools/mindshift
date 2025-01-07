@@ -7,10 +7,10 @@ import { markExerciseAsCompleted } from '../services/exerciseService';
 import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
-const HOLD_DURATION = 5000;   // 5 seconds hold
+const BREATH_DURATION = 3000; // 5 seconds for a more relaxed breath
+const HOLD_DURATION = 1000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
-const INITIAL_DELAY = 3000;   // 3 seconds initial delay
+const INITIAL_DELAY = 1000;   // 3 seconds initial delay
 const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
@@ -300,6 +300,21 @@ const BreathingAnimation = React.forwardRef<
     handleContinue,
     cleanupAllAudio
   }));
+
+  // Handle completion phase
+  useEffect(() => {
+    if (phase === 'complete') {
+      const timer = setTimeout(() => {
+        if (onComplete) {
+          onComplete();
+        }
+      }, 2000); // Wait 2 seconds before navigating
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [phase, onComplete]);
 
   if (phase === 'complete') {
     return (

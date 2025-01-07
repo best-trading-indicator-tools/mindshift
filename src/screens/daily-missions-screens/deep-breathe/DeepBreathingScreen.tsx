@@ -41,19 +41,16 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
         // Mark as completed for challenge
         await markChallengeExerciseAsCompleted(route.params.challengeId, 'deep-breathing');
         
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
+        // Navigate back to challenge detail
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
       } else {
         // Mark as completed for daily mission
         await markDailyExerciseAsCompleted('deep-breathing');
@@ -61,7 +58,20 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Failed to mark exercise as completed:', error);
-      navigation.goBack();
+      // Even if marking as completed fails, still navigate back
+      if (route.params?.context === 'challenge') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params?.challengeId || '',
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
+      } else {
+        navigation.navigate('MainTabs');
+      }
     }
   };
 
