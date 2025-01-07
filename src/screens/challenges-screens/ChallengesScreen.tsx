@@ -4,7 +4,7 @@ import { Text } from '@rneui/themed';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
+import { RootStackParamList, RootTabParamList } from '../../navigation/types';
 import ChallengeCard from '../../components/ChallengeCard';
 
 type Props = CompositeScreenProps<
@@ -18,7 +18,7 @@ const challenges = [
     title: 'Ultimate',
     duration: 21,
     description: 'Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
-    image: require('../../assets/illustrations/challenge-21.png'),
+    image: require('../../assets/illustrations/challenges/challenge-21.png'),
   },
   // Add more challenges here as needed
 ];
@@ -39,8 +39,10 @@ const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
             description={challenge.description}
             image={challenge.image}
             onPress={() => {
-              // Handle challenge selection
-              navigation.navigate('ChallengeDetail', { challenge });
+              navigation.navigate('ChallengeDetail', {
+                challenge,
+                source: 'challenges'
+              });
             }}
           />
         ))}
