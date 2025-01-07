@@ -19,9 +19,6 @@ export const ResourcePreloadService = {
         audioService.loadSound(AUDIO_FILES.SUN_BREATHE_OUT)
       ]);
 
-      console.log('✅ Successfully loaded breathe in audio');
-      console.log('✅ Successfully loaded breathe out audio');
-
       // Preload and verify videos are in memory cache
       console.log('🎥 Starting to preload Sun Breath videos...');
       const videosPreloaded = await videoService.preloadAllBreathingVideos();
@@ -29,13 +26,10 @@ export const ResourcePreloadService = {
       if (!videosPreloaded) {
         throw new Error('Failed to preload videos into memory cache');
       }
-      console.log('✅ Successfully preloaded Sun Breath videos');
 
       this.preloadedSunBreathResources = true;
-      console.log('🎉 All Sun Breath resources preloaded successfully');
     } catch (error: unknown) {
       this.preloadedSunBreathResources = false;
-      console.error('❌ Error preloading Sun Breath resources:', error);
       throw error;
     }
   },

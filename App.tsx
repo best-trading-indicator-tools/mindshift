@@ -21,12 +21,6 @@ function App(): JSX.Element {
   const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'PostQuestionnaire'>('PreQuestionnaire');
 
   const handleAuthStateChanged = useCallback((firebaseUser: FirebaseAuthTypes.User | null) => {
-    console.log('👤 App.tsx: Auth state changed:', {
-      userExists: !!firebaseUser,
-      userEmail: firebaseUser?.email,
-      timestamp: new Date().toISOString()
-    });
-
     // Batch state updates together
     unstable_batchedUpdates(() => {
       setUser(firebaseUser);
@@ -35,30 +29,22 @@ function App(): JSX.Element {
       setInitializing(false);
     });
 
-    console.log('✅ App.tsx: State update complete', {
-      userExists: !!firebaseUser,
-      isInitializing: false,
-      timestamp: new Date().toISOString()
-    });
+
   }, []); // Empty dependency array since these setters never change
 
   useEffect(() => {
-    console.log('🔄 App.tsx: Setting up auth state listener');
     const unsubscribe = auth().onAuthStateChanged(handleAuthStateChanged);
 
     return () => {
-      console.log('🔚 App.tsx: Cleaning up auth state listener');
       unsubscribe();
     };
   }, [handleAuthStateChanged]);
 
   const memoizedNavigator = React.useMemo(() => {
-    console.log('🧭 App.tsx: Creating memoized navigator with route:', initialRoute);
     return <AppNavigator initialRoute={initialRoute} />;
   }, [initialRoute]);
 
   if (initializing) {
-    console.log('⌛ App.tsx: Still initializing, showing loading screen');
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' }}>
         <ActivityIndicator size="large" color="#4285F4" />
@@ -66,7 +52,6 @@ function App(): JSX.Element {
     );
   }
 
-  console.log('🚀 App.tsx: Rendering main app UI');
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

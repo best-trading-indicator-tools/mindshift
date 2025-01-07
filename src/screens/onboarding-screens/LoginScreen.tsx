@@ -181,20 +181,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       let userCredential: FirebaseAuthTypes.UserCredential;
       
       if (isSignUp) {
-        console.log('📝 LoginScreen: Attempting to create new account');
+
         userCredential = await auth().createUserWithEmailAndPassword(email, password);
         await createUserProfile(userCredential.user);
-        console.log('✅ LoginScreen: New account created successfully');
       } else {
-        console.log('🔓 LoginScreen: Attempting to sign in');
         userCredential = await auth().signInWithEmailAndPassword(email, password);
-        console.log('✅ LoginScreen: Sign in successful');
       }
       
-      console.log('🚀 LoginScreen: Navigating to PostQuestionnaire');
       navigation.replace('PostQuestionnaire');
     } catch (error: any) {
-      console.error('❌ LoginScreen: Authentication error:', error);
       if (error.code === 'auth/invalid-email') {
         setError('Please enter a valid email address');
       } else if (error.code === 'auth/user-not-found') {

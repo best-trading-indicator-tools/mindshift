@@ -19,10 +19,9 @@ const introContent = [
   }
 ];
 
-
 const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = introContent.length; // Match total steps with actual content
+  const totalSteps = introContent.length;
 
   const handleNext = async () => {
     if (currentStep < totalSteps) {
@@ -43,14 +42,6 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleExit = () => {
     navigation.goBack();
-  };
-
-  const handleStart = () => {
-    navigation.navigate('DeepBreathing', {
-      context: route.params?.context || (route.params?.challengeId ? 'challenge' : 'daily'),
-      challengeId: route.params?.challengeId,
-      returnTo: route.params?.returnTo
-    });
   };
 
   const currentContent = introContent[currentStep - 1];

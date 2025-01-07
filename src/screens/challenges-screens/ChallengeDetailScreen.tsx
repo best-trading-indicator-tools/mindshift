@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -88,6 +88,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [lastUnlockedExercise, setLastUnlockedExercise] = useState<Exercise | null>(null);
+  const [pendingCompletion, setPendingCompletion] = useState<string | null>(null);
   
   if (!route.params?.challenge) {
     return null;
@@ -188,41 +189,39 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     findLastUnlockedExercise();
   }, [challenge.id, exercises]);
 
-  const handleExerciseComplete = async (exerciseId: string) => {
-    await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
-    setCompletedExercises(prev => ({
-      ...prev,
-      [exerciseId]: true
-    }));
-    
-    // Find and update the next unlocked exercise
-    const currentIndex = exercises.findIndex(e => e.id === exerciseId);
-    if (currentIndex < exercises.length - 1) {
-      const nextExercise = exercises[currentIndex + 1];
-      const isNextUnlocked = await isChallengeExerciseUnlocked(challenge.id, nextExercise.id, currentIndex + 1);
-      if (isNextUnlocked) {
-        setLastUnlockedExercise(nextExercise);
+  useEffect(() => {
+    // Handle pending completion when navigation focuses
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (pendingCompletion) {
+        handleExerciseComplete(pendingCompletion);
+        setPendingCompletion(null);
       }
-    }
-    
-    // Add notification for completed exercise
-    const exercise = exercises.find(e => e.id === exerciseId);
-    if (exercise) {
-      await addNotification({
-        id: `challenge-complete-${Date.now()}`,
-        title: 'Exercise Completed! 🎉',
-        message: `You've completed the ${exercise.title} exercise in your 21-day challenge. Keep up the great work!`,
-        type: 'success'
-      });
+    });
+
+    return unsubscribe;
+  }, [navigation, pendingCompletion]);
+
+  const handleExerciseComplete = async (exerciseId: string) => {
+    try {
+      await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
+      setCompletedExercises(prev => ({
+        ...prev,
+        [exerciseId]: true
+      }));
+    } catch (error) {
+      console.error('Error marking exercise as completed:', error);
     }
   };
 
   const handleExerciseStart = async (exerciseId: string) => {
     const navigationParams = {
-      context: 'challenge' as const,
       returnTo: 'ChallengeDetail' as keyof RootStackParamList,
-      challengeId: challenge.id
+      challengeId: challenge.id,
+      context: 'challenge' as const
     };
+
+    // Set the pending completion before navigating
+    setPendingCompletion(exerciseId);
 
     // Navigate to the appropriate exercise screen based on the exercise ID
     switch (exerciseId) {

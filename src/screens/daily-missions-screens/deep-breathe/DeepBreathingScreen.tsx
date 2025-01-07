@@ -13,7 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
-import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
@@ -38,19 +38,20 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleComplete = async () => {
     try {
       if (route.params?.context === 'challenge' && route.params?.challengeId) {
-        // Mark as completed for challenge
-        await markChallengeExerciseAsCompleted(route.params.challengeId, 'deep-breathing');
-        
-        // Navigate back to challenge detail
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
+        // For challenge completion, just navigate back
+        if (route.params.returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: route.params.challengeId,
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: require('../../../assets/illustrations/challenges/challenge-21.png')
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
       } else {
         // Mark as completed for daily mission
         await markDailyExerciseAsCompleted('deep-breathing');
@@ -58,20 +59,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Failed to mark exercise as completed:', error);
-      // Even if marking as completed fails, still navigate back
-      if (route.params?.context === 'challenge') {
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params?.challengeId || '',
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        navigation.navigate('MainTabs');
-      }
+      navigation.goBack();
     }
   };
 

@@ -187,7 +187,8 @@ export type RootStackParamList = {
       description: string;
       image: any;
     };
-  } | undefined;
+    pendingCompletion?: string;
+  };
   DeepBreathingComplete: {
     context?: 'challenge' | 'daily';
     challengeId?: string;
