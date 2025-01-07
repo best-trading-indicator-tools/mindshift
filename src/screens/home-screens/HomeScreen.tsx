@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Image, Alert } from 'react-native';
 import { Text, LinearProgress } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import type { CompositeScreenProps, NavigationProp } from '@react-navigation/native';
+import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';

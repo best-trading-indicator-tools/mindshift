@@ -7,7 +7,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 // Screen imports
 import HomeScreen from '../screens/home-screens/HomeScreen';
 import AiCoachScreen from '../screens/home-screens/AiCoachScreen';
-import { CourseTabScreen, CourseStackScreen } from '../screens/courses-screen/CourseScreen';
 import ChallengesScreen from '../screens/challenges-screens/ChallengesScreen';
 import ProfileScreen from '../screens/profile-page-screens/ProfileScreen';
 import NotificationsScreen from '../screens/home-screens/NotificationsScreen';
@@ -47,7 +46,6 @@ import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/act
 
 export type RootTabParamList = {
   Home: undefined;
-  Courses: undefined;
   Challenges: undefined;
   Profile: undefined;
 };
@@ -57,7 +55,6 @@ export type RootStackParamList = {
   MainTabs: undefined;
   AiCoach: undefined;
   Support: undefined;
-  Course: undefined;
   Notifications: undefined;
   DeepBreathing: undefined;
   ActiveIncantationsIntro: undefined;
@@ -125,15 +122,6 @@ const MainTabNavigator = () => {
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Courses"
-        component={CourseTabScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="book-open-variant" color={color} size={size} />
           ),
         }}
       />
@@ -211,7 +199,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         />
         <Stack.Screen name="AiCoach" component={AiCoachScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
-        <Stack.Screen name="Course" component={CourseStackScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen 
           name="DeepBreathing" 
