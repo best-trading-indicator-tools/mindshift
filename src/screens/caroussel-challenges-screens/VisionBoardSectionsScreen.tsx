@@ -25,6 +25,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardSections'>;
 
+interface ExtendedRouteParams {
+  boardId: string;
+  refresh?: number;
+  context?: 'daily' | 'challenge';
+  challengeId?: string;
+}
+
 const PLACEHOLDER_COLORS = {
   mint: '#E1F8E7',
   lavender: '#E8E6FF',
@@ -191,13 +198,30 @@ const generateRandomLayout = (photoCount: number, containerWidth: number): Layou
 };
 
 const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { boardId } = route.params;
+  const params = route.params as ExtendedRouteParams;
+  const { boardId } = params;
   const [board, setBoard] = React.useState<VisionBoard | null>(null);
   const [showMenu, setShowMenu] = React.useState(false);
   const [selectedSection, setSelectedSection] = React.useState<{ id: string, name: string } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = React.useState(false);
+
+  const handleExit = () => {
+    if (params.context === 'challenge' && params.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: params.challengeId,
+          title: 'Ultimate',
+          duration: 21,
+          description: '',
+          image: null
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  };
 
   const loadBoard = React.useCallback(async () => {
     try {
@@ -524,12 +548,7 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
             ) : (
               <TouchableOpacity 
                 style={styles.exitButton}
-                onPress={() => {
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'MainTabs' }],
-                  });
-                }}
+                onPress={handleExit}
               >
                 <Text style={styles.exitText}>Exit</Text>
               </TouchableOpacity>

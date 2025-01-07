@@ -81,4 +81,37 @@ export const getExerciseCompletion = async (
     console.error('Error getting exercise completion:', error);
     return null;
   }
+};
+
+// Get total number of exercises in the challenge
+const TOTAL_CHALLENGE_EXERCISES = 9; // Total number of exercises in the 21-day challenge
+
+// Get challenge progress
+export const getChallengeProgress = async (challengeId: string): Promise<{
+  completedCount: number;
+  totalExercises: number;
+  progressPercentage: number;
+}> => {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const challengeKeys = allKeys.filter(key => 
+      key.startsWith(`${CHALLENGE_COMPLETION_KEY_PREFIX}${challengeId}:`)
+    );
+    
+    const completedCount = challengeKeys.length;
+    const progressPercentage = Math.round((completedCount / TOTAL_CHALLENGE_EXERCISES) * 100);
+
+    return {
+      completedCount,
+      totalExercises: TOTAL_CHALLENGE_EXERCISES,
+      progressPercentage
+    };
+  } catch (error) {
+    console.error('Error getting challenge progress:', error);
+    return {
+      completedCount: 0,
+      totalExercises: TOTAL_CHALLENGE_EXERCISES,
+      progressPercentage: 0
+    };
+  }
 }; 

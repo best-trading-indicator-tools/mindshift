@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
+import { addNotification } from '../../services/notificationService';
 
 const { width } = Dimensions.get('window');
 
@@ -148,6 +149,17 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       ...prev,
       [exerciseId]: true
     }));
+    
+    // Add notification for completed exercise
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (exercise) {
+      await addNotification({
+        id: `challenge-complete-${Date.now()}`,
+        title: 'Exercise Completed! 🎉',
+        message: `You've completed the ${exercise.title} exercise in your 21-day challenge. Keep up the great work!`,
+        type: 'success'
+      });
+    }
   };
 
   const handleExerciseStart = async (exerciseId: string) => {
@@ -192,9 +204,13 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
-          <MaterialCommunityIcons name="close" size={24} color="#fff" />
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <MaterialCommunityIcons name="chevron-left" size={32} color="#000" />
         </TouchableOpacity>
+        <Text style={styles.title}>{challenge.title}</Text>
       </View>
 
       <ScrollView style={styles.content}>
@@ -295,7 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 8,
   },
-  closeButton: {
+  backButton: {
     padding: 8,
   },
   heroSection: {
