@@ -219,7 +219,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleExerciseStart = async (exerciseId: string) => {
     const navigationParams = {
-      onComplete: () => handleExerciseComplete(exerciseId),
+      context: 'challenge' as const,
       returnTo: 'ChallengeDetail' as keyof RootStackParamList,
       challengeId: challenge.id
     };

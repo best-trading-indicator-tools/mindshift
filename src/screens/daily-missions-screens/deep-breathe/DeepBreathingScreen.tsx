@@ -13,7 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
@@ -37,10 +37,10 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleComplete = async () => {
     try {
-      await markDailyExerciseAsCompleted('deep-breathing');
-      
-      // Handle navigation based on context
       if (route.params?.context === 'challenge' && route.params?.challengeId) {
+        // Mark as completed for challenge
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'deep-breathing');
+        
         if (route.params.returnTo === 'ChallengeDetail') {
           navigation.navigate('ChallengeDetail', {
             challenge: {
@@ -55,7 +55,8 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
           navigation.goBack();
         }
       } else {
-        // Default behavior for daily mission
+        // Mark as completed for daily mission
+        await markDailyExerciseAsCompleted('deep-breathing');
         navigation.navigate('MainTabs');
       }
     } catch (error) {
