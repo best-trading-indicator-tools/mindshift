@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
@@ -63,10 +64,11 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExit = async () => {
+  const handleExit = () => {
     if (breathingAnimationRef.current) {
       breathingAnimationRef.current.cleanupAllAudio();
     }
+    setShowExitModal(false);
     
     // Handle navigation based on context
     if (route.params?.context === 'challenge' && route.params?.challengeId) {
@@ -84,8 +86,16 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
         navigation.goBack();
       }
     } else {
-      // Default behavior for daily mission
+      // Pop to top of stack first, then navigate to MainTabs
+      navigation.dispatch(StackActions.popToTop());
       navigation.navigate('MainTabs');
+    }
+  };
+
+  const handleContinue = () => {
+    setShowExitModal(false);
+    if (breathingAnimationRef.current) {
+      breathingAnimationRef.current.handleContinue();
     }
   };
 
@@ -129,19 +139,13 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
             </Text>
             <TouchableOpacity
               style={styles.continueButton}
-              onPress={() => setShowExitModal(false)}
+              onPress={handleContinue}
             >
               <Text style={styles.continueText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.exitButton}
-              onPress={() => {
-                if (breathingAnimationRef.current) {
-                  breathingAnimationRef.current.cleanupAllAudio();
-                }
-                setShowExitModal(false);
-                navigation.navigate('MainTabs');
-              }}
+              onPress={handleExit}
             >
               <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>

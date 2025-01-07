@@ -29,7 +29,6 @@ const BreathingAnimation = React.forwardRef<
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
-  const [showExitModal, setShowExitModal] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
   const completionSound = useRef<Sound | null>(null);
@@ -264,61 +263,6 @@ const BreathingAnimation = React.forwardRef<
     }
   };
 
-  const handleCompletion = async () => {
-    try {
-      // Clean up audio before playing completion sound
-      cleanupAllAudio();
-      
-      // Play completion sound if available
-      if (completionSound.current) {
-        completionSound.current.play();
-      }
-      
-      // Mark exercise as completed
-      await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
-      
-      // Call onComplete callback if provided
-      if (onComplete) {
-        onComplete();
-      }
-    } catch (error) {
-      console.error('Error during completion:', error);
-      // Still call onComplete even if there was an error
-      if (onComplete) {
-        onComplete();
-      }
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cleanupAllAudio();
-    };
-  }, []);
-
-  // Handle completion phase
-  useEffect(() => {
-    if (phase === 'complete') {
-      const playCompletionSound = async () => {
-        try {
-          completionSound.current = await audioService.loadSound(AUDIO_FILES.HAVE_A_GREAT_DAY);
-          completionSound.current?.play();
-        } catch (error) {
-          console.error('Error playing completion sound:', error);
-        }
-      };
-
-      playCompletionSound();
-      const timer = setTimeout(handleCompletion, 3000);
-      
-      return () => {
-        clearTimeout(timer);
-        cleanupAllAudio();
-      };
-    }
-  }, [phase, handleCompletion]);
-
   const handleExitPress = () => {
     // Pause all animations and timers
     if (animationRef.current) {
@@ -335,35 +279,9 @@ const BreathingAnimation = React.forwardRef<
     if (completionSound.current) {
       completionSound.current.pause();
     }
-    setShowExitModal(true);
-  };
-
-  const handleConfirmExit = () => {
-    cleanupAllAudio();
-    
-    // Handle navigation based on context
-    if (context === 'challenge' && challengeId) {
-      if (returnTo === 'ChallengeDetail') {
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: require('../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        navigation.goBack();
-      }
-    } else {
-      // Default behavior for daily mission - go to MainTabs
-      navigation.replace('MainTabs');
-    }
   };
 
   const handleContinue = () => {
-    setShowExitModal(false);
     // Resume animations
     if (animationRef.current) {
       animationRef.current.start();
@@ -379,6 +297,7 @@ const BreathingAnimation = React.forwardRef<
   // Expose methods via ref
   React.useImperativeHandle(ref, () => ({
     handleExitPress,
+    handleContinue,
     cleanupAllAudio
   }));
 
@@ -442,34 +361,6 @@ const BreathingAnimation = React.forwardRef<
           {breathsLeft} {breathsLeft === 1 ? 'breath' : 'breaths'} left
         </Text>
       </View>
-
-      <Modal
-        visible={showExitModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowExitModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
-            <Text style={styles.modalText}>
-              You're making progress! Continue practicing to maintain your results.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-            >
-              <Text style={styles.continueText}>Continue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.exitButton}
-              onPress={handleConfirmExit}
-            >
-              <Text style={styles.exitText}>Exit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 });
@@ -555,59 +446,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  modalContent: {
-    backgroundColor: '#1C1C1E',
-    padding: 24,
-    borderRadius: 16,
-    width: '85%',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 32,
-    opacity: 0.8,
-    lineHeight: 24,
-  },
-  continueButton: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginBottom: 12,
-    width: '100%',
-  },
-  continueText: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  exitButton: {
-    backgroundColor: '#E31837',
-    paddingVertical: 16,
-    borderRadius: 30,
-    width: '100%',
-  },
-  exitText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   fullscreenContainer: {
     position: 'absolute',
