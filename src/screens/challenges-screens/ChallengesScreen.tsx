@@ -25,26 +25,30 @@ const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Mind Rewiring Challenge Card */}
         <TouchableOpacity style={styles.challengeCard}>
-          <Image 
-            source={require('../../assets/illustrations/challenge-21.png')} 
-            style={styles.challengeImage}
-          />
-
           <View style={styles.durationBadge}>
             <MaterialCommunityIcons name="calendar" size={16} color="#000000" />
             <Text style={styles.durationText}>21 days</Text>
           </View>
 
-          <Text style={styles.challengeTitle}>Rewire Your Subconscious Mind</Text>
-          
-          <Text style={styles.challengeDescription}>
-          Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns. Perfect for busy people who want real transformation.
-          </Text>
+          <View style={styles.imageContainer}>
+            <Image 
+              source={require('../../assets/illustrations/challenge-21.png')} 
+              style={styles.challengeImage}
+              resizeMode="contain"
+            />
+          </View>
 
+          <View style={styles.cardContent}>
+            <Text style={styles.challengeTitle}>Rewire Your Subconscious Mind</Text>
+            
+            <Text style={styles.challengeDescription}>
+              Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.{'\n\n'}Perfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.
+            </Text>
 
-          <TouchableOpacity style={styles.continueButton}>
-            <Text style={styles.continueButtonText}>Continue</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.continueButton}>
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -74,11 +78,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#151932',
     borderRadius: 20,
     margin: 16,
-    padding: 20,
     width: cardWidth,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     overflow: 'hidden',
+    position: 'relative',
+  },
+  imageContainer: {
+    width: '100%',
+    height: 240,
+    backgroundColor: '#151932',
+    paddingTop: 20,
+  },
+  challengeImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cardContent: {
+    padding: 20,
   },
   durationBadge: {
     flexDirection: 'row',
@@ -87,8 +104,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 16,
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
   },
   durationText: {
     color: '#000000',
@@ -108,20 +127,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 24,
   },
-  statsText: {
-    fontSize: 16,
-    color: '#FCD34D',
-    marginBottom: 16,
-    fontWeight: '600',
-  },
-  challengeContent: {
-    marginBottom: 20,
-  },
-  contentDescription: {
-    fontSize: 15,
-    color: '#B0B0B0',
-    lineHeight: 22,
-  },
   continueButton: {
     backgroundColor: '#FCD34D',
     borderRadius: 12,
@@ -133,12 +138,6 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 16,
     fontWeight: '600',
-  },
-  challengeImage: {
-    width: '100%',
-    height: 200,
-    marginBottom: 20,
-    borderRadius: 12,
   },
 });
 
