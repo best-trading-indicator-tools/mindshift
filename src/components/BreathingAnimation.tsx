@@ -8,9 +8,9 @@ import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
-const HOLD_DURATION = 1000;   // 5 seconds hold
+const HOLD_DURATION = 5000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
-const INITIAL_DELAY = 2000;   // 2 seconds initial delay
+const INITIAL_DELAY = 2000;   // 3 seconds initial delay
 const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
