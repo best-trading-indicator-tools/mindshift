@@ -4,7 +4,7 @@ import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
+import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted, isChallengeExerciseUnlocked } from '../../utils/exerciseCompletion';
 import { addNotification } from '../../services/notificationService';
 
 const { width } = Dimensions.get('window');
@@ -20,36 +20,68 @@ interface Exercise {
   week: number;
 }
 
-const ExerciseCard: React.FC<Exercise & { challengeId: string; isCompleted: boolean; onComplete: () => void }> = ({ 
+const ExerciseCard: React.FC<Exercise & { 
+  challengeId: string; 
+  isCompleted: boolean; 
+  onComplete: () => void;
+  index: number;
+}> = ({ 
   id, 
   title, 
   description, 
   isCompleted,
-  onComplete 
-}) => (
-  <View style={styles.exerciseCard}>
-    <View style={styles.exerciseContent}>
-      <View style={styles.exerciseHeader}>
-        <Text style={styles.exerciseTitle}>{title}</Text>
-        {isCompleted && (
-          <View style={styles.completedBadge}>
-            <MaterialCommunityIcons name="check" size={16} color="#000" />
-            <Text style={styles.completedText}>Completed</Text>
-          </View>
-        )}
+  onComplete,
+  challengeId,
+  index
+}) => {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  useEffect(() => {
+    const checkUnlockStatus = async () => {
+      const unlocked = await isChallengeExerciseUnlocked(challengeId, id, index);
+      setIsUnlocked(unlocked);
+    };
+    checkUnlockStatus();
+  }, [challengeId, id, index, isCompleted]);
+
+  return (
+    <View style={styles.exerciseCard}>
+      <View style={styles.exerciseContent}>
+        <View style={styles.exerciseHeader}>
+          <Text style={styles.exerciseTitle}>{title}</Text>
+          {isCompleted && (
+            <View style={styles.completedBadge}>
+              <MaterialCommunityIcons name="check" size={16} color="#000" />
+              <Text style={styles.completedText}>Completed</Text>
+            </View>
+          )}
+          {!isUnlocked && (
+            <View style={styles.lockedBadge}>
+              <MaterialCommunityIcons name="lock" size={16} color="#FFFFFF" />
+              <Text style={styles.lockedText}>Locked</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.exerciseDescription}>{description}</Text>
+        <TouchableOpacity 
+          style={[
+            styles.startButton,
+            !isUnlocked && styles.startButtonLocked
+          ]}
+          onPress={onComplete}
+          disabled={!isUnlocked}
+        >
+          <Text style={[
+            styles.startButtonText,
+            !isUnlocked && styles.startButtonTextLocked
+          ]}>
+            {isCompleted ? 'Restart Training' : isUnlocked ? 'Start Training' : 'Complete Previous Exercise'}
+          </Text>
+        </TouchableOpacity>
       </View>
-      <Text style={styles.exerciseDescription}>{description}</Text>
-      <TouchableOpacity 
-        style={styles.startButton}
-        onPress={onComplete}
-      >
-        <Text style={styles.startButtonText}>
-          {isCompleted ? 'Restart Training' : 'Start Training'}
-        </Text>
-      </TouchableOpacity>
     </View>
-  </View>
-);
+  );
+};
 
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
@@ -278,13 +310,14 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.exercisesContainer}>
               {exercises
                 .filter(exercise => exercise.week === selectedWeek)
-                .map(exercise => (
+                .map((exercise, index) => (
                   <ExerciseCard
                     key={exercise.id}
                     {...exercise}
                     challengeId={challenge.id}
                     isCompleted={completedExercises[exercise.id] || false}
                     onComplete={() => handleExerciseStart(exercise.id)}
+                    index={index}
                   />
                 ))}
             </View>
@@ -467,6 +500,25 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     padding: 16,
+  },
+  lockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#666666',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  lockedText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  startButtonLocked: {
+    backgroundColor: '#666666',
+  },
+  startButtonTextLocked: {
+    color: '#999999',
   },
 });
 

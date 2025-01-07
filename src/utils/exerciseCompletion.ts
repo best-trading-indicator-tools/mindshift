@@ -114,4 +114,46 @@ export const getChallengeProgress = async (challengeId: string): Promise<{
       progressPercentage: 0
     };
   }
+};
+
+// Get all completed exercises for a challenge in chronological order
+export const getCompletedChallengeExercises = async (challengeId: string): Promise<ExerciseCompletion[]> => {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const challengeKeys = allKeys.filter(key => 
+      key.startsWith(`${CHALLENGE_COMPLETION_KEY_PREFIX}${challengeId}:`)
+    );
+    
+    const completions = await Promise.all(
+      challengeKeys.map(async key => {
+        const completion = await AsyncStorage.getItem(key);
+        return completion ? JSON.parse(completion) : null;
+      })
+    );
+
+    return completions
+      .filter((completion): completion is ExerciseCompletion => completion !== null)
+      .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+  } catch (error) {
+    console.error('Error getting completed challenge exercises:', error);
+    return [];
+  }
+};
+
+// Check if a challenge exercise is unlocked based on previous exercise completion
+export const isChallengeExerciseUnlocked = async (challengeId: string, exerciseId: string, exerciseIndex: number): Promise<boolean> => {
+  try {
+    // First exercise is always unlocked
+    if (exerciseIndex === 0) {
+      return true;
+    }
+
+    // For other exercises, check if the previous exercise is completed
+    const previousExerciseId = `exercise-${exerciseIndex - 1}`;
+    const isPreviousCompleted = await isChallengeExerciseCompleted(challengeId, previousExerciseId);
+    return isPreviousCompleted;
+  } catch (error) {
+    console.error('Error checking if challenge exercise is unlocked:', error);
+    return false;
+  }
 }; 
