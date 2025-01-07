@@ -237,12 +237,18 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={styles.headerButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#000" />
+          <MaterialCommunityIcons name="chevron-left" size={32} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.title}>{challenge.title}</Text>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => navigation.push('MainTabs')}
+        >
+          <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -342,10 +348,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 8,
   },
-  backButton: {
-    padding: 8,
+  headerButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   heroSection: {
     alignItems: 'center',
