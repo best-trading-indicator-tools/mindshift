@@ -93,7 +93,12 @@ const BreathingAnimation: React.FC<{
       clearInterval(countdownRef.current);
     }
 
-    setCountdown(5);
+    // Convert milliseconds to seconds for the current phase
+    const durationInSeconds = phase === 'in' || phase === 'out' 
+      ? BREATH_DURATION / 1000 
+      : HOLD_DURATION / 1000;
+
+    setCountdown(durationInSeconds);
     countdownRef.current = setInterval(() => {
       setCountdown(prev => {
         const next = prev - 1;
@@ -106,7 +111,7 @@ const BreathingAnimation: React.FC<{
         return next;
       });
     }, 1000);
-  }, []);
+  }, [phase]); // Add phase as a dependency since we use it to determine duration
 
   // Cleanup on unmount
   useEffect(() => {
