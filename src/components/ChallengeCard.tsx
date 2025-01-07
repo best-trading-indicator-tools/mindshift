@@ -46,7 +46,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
           {description}
         </Text>
 
-        <TouchableOpacity style={styles.continueButton}>
+        <TouchableOpacity style={styles.continueButton} onPress={onPress}>
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>

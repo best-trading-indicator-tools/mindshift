@@ -40,7 +40,7 @@ const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
             image={challenge.image}
             onPress={() => {
               // Handle challenge selection
-              console.log(`Selected challenge: ${challenge.id}`);
+              navigation.navigate('ChallengeDetail', { challenge });
             }}
           />
         ))}
