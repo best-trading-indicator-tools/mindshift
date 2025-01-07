@@ -20,6 +20,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useFocusEffect } from '@react-navigation/native';
 import { LayoutTile } from '../../types/layout';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
 
 export interface VisionBoardSection {
   id: string;
@@ -78,7 +79,14 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
         // Check if we should mark exercise as completed
         const hasCompletedBoard = boards.some((board: VisionBoard) => board.sections.length > 0);
         if (hasCompletedBoard) {
-          await markExerciseAsCompleted('vision-board', 'Vision Board');
+          if (route.params?.context === 'challenge' && route.params.challengeId) {
+            await markChallengeExerciseAsCompleted(route.params.challengeId, 'vision-board');
+            if (route.params.onComplete) {
+              route.params.onComplete();
+            }
+          } else {
+            await markExerciseAsCompleted('vision-board', 'Vision Board');
+          }
         }
       }
     } catch (error) {
