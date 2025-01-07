@@ -86,6 +86,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   VisionBoardIntro: {
     returnTo?: keyof RootStackParamList;
@@ -95,6 +96,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   MentorBoardIntro: {
     returnTo?: keyof RootStackParamList;
