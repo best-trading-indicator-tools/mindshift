@@ -185,6 +185,7 @@ export type RootStackParamList = {
     context?: 'challenge' | 'daily';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   };
 };
 

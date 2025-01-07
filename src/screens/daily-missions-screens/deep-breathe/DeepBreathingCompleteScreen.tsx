@@ -4,21 +4,27 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
 const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleExit = async () => {
     try {
-      if (route.params?.context === 'challenge') {
+      if (route.params?.context === 'challenge' && route.params.challengeId) {
+        // Mark as completed for challenge only
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'deep-breathing');
+        
+        // Call onComplete callback if provided
         if (route.params.onComplete) {
           route.params.onComplete();
         }
+
+        // Handle navigation
         if (route.params.returnTo === 'ChallengeDetail') {
           navigation.navigate('ChallengeDetail', {
             challenge: {
-              id: route.params.challengeId || '',
+              id: route.params.challengeId,
               title: 'Ultimate',
               duration: 21,
               description: '',
@@ -29,11 +35,13 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
           navigation.goBack();
         }
       } else {
+        // Mark as completed for daily mission
         await markDailyExerciseAsCompleted('deep-breathing');
         navigation.navigate('MainTabs');
       }
     } catch (error) {
       console.error('Error completing exercise:', error);
+      navigation.goBack();
     }
   };
 
