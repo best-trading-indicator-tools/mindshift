@@ -37,6 +37,7 @@ export const tutorialSteps = [
   }
 ];
 
+
 const SunBreathTutorialScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [currentStep, setCurrentStep] = useState(0);
