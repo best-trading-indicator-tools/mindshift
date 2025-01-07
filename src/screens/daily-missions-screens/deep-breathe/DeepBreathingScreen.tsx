@@ -38,7 +38,31 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleConfirmExit = () => {
-    navigation.navigate('MainTabs');
+    // Handle exit based on context
+    if (route.params?.context === 'challenge') {
+      // Let the challenge flow handle the completion if needed
+      if (route.params.onComplete) {
+        route.params.onComplete();
+      }
+      
+      // Navigate back to challenge if specified
+      if (route.params.returnTo === 'ChallengeDetail') {
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId || '',
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: null
+          }
+        });
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      // Default behavior for daily mission
+      navigation.navigate('MainTabs');
+    }
   };
 
   const handleComplete = async () => {
