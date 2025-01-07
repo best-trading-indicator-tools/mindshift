@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Image } from 'react-native';
 import { Text } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -25,26 +25,22 @@ const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Mind Rewiring Challenge Card */}
         <TouchableOpacity style={styles.challengeCard}>
+          <Image 
+            source={require('../../assets/illustrations/challenge-21.png')} 
+            style={styles.challengeImage}
+          />
+
           <View style={styles.durationBadge}>
-            <MaterialCommunityIcons name="calendar" size={16} color="#FFFFFF" />
+            <MaterialCommunityIcons name="calendar" size={16} color="#000000" />
             <Text style={styles.durationText}>21 days</Text>
           </View>
 
-          <Text style={styles.challengeTitle}>Rewire Your Mind</Text>
+          <Text style={styles.challengeTitle}>Rewire Your Subconscious Mind</Text>
           
           <Text style={styles.challengeDescription}>
-            Ready to transform your life? Want to be more motivated, happier, and unlock your full potential?
+          Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns. Perfect for busy people who want real transformation.
           </Text>
 
-          <Text style={styles.statsText}>
-            92% of users notice positive changes after completing their first training session.
-          </Text>
-
-          <View style={styles.challengeContent}>
-            <Text style={styles.contentDescription}>
-              Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns, boost your motivation, and create lasting happiness. Perfect for busy people who want real transformation.
-            </Text>
-          </View>
 
           <TouchableOpacity style={styles.continueButton}>
             <Text style={styles.continueButtonText}>Continue</Text>
@@ -87,7 +83,7 @@ const styles = StyleSheet.create({
   durationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FCD34D',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -95,7 +91,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   durationText: {
-    color: '#FFFFFF',
+    color: '#000000',
     marginLeft: 6,
     fontSize: 14,
     fontWeight: '600',
@@ -114,7 +110,7 @@ const styles = StyleSheet.create({
   },
   statsText: {
     fontSize: 16,
-    color: '#6366f1',
+    color: '#FCD34D',
     marginBottom: 16,
     fontWeight: '600',
   },
@@ -127,16 +123,22 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   continueButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FCD34D',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 20,
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
+  },
+  challengeImage: {
+    width: '100%',
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 12,
   },
 });
 
