@@ -42,10 +42,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { challenge } = route.params;
 
   const weeks = [
-    { id: 1, title: 'Semaine 1' },
-    { id: 2, title: 'Semaine 2' },
-    { id: 3, title: 'Semaine 3' },
-    { id: 4, title: 'Semaine 4' },
+    { id: 1, title: 'Week 1' },
+    { id: 2, title: 'Week 2' },
+    { id: 3, title: 'Week 3' },
+    { id: 4, title: 'Week 4' },
   ];
 
   const exercises = [
@@ -74,7 +74,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         />
         <Text style={styles.title}>{challenge.title}</Text>
         <View style={styles.durationBadge}>
-          <MaterialCommunityIcons name="layers" size={20} color="#000" />
+          <MaterialCommunityIcons name="layers" size={20} color="#FFFFFF" />
           <Text style={styles.durationText}>{challenge.duration} days</Text>
         </View>
       </View>
@@ -176,13 +176,12 @@ const styles = StyleSheet.create({
   durationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FCD34D',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   durationText: {
-    color: '#000000',
+    color: '#FFFFFF',
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
