@@ -214,12 +214,24 @@ export const resetAllDailyExercises = async () => {
     // Reset exercise completions
     await AsyncStorage.setItem(EXERCISE_COMPLETION_KEY, JSON.stringify({}));
     
-    // Reset completion count
+    // Reset completion count and progress
     await AsyncStorage.setItem('last_completed_count', '0');
+    await AsyncStorage.setItem('daily_progress', '0');
+    
+    // Reset streak data
+    await AsyncStorage.setItem(STREAK_KEY, '0');
+    await AsyncStorage.removeItem(LAST_COMPLETION_KEY);
     
     // Reset golden checklist items
     const todayISOString = new Date().toISOString().split('T')[0];
     await AsyncStorage.removeItem(`checklist_${todayISOString}`);
+    
+    // Clear all challenge completions
+    const allKeys = await AsyncStorage.getAllKeys();
+    const challengeKeys = allKeys.filter(key => key.startsWith('@challenge_exercise_completion:'));
+    if (challengeKeys.length > 0) {
+      await AsyncStorage.multiRemove(challengeKeys);
+    }
     
     return true;
   } catch (error) {

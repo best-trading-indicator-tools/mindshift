@@ -87,6 +87,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [selectedWeek, setSelectedWeek] = useState(1);
+  const [lastUnlockedExercise, setLastUnlockedExercise] = useState<Exercise | null>(null);
   
   if (!route.params?.challenge) {
     return null;
@@ -172,7 +173,19 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       setCompletedExercises(completionStatus);
     };
 
+    // Find last unlocked exercise
+    const findLastUnlockedExercise = async () => {
+      for (let i = exercises.length - 1; i >= 0; i--) {
+        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
+        if (isUnlocked) {
+          setLastUnlockedExercise(exercises[i]);
+          break;
+        }
+      }
+    };
+
     loadCompletionStatus();
+    findLastUnlockedExercise();
   }, [challenge.id, exercises]);
 
   const handleExerciseComplete = async (exerciseId: string) => {
@@ -233,6 +246,12 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
+  const handleContinue = () => {
+    if (lastUnlockedExercise) {
+      handleExerciseStart(lastUnlockedExercise.id);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -245,7 +264,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <View style={styles.headerButtonPlaceholder} />
         <TouchableOpacity 
           style={styles.headerButton}
-          onPress={() => navigation.getParent()?.navigate('MainTabs')}
+          onPress={() => navigation.push('MainTabs')}
         >
           <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -265,7 +284,14 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.continueButton}>
+        <TouchableOpacity 
+          style={[
+            styles.continueButton,
+            !lastUnlockedExercise && styles.continueButtonDisabled
+          ]}
+          onPress={handleContinue}
+          disabled={!lastUnlockedExercise}
+        >
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
 
@@ -356,6 +382,10 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerButtonPlaceholder: {
+    width: 44,
+    height: 44,
   },
   heroSection: {
     alignItems: 'center',
@@ -529,6 +559,10 @@ const styles = StyleSheet.create({
   },
   startButtonTextLocked: {
     color: '#999999',
+  },
+  continueButtonDisabled: {
+    backgroundColor: '#666666',
+    opacity: 0.5,
   },
 });
 
