@@ -44,6 +44,7 @@ import ManageActiveIncantationsScreen from '../screens/daily-missions-screens/ac
 import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/active-incantations/ActiveIncantationsExerciseScreen';
 import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/active-incantations/ActiveIncantationsIntroScreen';
 import ChallengeDetailScreen from '../screens/challenges-screens/ChallengeDetailScreen';
+import DeepBreathingCompleteScreen from '../screens/daily-missions-screens/deep-breathe/DeepBreathingCompleteScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -197,6 +198,12 @@ export type RootStackParamList = {
       image: any;
     };
   } | undefined;
+  DeepBreathingComplete: {
+    context?: 'challenge' | 'daily';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -448,6 +455,12 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen
           name="ChallengeDetail"
           component={ChallengeDetailScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="DeepBreathingComplete"
+          component={DeepBreathingCompleteScreen}
           options={{ headerShown: false }}
         />
 

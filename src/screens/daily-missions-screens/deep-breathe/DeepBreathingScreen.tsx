@@ -66,32 +66,13 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleComplete = async () => {
-    // Handle completion based on context
-    if (route.params?.context === 'challenge') {
-      // Let the challenge flow handle the completion
-      if (route.params.onComplete) {
-        route.params.onComplete();
-      }
-      
-      // Navigate back to challenge if specified
-      if (route.params.returnTo === 'ChallengeDetail') {
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId || '',
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: null
-          }
-        });
-      } else {
-        navigation.goBack();
-      }
-    } else {
-      // Daily mission completion
-      await markDailyExerciseAsCompleted('deep-breathing');
-      navigation.goBack();
-    }
+    // Navigate to completion screen with the same params
+    navigation.push('DeepBreathingComplete', {
+      context: route.params?.context,
+      challengeId: route.params?.challengeId,
+      onComplete: route.params?.onComplete,
+      returnTo: route.params?.returnTo
+    });
   };
 
   return (
