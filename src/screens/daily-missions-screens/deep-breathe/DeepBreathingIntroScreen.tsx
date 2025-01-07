@@ -36,7 +36,6 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.push('DeepBreathing', {
         context: route.params?.challengeId ? 'challenge' : 'daily',
         challengeId: route.params?.challengeId,
-        onComplete: route.params?.onComplete,
         returnTo: route.params?.returnTo
       });
     }
@@ -52,28 +51,6 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       challengeId: route.params?.challengeId,
       returnTo: route.params?.returnTo
     });
-  };
-
-  const handleComplete = () => {
-    // If this was launched from a challenge, call the completion callback
-    if (route.params?.onComplete) {
-      route.params.onComplete();
-    }
-
-    // Navigate back to the challenge screen if specified, otherwise go back
-    if (route.params?.returnTo === 'ChallengeDetail') {
-      navigation.navigate('ChallengeDetail', {
-        challenge: {
-          id: route.params.challengeId || '',
-          title: 'Ultimate',
-          duration: 21,
-          description: '',
-          image: null
-        }
-      });
-    } else {
-      navigation.goBack();
-    }
   };
 
   const currentContent = introContent[currentStep - 1];

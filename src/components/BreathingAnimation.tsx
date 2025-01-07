@@ -17,8 +17,10 @@ Sound.setCategory('Playback', true);
 
 const BreathingAnimation: React.FC<{ 
   navigation: any;
-  onComplete: () => void;
-}> = ({ navigation, onComplete }) => {
+  context?: 'daily' | 'challenge';
+  challengeId?: string;
+  returnTo?: string;
+}> = ({ navigation, context, challengeId, returnTo }) => {
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
@@ -254,12 +256,30 @@ const BreathingAnimation: React.FC<{
     try {
       // Mark the exercise as completed in Firestore
       await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
+      
+      // Handle navigation based on context
+      if (context === 'challenge' && challengeId) {
+        if (returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: challengeId,
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: require('../assets/illustrations/challenges/challenge-21.png')
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
+      } else {
+        // Default behavior for daily mission
+        navigation.navigate('MainTabs');
+      }
     } catch (error) {
       console.error('Failed to mark exercise as completed:', error);
+      navigation.goBack();
     }
-
-    // Call onComplete immediately to navigate back
-    onComplete();
   };
 
   // Cleanup on unmount
