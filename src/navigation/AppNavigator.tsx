@@ -68,7 +68,12 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
   } | undefined;
-  PassiveIncantations: undefined;
+  PassiveIncantations: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
   GoldenChecklist: {
     context?: 'daily' | 'challenge';
     challengeId?: string;
@@ -80,13 +85,23 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
   } | undefined;
-  VisionBoard: undefined;
+  VisionBoard: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
   VisionBoardIntro: {
     onComplete?: () => void;
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
   } | undefined;
-  MentorBoard: undefined;
+  MentorBoard: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
   MentorBoardIntro: {
     onComplete?: () => void;
     returnTo?: keyof RootStackParamList;
@@ -156,8 +171,18 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
   } | undefined;
-  SunBreathExercise: undefined;
-  SunBreathComplete: undefined;
+  SunBreathExercise: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
+  SunBreathComplete: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    onComplete?: () => void;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
   SunBreathSettings: undefined;
   ManageActiveIncantations: undefined;
   ActiveIncantationsExercise: {

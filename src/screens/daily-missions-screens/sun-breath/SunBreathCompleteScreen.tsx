@@ -1,31 +1,45 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markExerciseAsCompleted } from '../../../services/exerciseService';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathComplete'>;
 
-const SunBreathCompleteScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-
+const SunBreathCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleRepeat = () => {
     navigation.push('SunBreathExercise');
   };
 
   const handleComplete = async () => {
     try {
-      const success = await markExerciseAsCompleted('sun-breath', 'The Sun Breath');
-      if (success) {
-        navigation.navigate('MainTabs');
+      if (route.params?.context === 'challenge') {
+        if (route.params.onComplete) {
+          route.params.onComplete();
+        }
+        if (route.params.returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: route.params.challengeId || '',
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: null
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
       } else {
-        console.error('Failed to mark exercise as completed');
+        await markDailyExerciseAsCompleted('sun-breath');
+        navigation.navigate('MainTabs');
       }
     } catch (error) {
-      console.error('Error marking exercise as completed:', error);
+      console.error('Error completing exercise:', error);
     }
   };
 

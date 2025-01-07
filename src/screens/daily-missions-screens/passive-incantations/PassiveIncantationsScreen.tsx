@@ -45,8 +45,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Sound from 'react-native-sound';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
-const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const PassiveIncantationsScreen: React.FC<{ navigation: any, route: any }> = ({ navigation, route }) => {
   const [recordings, setRecordings] = useState<Affirmation[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -616,28 +617,6 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
         return;
       }
 
-      // Only if both conditions are met, try to mark exercise as completed
-      const validationData = {
-        hasRecordings: recordings.length > 0,
-        hasListened: hasListenedToAny
-      };
-
-      // Double check validation data
-      if (!validationData.hasRecordings || !validationData.hasListened) {
-        Alert.alert('Cannot Complete', 'You need to record and listen to at least one affirmation before completing the exercise.');
-        return;
-      }
-
-      const success = await markExerciseAsCompleted(
-        'passive-incantations', 
-        'Passive Incantations'        
-      );
-
-      if (!success) {
-        Alert.alert('Cannot Complete', 'You need to record and listen to at least one affirmation before completing the exercise.');
-        return;
-      }
-      
       // Clean up audio player
       if (isPlaying) {
         await audioRecorderPlayer.current.stopPlayer();
@@ -647,11 +626,30 @@ const PassiveIncantationsScreen: React.FC<{ navigation: any }> = ({ navigation }
       setPlayingId(null);
       setCurrentRecordingText('');
       setCurrentLoopCount(0);
-      
-      // Navigate to home screen
-      navigation.navigate('MainTabs');
+
+      if (route.params?.context === 'challenge') {
+        if (route.params.onComplete) {
+          route.params.onComplete();
+        }
+        if (route.params.returnTo === 'ChallengeDetail') {
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: route.params.challengeId || '',
+              title: 'Ultimate',
+              duration: 21,
+              description: '',
+              image: null
+            }
+          });
+        } else {
+          navigation.goBack();
+        }
+      } else {
+        await markDailyExerciseAsCompleted('passive-incantations');
+        navigation.navigate('MainTabs');
+      }
     } catch (error) {
-      console.error('Failed to mark exercise as completed:', error);
+      console.error('Failed to complete exercise:', error);
       Alert.alert('Error', 'Failed to complete exercise. Please try again.');
     }
   };
