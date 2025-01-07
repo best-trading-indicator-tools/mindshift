@@ -3,40 +3,17 @@ import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity,
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { markExerciseAsCompleted } from '../services/exerciseService';
-import RNFS from 'react-native-fs';
 import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
 const HOLD_DURATION = 5000;   // 5 seconds hold
 const GONG_DURATION = 2000;   // 2 seconds for gong
-const INITIAL_DELAY = 2000;   // 3 seconds initial delay
+const INITIAL_DELAY = 3000;   // 3 seconds initial delay
 const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
 Sound.setCategory('Playback', true);
-
-const setupAudioFile = async (url: string): Promise<string> => {
-  const filename = 'haveagreatday.wav';
-  const localPath = `${RNFS.CachesDirectoryPath}/${filename}`;
-
-  try {
-    const exists = await RNFS.exists(localPath);
-    if (exists) {
-      return localPath;
-    }
-
-    await RNFS.downloadFile({
-      fromUrl: url,
-      toFile: localPath,
-    }).promise;
-
-    return localPath;
-  } catch (error) {
-    console.error('Error setting up audio file:', error);
-    throw error;
-  }
-};
 
 const BreathingAnimation: React.FC<{ 
   navigation: any;
@@ -51,49 +28,31 @@ const BreathingAnimation: React.FC<{
   const completionSound = useRef<Sound | null>(null);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
-  const isFirstRender = useRef(true);
   const isMounted = useRef(true);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize sound
+  // Initialize exercise
   useEffect(() => {
-    if (!isFirstRender.current) return;
-    isFirstRender.current = false;
-
+    // Load gong sound and start exercise
     const initAudio = async () => {
       try {
-        gongSound.current = await audioService.loadSound(
-          AUDIO_FILES.GONG,
-          (state) => {
-            if (state.error) {
-              console.error('Error loading gong sound:', state.error);
-            }
-          }
-        );
-
-        if (isMounted.current) {
-          console.log('Sound loaded successfully');
-          // Start breathing cycle immediately after sound is loaded
-          startBreathingCycle();
-          // Play gong after a short delay
-          setTimeout(() => {
-            playGong();
-          }, INITIAL_DELAY);
-        }
+        gongSound.current = await audioService.loadSound(AUDIO_FILES.GONG);
+        startBreathingCycle();
+        
+        // Play initial gong after delay
+        const gongTimer = setTimeout(playGong, INITIAL_DELAY);
+        timersRef.current.push(gongTimer);
       } catch (error) {
-        console.error('Error initializing gong audio:', error);
+        console.error('Error loading gong sound:', error);
       }
     };
 
     initAudio();
 
+    // Cleanup on unmount
     return () => {
       isMounted.current = false;
-      if (gongSound.current) {
-        gongSound.current.stop();
-        audioService.releaseSound(AUDIO_FILES.GONG.filename);
-        gongSound.current = null;
-      }
+      cleanupAllAudio();
       if (animationRef.current) {
         animationRef.current.stop();
       }
@@ -107,19 +66,18 @@ const BreathingAnimation: React.FC<{
 
   const playGong = () => {
     if (gongSound.current) {
-      gongSound.current.stop(() => {
-        gongSound.current?.setCurrentTime(0);
-        gongSound.current?.play((success) => {
-          if (!success) {
-            console.log('Sound playback failed');
-          }
-        });
-        // Stop the sound after GONG_DURATION
-        const timeout = setTimeout(() => {
-          gongSound.current?.stop();
-        }, GONG_DURATION);
-        return () => clearTimeout(timeout);
+      gongSound.current.play((success) => {
+        if (!success) {
+          console.error('Failed to play gong sound');
+        }
       });
+      // Stop the sound after GONG_DURATION
+      setTimeout(() => {
+        if (gongSound.current) {
+          gongSound.current.stop();
+          gongSound.current.setCurrentTime(0);
+        }
+      }, GONG_DURATION);
     }
   };
 
@@ -278,16 +236,14 @@ const BreathingAnimation: React.FC<{
   };
 
   const cleanupAllAudio = () => {
-    // Stop and release gong sound
     if (gongSound.current) {
       gongSound.current.stop();
-      gongSound.current.release();
+      audioService.releaseSound(AUDIO_FILES.GONG.filename);
       gongSound.current = null;
     }
-    // Stop and release completion sound
     if (completionSound.current) {
       completionSound.current.stop();
-      completionSound.current.release();
+      audioService.releaseSound(AUDIO_FILES.HAVE_A_GREAT_DAY.filename);
       completionSound.current = null;
     }
   };
@@ -316,42 +272,21 @@ const BreathingAnimation: React.FC<{
   // Handle completion phase
   useEffect(() => {
     if (phase === 'complete') {
-      // Load and play the completion sound
-      const initAudio = async () => {
+      const playCompletionSound = async () => {
         try {
-          completionSound.current = await audioService.loadSound(
-            AUDIO_FILES.HAVE_A_GREAT_DAY,
-            (state) => {
-              if (state.error) {
-                console.error('Error loading completion sound:', state.error);
-              }
-            }
-          );
-
-          if (completionSound.current) {
-            completionSound.current.play((success) => {
-              if (!success) {
-                console.log('Sound playback failed');
-              }
-            });
-          }
+          completionSound.current = await audioService.loadSound(AUDIO_FILES.HAVE_A_GREAT_DAY);
+          completionSound.current?.play();
         } catch (error) {
-          console.error('Error initializing completion audio:', error);
+          console.error('Error playing completion sound:', error);
         }
       };
 
-      initAudio();
-
-      // Automatically complete after 3 seconds
+      playCompletionSound();
       const timer = setTimeout(handleCompletion, 3000);
       
       return () => {
         clearTimeout(timer);
-        if (completionSound.current) {
-          completionSound.current.stop();
-          audioService.releaseSound(AUDIO_FILES.HAVE_A_GREAT_DAY.filename);
-          completionSound.current = null;
-        }
+        cleanupAllAudio();
       };
     }
   }, [phase, handleCompletion]);
