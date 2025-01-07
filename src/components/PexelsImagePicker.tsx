@@ -185,18 +185,15 @@ const PexelsImagePicker: React.FC<Props> = ({
           }
         }));
 
-        if (selectedPhotos.length + newPhotos.length > 10) {
-          Alert.alert(
-            'Photo Limit Reached',
-            'You can only add up to 10 photos per section.',
-            [{ text: 'OK', style: 'default' }]
-          );
-          return;
-        }
-
-        console.log('Processing selected photos:', newPhotos);
-        onSelectPhotos(newPhotos);
-        onClose();
+        // Add new photos to the photos array
+        setPhotos(prevPhotos => [...prevPhotos, ...newPhotos]);
+        
+        // Auto-select the newly added photos
+        newPhotos.forEach(photo => {
+          if (selectedPhotos.length < 10) {
+            togglePhotoSelection(photo.src.original);
+          }
+        });
       }
     } catch (error) {
       console.error('Error picking image:', error);
