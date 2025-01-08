@@ -7,6 +7,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 2000; // 5 seconds
 const HOLD_DURATION = 2000;   // 5 seconds
 const GONG_DURATION = 2000;   // 2 seconds
+const INITIAL_DELAY = 2000; // 2 seconds
 const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
@@ -45,6 +46,8 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     breathsLeft: number;
   } | null>(null);
   const [completionSound, setCompletionSound] = useState<Sound | null>(null);
+  const [initialCountdown, setInitialCountdown] = useState(Math.ceil(INITIAL_DELAY / 1000));
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const startCountdown = (from: number = 5) => {
     // Clear existing countdown timers
@@ -120,6 +123,23 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     timersRef.current.push(phaseTimer);
   };
 
+  // Add new effect for initial countdown
+  useEffect(() => {
+    if (isInitializing) {
+      const countdownInterval = setInterval(() => {
+        setInitialCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(countdownInterval);
+    }
+  }, [isInitializing]);
+
   // Initialize
   useEffect(() => {
     // Initialize gong sound
@@ -129,8 +149,14 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         return;
       }
       gongSound.current = sound;
-      playGong();
-      startPhase('in');
+      
+      const initialTimer = setTimeout(() => {
+        setIsInitializing(false);
+        playGong();
+        startPhase('in');
+      }, INITIAL_DELAY);
+      
+      timersRef.current.push(initialTimer);
     });
 
     // Initialize completion sound
@@ -267,6 +293,21 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       return () => clearTimeout(timer);
     }
   }, [phase, completionSound]);
+
+  if (isInitializing) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.textContainer}>
+          <Text style={styles.phaseText}>
+            Starting in
+          </Text>
+          <Text style={styles.countdownText}>
+            {initialCountdown}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   if (phase === 'complete') {
     return (
