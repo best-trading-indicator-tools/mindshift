@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
@@ -29,14 +29,26 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     } else {
       try {
         await AsyncStorage.setItem('deep_breathing_intro_seen', 'true');
+        
+        // Always reset to just the breathing exercise, regardless of source
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              { 
+                name: 'DeepBreathing',
+                params: {
+                  context: route.params?.challengeId ? 'challenge' : 'daily',
+                  challengeId: route.params?.challengeId,
+                  returnTo: route.params?.returnTo
+                }
+              }
+            ]
+          })
+        );
       } catch (error) {
         console.error('Error saving intro state:', error);
       }
-      navigation.push('DeepBreathing', {
-        context: route.params?.challengeId ? 'challenge' : 'daily',
-        challengeId: route.params?.challengeId,
-        returnTo: route.params?.returnTo
-      });
     }
   };
 

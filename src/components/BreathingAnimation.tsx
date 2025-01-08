@@ -33,38 +33,42 @@ const BreathingAnimation = React.forwardRef<
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(5);
+  const [isAudioReady, setIsAudioReady] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
   const completionSound = useRef<Sound | null>(null);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isMounted = useRef(true);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<number | null>(null);
 
-  // Initialize exercise
+  // Log navigation context when component mounts
   useEffect(() => {
-    // Load gong sound and start exercise
+    console.log('🧭 Navigation Context:', {
+      source: context || 'home',
+      challengeId: challengeId || 'none',
+      returnTo: returnTo || 'none'
+    });
+  }, [context, challengeId, returnTo]);
+
+  // Initialize audio
+  useEffect(() => {
     const initAudio = async () => {
+      console.log(`🎵 Starting audio initialization (from ${context || 'home'})`);
       try {
         gongSound.current = await audioService.loadSound(AUDIO_FILES.GONG);
-        
-        // Start breathing cycle after initial delay
-        const startTimer = setTimeout(() => {
-          // Play gong right before starting the cycle
-          playGong();
-          startBreathingCycle();
-        }, INITIAL_DELAY);
-        timersRef.current.push(startTimer);
-        
+        console.log(`🎵 Audio initialized successfully (from ${context || 'home'})`);
+        setIsAudioReady(true);
       } catch (error) {
         console.error('Error loading gong sound:', error);
       }
     };
 
+    console.log(`🔄 Component mounted (from ${context || 'home'})`);
     initAudio();
 
-    // Cleanup on unmount
     return () => {
+      console.log(`🔄 Component unmounting (from ${context || 'home'})`);
       isMounted.current = false;
       cleanupAllAudio();
       if (animationRef.current) {
@@ -73,12 +77,41 @@ const BreathingAnimation = React.forwardRef<
       animation.removeAllListeners();
       timersRef.current.forEach(timer => clearTimeout(timer));
       if (countdownRef.current) {
-        clearInterval(countdownRef.current);
+        cancelAnimationFrame(countdownRef.current);
       }
     };
   }, []);
 
+  // Start exercise when audio is ready
+  useEffect(() => {
+    if (!isAudioReady) return;
+    console.log(`🎬 Starting exercise timer (from ${context || 'home'})`);
+
+    const startTimer = setTimeout(() => {
+      console.log(`⏰ Initial delay completed, starting exercise (from ${context || 'home'})`);
+      // Start everything in a single animation frame to ensure synchronization
+      requestAnimationFrame(() => {
+        if (gongSound.current) {
+          gongSound.current.play((success) => {
+            if (!success) {
+              console.error('Failed to play gong sound');
+            }
+          });
+          startBreathingCycle();
+        }
+      });
+    }, INITIAL_DELAY);
+
+    timersRef.current.push(startTimer);
+
+    return () => {
+      console.log(`🛑 Cleaning up exercise timer (from ${context || 'home'})`);
+      clearTimeout(startTimer);
+    };
+  }, [isAudioReady]);
+
   const playGong = () => {
+    console.log(`🔔 Playing gong (from ${context || 'home'})`);
     if (gongSound.current) {
       gongSound.current.play((success) => {
         if (!success) {
@@ -95,60 +128,69 @@ const BreathingAnimation = React.forwardRef<
     }
   };
 
-  // Update countdown timer
+  // Update countdown timer using performance.now() for better accuracy
   const startCountdown = useCallback(() => {
     if (countdownRef.current) {
-      clearInterval(countdownRef.current);
+      cancelAnimationFrame(countdownRef.current);
     }
 
-    // Convert milliseconds to seconds for the current phase
     const durationInSeconds = phase === 'in' || phase === 'out' 
       ? BREATH_DURATION / 1000 
       : HOLD_DURATION / 1000;
 
+    const startTime = performance.now();
     setCountdown(durationInSeconds);
-    countdownRef.current = setInterval(() => {
-      setCountdown(prev => {
-        const next = prev - 1;
-        if (next <= 0) {
-          if (countdownRef.current) {
-            clearInterval(countdownRef.current);
-          }
-          return 0;
-        }
-        return next;
-      });
-    }, 1000);
-  }, [phase]); // Add phase as a dependency since we use it to determine duration
+
+    const updateCountdown = () => {
+      const elapsedSeconds = Math.floor((performance.now() - startTime) / 1000);
+      const remaining = durationInSeconds - elapsedSeconds;
+
+      if (remaining <= 0) {
+        setCountdown(0);
+        return;
+      }
+
+      setCountdown(remaining);
+      countdownRef.current = requestAnimationFrame(updateCountdown);
+    };
+
+    countdownRef.current = requestAnimationFrame(updateCountdown);
+
+    return () => {
+      if (countdownRef.current) {
+        cancelAnimationFrame(countdownRef.current);
+      }
+    };
+  }, [phase]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (countdownRef.current) {
-        clearInterval(countdownRef.current);
+        cancelAnimationFrame(countdownRef.current);
       }
     };
   }, []);
 
   const startBreathingCycle = useCallback(() => {
-    if (!isMounted.current) return;
+    console.log(`🌊 Starting breathing cycle (from ${context || 'home'})`);
+    if (!isMounted.current || !isAudioReady) return;
     
     // Clear any existing timers
     timersRef.current.forEach(timer => clearTimeout(timer));
     timersRef.current = [];
     
     if (countdownRef.current) {
-      clearInterval(countdownRef.current);
+      cancelAnimationFrame(countdownRef.current);
     }
 
-    // Reset animation value
+    // Reset animation value and start countdown immediately
     animation.setValue(0);
-
-    // Start with 'in' phase
     setPhase('in');
     startCountdown();
+    console.log(`📊 Animation and countdown started (from ${context || 'home'})`);
 
-    // Create the animation sequence
+    // Create and start the animation sequence immediately
     const sequence = Animated.sequence([
       Animated.timing(animation, {
         toValue: 1,
@@ -223,7 +265,7 @@ const BreathingAnimation = React.forwardRef<
 
     timersRef.current = newTimers;
     sequence.start();
-  }, [breathsLeft, animation, startCountdown]);
+  }, [isAudioReady]);
 
   const getWaveStyle = (offset: number) => ({
     transform: [
@@ -277,7 +319,7 @@ const BreathingAnimation = React.forwardRef<
     }
     timersRef.current.forEach(timer => clearTimeout(timer));
     if (countdownRef.current) {
-      clearInterval(countdownRef.current);
+      cancelAnimationFrame(countdownRef.current);
     }
     // Pause audio
     if (gongSound.current) {

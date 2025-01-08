@@ -71,23 +71,34 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     
     // Handle navigation based on context
     if (route.params?.context === 'challenge' && route.params?.challengeId) {
-      if (route.params.returnTo === 'ChallengeDetail') {
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: '',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        navigation.goBack();
-      }
+      // Reset to ChallengeDetail
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            { 
+              name: 'ChallengeDetail',
+              params: {
+                challenge: {
+                  id: route.params.challengeId,
+                  title: 'Ultimate',
+                  duration: 21,
+                  description: '',
+                  image: require('../../../assets/illustrations/challenges/challenge-21.png')
+                }
+              }
+            }
+          ]
+        })
+      );
     } else {
-      // Pop to top of stack first, then navigate to MainTabs
-      navigation.dispatch(StackActions.popToTop());
-      navigation.navigate('MainTabs');
+      // Reset to MainTabs for daily flow
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }]
+        })
+      );
     }
   };
 

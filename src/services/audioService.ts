@@ -58,6 +58,7 @@ export interface AudioLoadingState {
 
 class AudioService {
   private soundInstances: Map<string, Sound> = new Map();
+  private initializationPromises: Map<string, Promise<Sound>> = new Map();
   private downloadPromises: Map<string, Promise<string>> = new Map();
   private lastUsedTimestamp: Map<string, number> = new Map();  // Track sound usage
 
@@ -227,15 +228,22 @@ class AudioService {
         return existingSound;
       }
 
+      // Check if initialization is already in progress
+      const existingPromise = this.initializationPromises.get(audioFile.filename);
+      if (existingPromise) {
+        return existingPromise;
+      }
+
       // Manage cache before loading new sound
       this.manageCache();
 
       // Handle local audio files (using require)
       if (typeof audioFile.url === 'number') {
-        return new Promise((resolve, reject) => {
+        const initPromise = new Promise<Sound>((resolve, reject) => {
           const sound = new Sound(audioFile.url, (error) => {
             if (error) {
               console.error(`Error loading sound ${audioFile.filename}:`, error);
+              this.initializationPromises.delete(audioFile.filename);
               reject(error);
               return;
             }
@@ -248,11 +256,15 @@ class AudioService {
             // Cache the sound instance
             this.soundInstances.set(audioFile.filename, sound);
             this.lastUsedTimestamp.set(audioFile.filename, Date.now());
+            this.initializationPromises.delete(audioFile.filename);
             console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
             
             resolve(sound);
           });
         });
+
+        this.initializationPromises.set(audioFile.filename, initPromise);
+        return initPromise;
       }
 
       // Handle remote audio files
@@ -261,7 +273,7 @@ class AudioService {
       return new Promise((resolve, reject) => {
         const sound = new Sound(localPath, '', (error) => {
           if (error) {
-            console.error(`Error loading sound ${audioFile.filename}:`, error);
+            //console.error(`Error loading sound ${audioFile.filename}:`, error);
             reject(error);
             return;
           }
@@ -274,13 +286,13 @@ class AudioService {
           // Cache the sound instance
           this.soundInstances.set(audioFile.filename, sound);
           this.lastUsedTimestamp.set(audioFile.filename, Date.now());
-          console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
+          //console.log(`🎵 Sound loaded and cached: ${audioFile.filename}`);
           
           resolve(sound);
         });
       });
     } catch (error) {
-      console.error('Error in loadSound:', error);
+      //console.error('Error in loadSound:', error);
       throw error;
     }
   }
