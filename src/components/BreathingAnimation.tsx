@@ -4,8 +4,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds
-const HOLD_DURATION = 5000;   // 5 seconds
+const BREATH_DURATION = 2000; // 5 seconds
+const HOLD_DURATION = 2000;   // 5 seconds
 const GONG_DURATION = 2000;   // 2 seconds
 const TOTAL_CYCLES = 1;
 
@@ -44,6 +44,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     countdown: number;
     breathsLeft: number;
   } | null>(null);
+  const [completionSound, setCompletionSound] = useState<Sound | null>(null);
 
   const startCountdown = (from: number = 5) => {
     // Clear existing countdown timers
@@ -121,6 +122,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
 
   // Initialize
   useEffect(() => {
+    // Initialize gong sound
     const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
       if (error) {
         console.log('Failed to load gong sound', error);
@@ -131,11 +133,24 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       startPhase('in');
     });
 
+    // Initialize completion sound
+    const completeSound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+      if (error) {
+        console.log('Failed to load completion sound', error);
+        return;
+      }
+      setCompletionSound(completeSound);
+    });
+
     return () => {
       if (gongSound.current) {
         gongSound.current.stop();
         gongSound.current.release();
         gongSound.current = null;
+      }
+      if (completionSound) {
+        completionSound.stop();
+        completionSound.release();
       }
     };
   }, []);
@@ -236,15 +251,29 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     onComplete();
   };
 
+  // Play completion sound when phase changes to complete
+  useEffect(() => {
+    if (phase === 'complete') {
+      // Play sound
+      if (completionSound) {
+        completionSound.play();
+      }
+      
+      // Auto-quit after 3 seconds
+      const timer = setTimeout(() => {
+        handleCompletion();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [phase, completionSound]);
+
   if (phase === 'complete') {
     return (
-      <TouchableOpacity 
-        style={styles.fullScreenButton}
-        onPress={onComplete}
-      >
+      <View style={styles.fullScreenButton}>
         <LinearGradient
           colors={['#3730A3', '#6366F1', '#818CF8']}
-          style={styles.fullScreenGradient}
+          style={[styles.fullScreenGradient, { marginTop: 0 }]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
@@ -252,7 +281,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
             Have a good day!
           </Text>
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
     );
   }
 
@@ -355,10 +384,12 @@ const styles = StyleSheet.create({
     textShadowRadius: 5,
   },
   fullScreenButton: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   fullScreenGradient: {
+    flex: 1,
     width: '100%',
     height: '100%',
     justifyContent: 'center',

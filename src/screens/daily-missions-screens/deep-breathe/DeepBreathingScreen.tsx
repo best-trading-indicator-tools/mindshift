@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation, { BreathingRef } from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
@@ -37,8 +38,15 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleComplete = async () => {
     try {
+      // Mark as completed FIRST, before any navigation
+      if (!route.params?.context || route.params?.context === 'daily') {
+        console.log('Marking as completed');
+        await markDailyExerciseAsCompleted('deep-breathing');
+        await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
+      }
+
+      // Then handle navigation
       if (route.params?.context === 'challenge' && route.params?.challengeId) {
-        // For challenge completion, just navigate back
         if (route.params.returnTo === 'ChallengeDetail') {
           navigation.navigate('ChallengeDetail', {
             challenge: {
@@ -53,8 +61,6 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
           navigation.goBack();
         }
       } else {
-        // Mark as completed for daily mission
-        await markDailyExerciseAsCompleted('deep-breathing');
         navigation.navigate('MainTabs');
       }
     } catch (error) {
@@ -110,11 +116,11 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar 
         barStyle="light-content" 
         backgroundColor="#000000"
-        translucent={false}
+        translucent={true}
       />
       <View style={styles.content}>
         <BreathingAnimation
@@ -162,7 +168,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
