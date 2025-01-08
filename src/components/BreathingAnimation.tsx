@@ -140,6 +140,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     }
   }, [isInitializing]);
 
+  
   // Initialize
   useEffect(() => {
     // Initialize gong sound
