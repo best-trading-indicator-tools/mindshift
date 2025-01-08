@@ -302,7 +302,8 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           component={DeepBreathingScreen}
           options={{
             presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#000000' }
           }}
         />
         <Stack.Screen 

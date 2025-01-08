@@ -30,20 +30,14 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       try {
         await AsyncStorage.setItem('deep_breathing_intro_seen', 'true');
         
-        // Always reset to just the breathing exercise, regardless of source
         navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { 
-                name: 'DeepBreathing',
-                params: {
-                  context: route.params?.challengeId ? 'challenge' : 'daily',
-                  challengeId: route.params?.challengeId,
-                  returnTo: route.params?.returnTo
-                }
-              }
-            ]
+          CommonActions.navigate({
+            name: 'DeepBreathing',
+            params: {
+              context: route.params?.challengeId ? 'challenge' : 'daily',
+              challengeId: route.params?.challengeId,
+              returnTo: route.params?.returnTo
+            }
           })
         );
       } catch (error) {
