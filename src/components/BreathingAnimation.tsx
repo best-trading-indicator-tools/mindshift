@@ -4,10 +4,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds for a more relaxed breath
-const HOLD_DURATION = 5000;   // 5 seconds hold
-const GONG_DURATION = 2000;   // 2 seconds for gong
-const TOTAL_CYCLES = 5;
+const BREATH_DURATION = 5000; // 5 seconds
+const HOLD_DURATION = 5000;   // 5 seconds
+const GONG_DURATION = 2000;   // 2 seconds
+const TOTAL_CYCLES = 1;
 
 // Enable playback in silence mode
 Sound.setCategory('Playback', true);
@@ -39,23 +39,98 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+  const pausedStateRef = useRef<{
+    phase: typeof phase;
+    countdown: number;
+    breathsLeft: number;
+  } | null>(null);
 
-  // Initialize sound
+  const startCountdown = (from: number = 5) => {
+    // Clear existing countdown timers
+    timersRef.current.forEach(timer => clearTimeout(timer));
+    timersRef.current = [];
+
+    // Set initial countdown
+    setCountdown(from);
+
+    // Create timers for each second
+    for (let i = from - 1; i >= 1; i--) {
+      const timer = setTimeout(() => {
+        setCountdown(i);
+      }, (from - i) * 1000);
+      timersRef.current.push(timer);
+    }
+  };
+
+  const startPhase = (currentPhase: typeof phase, startFrom?: number) => {
+    setPhase(currentPhase);
+    startCountdown(startFrom || Math.floor(BREATH_DURATION / 1000));
+
+    // Start animation based on phase
+    switch (currentPhase) {
+      case 'in':
+        Animated.timing(animation, {
+          toValue: 1,
+          duration: BREATH_DURATION,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+        break;
+      case 'hold-in':
+        animation.setValue(1);  // Keep circle expanded
+        break;
+      case 'out':
+        Animated.timing(animation, {
+          toValue: 0,
+          duration: BREATH_DURATION,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }).start();
+        break;
+      case 'hold-out':
+        animation.setValue(0);  // Keep circle small
+        break;
+    }
+
+    const phaseTimer = setTimeout(() => {
+      switch (currentPhase) {
+        case 'in':
+          startPhase('hold-in');
+          break;
+        case 'hold-in':
+          playGong();
+          startPhase('out');
+          break;
+        case 'out':
+          startPhase('hold-out');
+          break;
+        case 'hold-out':
+          if (breathsLeft > 1) {
+            setBreathsLeft(prev => prev - 1);
+            playGong();
+            startPhase('in');
+          } else {
+            setPhase('complete');
+          }
+          break;
+      }
+    }, currentPhase.includes('hold') ? HOLD_DURATION : BREATH_DURATION);
+
+    timersRef.current.push(phaseTimer);
+  };
+
+  // Initialize
   useEffect(() => {
-    // Initialize gong sound
     const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
       if (error) {
         console.log('Failed to load gong sound', error);
         return;
       }
-      console.log('Sound loaded successfully');
       gongSound.current = sound;
-      // Start the first cycle
       playGong();
-      startBreathingCycle();
+      startPhase('in');
     });
 
-    // Cleanup when component unmounts
     return () => {
       if (gongSound.current) {
         gongSound.current.stop();
@@ -64,6 +139,40 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       }
     };
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    handleExitPress: () => {
+      // Stop all timers
+      timersRef.current.forEach(timer => clearTimeout(timer));
+      timersRef.current = [];
+
+      // Save exact current state
+      pausedStateRef.current = {
+        phase,
+        countdown,
+        breathsLeft
+      };
+
+      if (gongSound.current) {
+        gongSound.current.pause();
+      }
+    },
+    handleContinue: () => {
+      // Resume from exact saved state
+      if (pausedStateRef.current) {
+        startPhase(pausedStateRef.current.phase, pausedStateRef.current.countdown);
+        setBreathsLeft(pausedStateRef.current.breathsLeft);
+        pausedStateRef.current = null;
+      }
+    },
+    cleanupAllAudio: () => {
+      if (gongSound.current) {
+        gongSound.current.stop();
+        gongSound.current.release();
+        gongSound.current = null;
+      }
+    }
+  }));
 
   const playGong = () => {
     if (gongSound.current) {
@@ -82,114 +191,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       });
     }
   };
-
-  const startBreathingCycle = useCallback(() => {
-    // Clear any existing timers
-    timersRef.current.forEach(timer => clearTimeout(timer));
-    timersRef.current = [];
-
-    // Reset animation value
-    animation.setValue(0);
-
-    // Start with 'in' phase
-    setPhase('in');
-    setCountdown(5);
-    playGong();
-
-    // Set up countdown timers for each second
-    const countdownTimers = [];
-    for (let i = 4; i >= 1; i--) {
-      countdownTimers.push(
-        setTimeout(() => setCountdown(i), (5 - i) * 1000)
-      );
-    }
-
-    const sequence = Animated.sequence([
-      // Breath in
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: BREATH_DURATION,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }),
-      // Hold in
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: HOLD_DURATION,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-      // Breath out
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: BREATH_DURATION,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }),
-      // Hold out
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: HOLD_DURATION,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    ]);
-
-    // Set up phase change timers
-    const phaseTimers = [
-      // Breath in -> Hold
-      setTimeout(() => {
-        setPhase('hold-in');
-        setCountdown(5);
-      }, BREATH_DURATION),
-      
-      // Hold -> Breath out
-      setTimeout(() => {
-        setPhase('out');
-        setCountdown(5);
-        playGong();
-      }, BREATH_DURATION + HOLD_DURATION),
-      
-      // Breath out -> Hold
-      setTimeout(() => {
-        setPhase('hold-out');
-        setCountdown(5);
-      }, BREATH_DURATION * 2 + HOLD_DURATION),
-      
-      // Hold -> Next cycle or complete
-      setTimeout(() => {
-        if (breathsLeft > 1) {
-          setBreathsLeft(prev => prev - 1);
-          startBreathingCycle();
-        } else {
-          setPhase('complete');
-        }
-      }, (BREATH_DURATION + HOLD_DURATION) * 2)
-    ];
-
-    // Add countdown timers for each phase
-    for (let phase = 1; phase <= 4; phase++) {
-      const phaseStart = phase === 1 ? 0 : 
-                        phase === 2 ? BREATH_DURATION :
-                        phase === 3 ? BREATH_DURATION + HOLD_DURATION :
-                        BREATH_DURATION * 2 + HOLD_DURATION;
-      
-      for (let i = 4; i >= 1; i--) {
-        phaseTimers.push(
-          setTimeout(() => setCountdown(i), phaseStart + (5 - i) * 1000)
-        );
-      }
-    }
-
-    timersRef.current = [...countdownTimers, ...phaseTimers];
-
-    // Start the sequence
-    sequence.start();
-
-    return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
-    };
-  }, [breathsLeft, animation]);
 
   const getWaveStyle = (offset: number) => ({
     transform: [
@@ -234,36 +235,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     // Call onComplete immediately to navigate back
     onComplete();
   };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (gongSound.current) {
-        gongSound.current.stop();
-        gongSound.current.release();
-        gongSound.current = null;
-      }
-    };
-  }, []);
-
-  useImperativeHandle(ref, () => ({
-    handleExitPress: () => {
-      if (gongSound.current) {
-        gongSound.current.stop();
-      }
-      timersRef.current.forEach(timer => clearTimeout(timer));
-    },
-    handleContinue: () => {
-      startBreathingCycle();
-    },
-    cleanupAllAudio: () => {
-      if (gongSound.current) {
-        gongSound.current.stop();
-        gongSound.current.release();
-        gongSound.current = null;
-      }
-    }
-  }));
 
   if (phase === 'complete') {
     return (
