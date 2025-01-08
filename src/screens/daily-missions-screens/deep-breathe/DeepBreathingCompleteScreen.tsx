@@ -1,14 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
 const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
+  useEffect(() => {
+    // Enable playback in silence mode
+    Sound.setCategory('Playback', true);
+
+    // Play completion sound
+    const sound = new Sound(require('../../../assets/audio/haveagreatday.wav'), error => {
+      if (error) {
+        console.error('Failed to load completion sound:', error);
+        return;
+      }
+      sound.play(success => {
+        if (!success) {
+          console.error('Failed to play completion sound');
+        }
+      });
+    });
+
+    // Auto-exit after 3 seconds
+    const timer = setTimeout(handleExit, 3000);
+
+    return () => {
+      clearTimeout(timer);
+      if (sound) {
+        sound.release();
+      }
+    };
+  }, []);
+
   const handleExit = async () => {
     try {
       if (route.params?.context === 'challenge' && route.params.challengeId) {
@@ -60,14 +89,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
             style={styles.icon}
           />
 
-          <Text style={styles.title}>Have a good day!</Text>
-          
-          <TouchableOpacity 
-            style={styles.exitButton} 
-            onPress={handleExit}
-          >
-            <Text style={styles.exitButtonText}>Exit</Text>
-          </TouchableOpacity>
+          <Text style={styles.title}>Have a great day!</Text>
         </View>
       </SafeAreaView>
     </LinearGradient>

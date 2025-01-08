@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import BreathingAnimation from '../../../components/BreathingAnimation';
+import BreathingAnimation, { BreathingRef } from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
 import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { CommonActions, StackActions } from '@react-navigation/native';
@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
 const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
-  const breathingAnimationRef = useRef<any>();
+  const breathingAnimationRef = useRef<BreathingRef>(null);
 
   useEffect(() => {
     // Save the current status bar style
