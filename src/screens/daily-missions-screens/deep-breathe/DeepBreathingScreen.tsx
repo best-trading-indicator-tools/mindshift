@@ -36,82 +36,42 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     };
   }, []);
 
-  const handleComplete = async () => {
+  const handleExerciseComplete = async () => {
     try {
-      // Mark as completed FIRST, before any navigation
+      // Cleanup
+      if (breathingAnimationRef.current) {
+        breathingAnimationRef.current.cleanupAudio();
+      }
+      
+      // Mark as completed
       if (!route.params?.context || route.params?.context === 'daily') {
-        console.log('Marking as completed');
         await markDailyExerciseAsCompleted('deep-breathing');
         await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
       }
 
-      // Then handle navigation
-      if (route.params?.context === 'challenge' && route.params?.challengeId) {
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
-      } else {
-        navigation.navigate('MainTabs');
-      }
+      // Navigate
+      navigation.goBack();
     } catch (error) {
-      console.error('Failed to mark exercise as completed:', error);
+      console.error('Failed to complete exercise:', error);
       navigation.goBack();
     }
   };
 
   const handleExit = () => {
     if (breathingAnimationRef.current) {
-      breathingAnimationRef.current.cleanupAllAudio();
+      breathingAnimationRef.current.cleanupAudio();
     }
-    setShowExitModal(false);
     
-    // Handle navigation based on context
-    if (route.params?.context === 'challenge' && route.params?.challengeId) {
-      // Reset to ChallengeDetail
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            { 
-              name: 'ChallengeDetail',
-              params: {
-                challenge: {
-                  id: route.params.challengeId,
-                  title: 'Ultimate',
-                  duration: 21,
-                  description: '',
-                  image: require('../../../assets/illustrations/challenges/challenge-21.png')
-                }
-              }
-            }
-          ]
-        })
-      );
-    } else {
-      // Reset to MainTabs for daily flow
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'MainTabs' }]
-        })
-      );
-    }
+    setShowExitModal(false);
+
+    // Forcer la navigation vers Home sans passer par les vérifications initiales
+    navigation.push('MainTabs');
   };
 
   const handleContinue = () => {
     setShowExitModal(false);
     if (breathingAnimationRef.current) {
-      breathingAnimationRef.current.handleContinue();
+      breathingAnimationRef.current.handleResume();
     }
   };
 
@@ -125,19 +85,16 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.content}>
         <BreathingAnimation
           ref={breathingAnimationRef}
-          navigation={navigation}
-          onComplete={handleComplete}
-          context={route.params?.context}
-          challengeId={route.params?.challengeId}
-          returnTo={route.params?.returnTo}
+          onPhaseComplete={handleExerciseComplete}
         />
       </View>
       <View style={styles.exitButtonContainer}>
         <ExitExerciseButton onExit={() => {
-          if (breathingAnimationRef.current) {
-            breathingAnimationRef.current.handleExitPress();
-          }
           setShowExitModal(true);
+          
+          if (breathingAnimationRef.current) {
+            breathingAnimationRef.current.handlePause();
+          }
         }} />
       </View>
 

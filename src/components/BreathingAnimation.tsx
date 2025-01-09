@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperat
 import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
+import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 5000; // 5 seconds
@@ -14,25 +15,17 @@ const TOTAL_CYCLES = 1;
 Sound.setCategory('Playback', true);
 
 export interface BreathingRef {
-  handleExitPress: () => void;
-  handleContinue: () => void;
-  cleanupAllAudio: () => void;
+  handlePause: () => void;
+  handleResume: () => void;
+  cleanupAudio: () => void;
 }
 
 interface BreathingAnimationProps {
-  navigation: any;
-  onComplete: () => void;
-  context?: 'daily' | 'challenge';
-  challengeId?: string;
-  returnTo?: string;
+  onPhaseComplete: () => void;
 }
 
 const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({ 
-  navigation, 
-  onComplete,
-  context,
-  challengeId,
-  returnTo
+  onPhaseComplete
 }, ref) => {
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
@@ -74,14 +67,17 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     // Start animation and sound based on phase
     switch (currentPhase) {
       case 'in':
-        // Play gong first, then nature sound after GONG_DURATION
+      case 'out':
+        // Play gong first
         playGong();
-        setTimeout(() => {
+        // Then play nature sound after gong finishes
+        const timer = setTimeout(() => {
           playBreathSound();
-        }, GONG_DURATION);
+        }, GONG_DURATION + 100); // Add small buffer after gong
+        timersRef.current.push(timer);
         
         Animated.timing(animation, {
-          toValue: 1,
+          toValue: currentPhase === 'in' ? 1 : 0,
           duration: BREATH_DURATION,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
@@ -89,20 +85,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         break;
       case 'hold-in':
         animation.setValue(1);  // Keep circle expanded
-        break;
-      case 'out':
-        // Play gong first, then nature sound after GONG_DURATION
-        playGong();
-        setTimeout(() => {
-          playBreathSound();
-        }, GONG_DURATION);
-        
-        Animated.timing(animation, {
-          toValue: 0,
-          duration: BREATH_DURATION,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }).start();
         break;
       case 'hold-out':
         animation.setValue(0);  // Keep circle small
@@ -154,39 +136,51 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   
   // Initialize
   useEffect(() => {
+    let allSoundsLoaded = 0;
+    
     // Initialize gong sound
     const sound = new Sound(require('../assets/audio/gong.wav'), (error) => {
       if (error) {
         console.log('Failed to load gong sound', error);
         return;
       }
+      console.log('Gong sound loaded successfully');
       gongSound.current = sound;
+      allSoundsLoaded++;
       
-      // Also initialize breath sound
+      // Initialize breath sound
       const breathSoundInit = new Sound(require('../assets/audio/nature.wav'), (error) => {
         if (error) {
           console.log('Failed to load breath sound', error);
           return;
         }
+        console.log('Breath sound loaded successfully');
+        breathSoundInit.setVolume(1.0);
         setBreathSound(breathSoundInit);
+        allSoundsLoaded++;
+
+        // Initialize completion sound
+        const completeSound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+          if (error) {
+            console.log('Failed to load completion sound', error);
+            return;
+          }
+          console.log('Completion sound loaded successfully');
+          setCompletionSound(completeSound);
+          allSoundsLoaded++;
+
+          // Start only when all sounds are loaded
+          if (allSoundsLoaded === 3) {
+            const initialTimer = setTimeout(() => {
+              setIsInitializing(false);
+              playGong();
+              startPhase('in');
+            }, INITIAL_DELAY);
+            
+            timersRef.current.push(initialTimer);
+          }
+        });
       });
-
-      const initialTimer = setTimeout(() => {
-        setIsInitializing(false);
-        playGong();
-        startPhase('in');
-      }, INITIAL_DELAY);
-      
-      timersRef.current.push(initialTimer);
-    });
-
-    // Initialize completion sound
-    const completeSound = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
-      if (error) {
-        console.log('Failed to load completion sound', error);
-        return;
-      }
-      setCompletionSound(completeSound);
     });
 
     return () => {
@@ -206,36 +200,39 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     };
   }, []);
 
+
   useImperativeHandle(ref, () => ({
-    handleExitPress: () => {
-      // Stop all timers
+    handlePause: () => {
+      // Juste pause l'exercice et l'audio
       timersRef.current.forEach(timer => clearTimeout(timer));
       timersRef.current = [];
-
-      // Save exact current state
-      pausedStateRef.current = {
-        phase,
-        countdown,
-        breathsLeft
-      };
-
-      if (gongSound.current) {
-        gongSound.current.pause();
-      }
+      pausedStateRef.current = { phase, countdown, breathsLeft };
+      
+      if (gongSound.current) gongSound.current.stop();
+      if (breathSound) breathSound.stop();
+      if (completionSound) completionSound.stop();
     },
-    handleContinue: () => {
-      // Resume from exact saved state
+    handleResume: () => {
       if (pausedStateRef.current) {
         startPhase(pausedStateRef.current.phase, pausedStateRef.current.countdown);
         setBreathsLeft(pausedStateRef.current.breathsLeft);
         pausedStateRef.current = null;
       }
     },
-    cleanupAllAudio: () => {
+    cleanupAudio: () => {
+      // Nettoie l'audio
       if (gongSound.current) {
         gongSound.current.stop();
         gongSound.current.release();
         gongSound.current = null;
+      }
+      if (breathSound) {
+        breathSound.stop();
+        breathSound.release();
+      }
+      if (completionSound) {
+        completionSound.stop();
+        completionSound.release();
       }
     }
   }));
@@ -260,19 +257,32 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
 
   const playBreathSound = () => {
     if (breathSound) {
+      console.log('Breath sound exists, attempting to play');
+      console.log('Sound state:', {
+        isLoaded: breathSound.isLoaded(),
+        duration: breathSound.getDuration(),
+        volume: breathSound.getVolume()
+      });
+      
       breathSound.stop(() => {
+        console.log('Previous instance stopped, starting new play');
         breathSound.setCurrentTime(0);
         breathSound.play((success) => {
           if (!success) {
             console.log('Breath sound playback failed');
+          } else {
+            console.log('Breath sound playing successfully');
           }
         });
-        // Stop the nature sound after BREATH_DURATION - GONG_DURATION
+        // Play for the remaining duration after gong
         const timeout = setTimeout(() => {
+          console.log('Stopping breath sound');
           breathSound.stop();
-        }, BREATH_DURATION - GONG_DURATION);
+        }, BREATH_DURATION - GONG_DURATION - 100); // Adjust for the buffer
         timersRef.current.push(timeout);
       });
+    } else {
+      console.log('Breath sound not initialized');
     }
   };
 
@@ -308,31 +318,15 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     }
   };
 
-  const handleCompletion = () => {
-    // Clean up gong sound first
-    if (gongSound.current) {
-      gongSound.current.stop();
-      gongSound.current.release();
-      gongSound.current = null;
-    }
-
-    // Call onComplete immediately to navigate back
-    onComplete();
-  };
-
-  // Play completion sound when phase changes to complete
+  // Quand l'exercice est terminé
   useEffect(() => {
     if (phase === 'complete') {
-      // Play sound
       if (completionSound) {
         completionSound.play();
       }
-      
-      // Auto-quit after 3 seconds
       const timer = setTimeout(() => {
-        handleCompletion();
-      }, 3000);
-      
+        onPhaseComplete(); // Notifie le parent que l'exercice est terminé
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [phase, completionSound]);
