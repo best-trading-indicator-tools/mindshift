@@ -41,10 +41,9 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
-      // Clear all AsyncStorage data
       await AsyncStorage.clear();
       
-      // Navigate to login screen using parent navigator
+      // Utilise navigation.getParent() pour accéder au navigateur parent
       navigation.getParent()?.reset({
         index: 0,
         routes: [{ name: 'Login' }],

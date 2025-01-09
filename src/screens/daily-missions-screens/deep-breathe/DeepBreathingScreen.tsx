@@ -75,7 +75,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       breathingAnimationRef.current.cleanupAudio();
     }
     setShowExitModal(false);
-    navigation.goBack();
+    navigation.navigate('MainTabs');
   };
 
   const handleContinue = () => {
