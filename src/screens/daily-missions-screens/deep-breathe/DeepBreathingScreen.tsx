@@ -19,7 +19,7 @@ import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
-const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
+const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const breathingAnimationRef = useRef<BreathingRef>(null);
 
@@ -36,24 +36,37 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', (e) => {
+      console.log('Navigation state changed:', e.data);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    console.log('=== NAVIGATION DEBUG ===');
+    console.log('Navigation methods available:', {
+      push: typeof navigation.push === 'function',
+      navigate: typeof navigation.navigate === 'function',
+      goBack: typeof navigation.goBack === 'function',
+      dispatch: typeof navigation.dispatch === 'function'
+    });
+    console.log('Full navigation object:', navigation);
+    console.log('=== END NAVIGATION DEBUG ===');
+  }, [navigation]);
+
   const handleExerciseComplete = async () => {
     try {
-      // Cleanup
       if (breathingAnimationRef.current) {
         breathingAnimationRef.current.cleanupAudio();
       }
-      
-      // Mark as completed
-      if (!route.params?.context || route.params?.context === 'daily') {
-        await markDailyExerciseAsCompleted('deep-breathing');
-        await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
-      }
-
-      // Navigate
-      navigation.goBack();
+      await markDailyExerciseAsCompleted('deep-breathing');
+      await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
+      navigation.push('MainTabs');
     } catch (error) {
       console.error('Failed to complete exercise:', error);
-      navigation.goBack();
+      navigation.push('MainTabs');
     }
   };
 
@@ -61,11 +74,8 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     if (breathingAnimationRef.current) {
       breathingAnimationRef.current.cleanupAudio();
     }
-    
     setShowExitModal(false);
-
-    // Forcer la navigation vers Home sans passer par les vérifications initiales
-    navigation.push('MainTabs');
+    navigation.goBack();
   };
 
   const handleContinue = () => {

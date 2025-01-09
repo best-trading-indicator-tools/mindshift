@@ -19,25 +19,24 @@ function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'PostQuestionnaire'>('PreQuestionnaire');
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const handleAuthStateChanged = useCallback((firebaseUser: FirebaseAuthTypes.User | null) => {
-    // Batch state updates together
-    unstable_batchedUpdates(() => {
+    if (!hasInitialized) {
+      unstable_batchedUpdates(() => {
+        setUser(firebaseUser);
+        setInitialRoute(firebaseUser ? 'MainTabs' : 'PreQuestionnaire');
+        setInitializing(false);
+        setHasInitialized(true);
+      });
+    } else {
       setUser(firebaseUser);
-      // If user exists, go to MainTabs, otherwise PreQuestionnaire
-      setInitialRoute(firebaseUser ? 'MainTabs' : 'PreQuestionnaire');
-      setInitializing(false);
-    });
-
-
-  }, []); // Empty dependency array since these setters never change
+    }
+  }, [hasInitialized]);
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(handleAuthStateChanged);
-
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [handleAuthStateChanged]);
 
   const memoizedNavigator = React.useMemo(() => {

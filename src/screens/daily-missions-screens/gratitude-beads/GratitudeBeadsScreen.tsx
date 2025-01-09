@@ -406,9 +406,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleExit = () => {
-    // Stop and cleanup all sounds
-    audioService.releaseAllSounds();
-    setShowExitModal(true);
+    navigation.push('MainTabs');
   };
 
   const handleUndo = () => {
