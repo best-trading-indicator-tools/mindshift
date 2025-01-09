@@ -4,8 +4,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 2000; // 5 seconds
-const HOLD_DURATION = 2000;   // 5 seconds
+const BREATH_DURATION = 5000; // 5 seconds
+const HOLD_DURATION = 5000;   // 5 seconds
 const GONG_DURATION = 2000;   // 2 seconds
 const INITIAL_DELAY = 2000; // 2 seconds
 const TOTAL_CYCLES = 1;
@@ -48,6 +48,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   const [completionSound, setCompletionSound] = useState<Sound | null>(null);
   const [initialCountdown, setInitialCountdown] = useState(Math.ceil(INITIAL_DELAY / 1000));
   const [isInitializing, setIsInitializing] = useState(true);
+  const [breathSound, setBreathSound] = useState<Sound | null>(null);
 
   const startCountdown = (from: number = 5) => {
     // Clear existing countdown timers
@@ -70,9 +71,15 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     setPhase(currentPhase);
     startCountdown(startFrom || Math.floor(BREATH_DURATION / 1000));
 
-    // Start animation based on phase
+    // Start animation and sound based on phase
     switch (currentPhase) {
       case 'in':
+        // Play gong first, then nature sound after GONG_DURATION
+        playGong();
+        setTimeout(() => {
+          playBreathSound();
+        }, GONG_DURATION);
+        
         Animated.timing(animation, {
           toValue: 1,
           duration: BREATH_DURATION,
@@ -84,6 +91,12 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         animation.setValue(1);  // Keep circle expanded
         break;
       case 'out':
+        // Play gong first, then nature sound after GONG_DURATION
+        playGong();
+        setTimeout(() => {
+          playBreathSound();
+        }, GONG_DURATION);
+        
         Animated.timing(animation, {
           toValue: 0,
           duration: BREATH_DURATION,
@@ -102,7 +115,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
           startPhase('hold-in');
           break;
         case 'hold-in':
-          playGong();
           startPhase('out');
           break;
         case 'out':
@@ -111,7 +123,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         case 'hold-out':
           if (breathsLeft > 1) {
             setBreathsLeft(prev => prev - 1);
-            playGong();
             startPhase('in');
           } else {
             setPhase('complete');
@@ -151,6 +162,15 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       }
       gongSound.current = sound;
       
+      // Also initialize breath sound
+      const breathSoundInit = new Sound(require('../assets/audio/nature.wav'), (error) => {
+        if (error) {
+          console.log('Failed to load breath sound', error);
+          return;
+        }
+        setBreathSound(breathSoundInit);
+      });
+
       const initialTimer = setTimeout(() => {
         setIsInitializing(false);
         playGong();
@@ -174,6 +194,10 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         gongSound.current.stop();
         gongSound.current.release();
         gongSound.current = null;
+      }
+      if (breathSound) {
+        breathSound.stop();
+        breathSound.release();
       }
       if (completionSound) {
         completionSound.stop();
@@ -230,6 +254,19 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
           gongSound.current?.stop();
         }, GONG_DURATION);
         return () => clearTimeout(timeout);
+      });
+    }
+  };
+
+  const playBreathSound = () => {
+    if (breathSound) {
+      breathSound.stop(() => {
+        breathSound.setCurrentTime(0);
+        breathSound.play((success) => {
+          if (!success) {
+            console.log('Breath sound playback failed');
+          }
+        });
       });
     }
   };
