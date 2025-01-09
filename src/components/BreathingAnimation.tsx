@@ -267,6 +267,11 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
             console.log('Breath sound playback failed');
           }
         });
+        // Stop the nature sound after BREATH_DURATION - GONG_DURATION
+        const timeout = setTimeout(() => {
+          breathSound.stop();
+        }, BREATH_DURATION - GONG_DURATION);
+        timersRef.current.push(timeout);
       });
     }
   };
