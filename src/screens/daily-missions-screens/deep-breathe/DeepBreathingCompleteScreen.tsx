@@ -1,36 +1,68 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { CommonActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
-const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
-  useEffect(() => {
-    // Enable playback in silence mode
-    Sound.setCategory('Playback', true);
+const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation }) => {
+  const [showExitModal, setShowExitModal] = useState(false);
 
-    // Play completion sound
+  const handleExit = () => {
+    console.log("exit phase 1")
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
+    console.log("handleConfirmExit started");
+    setShowExitModal(false);
+    console.log("Modal closed");
+    console.log("Navigating to MainTabs...");
+    navigation.navigate('MainTabs');
+    console.log("Navigation command sent");
+  };
+
+  const handleContinue = () => {
+    console.log("handleContinue called");
+    setShowExitModal(false);
+  };
+
+  useEffect(() => {
+    console.log("DeepBreathingComplete mounted - Start of useEffect");
+    Sound.setCategory('Playback', true);
+    console.log("Sound category set");
+
     const sound = new Sound(require('../../../assets/audio/haveagreatday.wav'), error => {
+      console.log("Sound initialization started");
       if (error) {
         console.error('Failed to load completion sound:', error);
         return;
       }
+      console.log("Sound loaded successfully");
       sound.play(success => {
+        console.log("Sound play attempted");
         if (!success) {
           console.error('Failed to play completion sound');
         }
       });
     });
 
-    // Auto-exit after 3 seconds
-    const timer = setTimeout(handleExit, 3000);
+    console.log("About to call markDailyExerciseAsCompleted");
+    markDailyExerciseAsCompleted('deep-breathing');
+    console.log("deep breathing markDailyExerciseAsCompleted called");
+
+    const timer = setTimeout(() => {
+      console.log("Auto navigation timer triggered");
+      navigation.navigate('MainTabs');
+    }, 3000);
 
     return () => {
+      console.log("DeepBreathingComplete cleanup");
       clearTimeout(timer);
       if (sound) {
         sound.release();
@@ -38,61 +70,66 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     };
   }, []);
 
-  const handleExit = async () => {
-    try {
-      if (route.params?.context === 'challenge' && route.params.challengeId) {
-        // Mark as completed for challenge only
-        await markChallengeExerciseAsCompleted(route.params.challengeId, 'deep-breathing');
-        
-        // Call onComplete callback if provided
-        if (route.params.onComplete) {
-          route.params.onComplete();
-        }
-
-        // Handle navigation
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
-      } else {
-        // Mark as completed for daily mission
-        await markDailyExerciseAsCompleted('deep-breathing');
-        navigation.navigate('MainTabs');
-      }
-    } catch (error) {
-      console.error('Error completing exercise:', error);
-      navigation.goBack();
-    }
-  };
+  useEffect(() => {
+    console.log("Modal state changed:", showExitModal);
+  }, [showExitModal]);
 
   return (
-    <LinearGradient
-      colors={['#4A90E2', '#357ABD', '#2C3E50']}
-      locations={[0, 0.5, 1]}
-      style={styles.gradient}
-    >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <MaterialCommunityIcons 
-            name="meditation" 
-            size={120} 
-            color="white" 
-            style={styles.icon}
-          />
+    <View style={StyleSheet.absoluteFill}>
+      <LinearGradient
+        colors={['#4A90E2', '#357ABD', '#2C3E50']}
+        locations={[0, 0.5, 1]}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.content}>
+            <MaterialCommunityIcons 
+              name="meditation" 
+              size={120} 
+              color="white" 
+              style={styles.icon}
+            />
+            <Text style={styles.title}>Have a great day!</Text>
+            
+            <TouchableOpacity 
+              style={[styles.exitButton, { zIndex: 999 }]}
+              activeOpacity={0.7}
+              onPress={handleExit}
+            >
+              <Text style={styles.exitButtonText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
 
-          <Text style={styles.title}>Have a great day!</Text>
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              You're making progress! Continue practicing to maintain your results.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinue}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.exitButton, { backgroundColor: '#DC2626' }]}
+              onPress={handleConfirmExit}
+            >
+              <Text style={[styles.exitText, { color: 'white' }]}>Exit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </SafeAreaView>
-    </LinearGradient>
+      </Modal>
+    </View>
   );
 };
 
@@ -133,12 +170,55 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    zIndex: 1001,
+    width: '100%',
   },
   exitButtonText: {
     color: '#000000',
     fontSize: 20,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 20,
+    width: '80%',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  continueButton: {
+    backgroundColor: '#4A90E2',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  continueText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  exitText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 

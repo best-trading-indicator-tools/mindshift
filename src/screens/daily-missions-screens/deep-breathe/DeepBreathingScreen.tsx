@@ -36,26 +36,6 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('state', (e) => {
-      console.log('Navigation state changed:', e.data);
-    });
-
-    return unsubscribe;
-  }, [navigation]);
-
-  useEffect(() => {
-    console.log('=== NAVIGATION DEBUG ===');
-    console.log('Navigation methods available:', {
-      push: typeof navigation.push === 'function',
-      navigate: typeof navigation.navigate === 'function',
-      goBack: typeof navigation.goBack === 'function',
-      dispatch: typeof navigation.dispatch === 'function'
-    });
-    console.log('Full navigation object:', navigation);
-    console.log('=== END NAVIGATION DEBUG ===');
-  }, [navigation]);
-
   const handleExerciseComplete = async () => {
     try {
       if (breathingAnimationRef.current) {
@@ -63,10 +43,16 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       }
       await markDailyExerciseAsCompleted('deep-breathing');
       await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
-      navigation.push('MainTabs');
+      
+      // S'assurer que le modal est fermé avant de naviguer
+      setShowExitModal(false);
+      
+      // Naviguer vers l'écran de completion
+      navigation.push('DeepBreathingComplete', {});
     } catch (error) {
       console.error('Failed to complete exercise:', error);
-      navigation.push('MainTabs');
+      setShowExitModal(false);  // S'assurer que le modal est fermé même en cas d'erreur
+      navigation.push('DeepBreathingComplete', {});
     }
   };
 

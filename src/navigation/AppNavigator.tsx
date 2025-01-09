@@ -449,10 +449,13 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           options={{ headerShown: false }}
         />
 
-        <Stack.Screen
-          name="DeepBreathingComplete"
+        <Stack.Screen 
+          name="DeepBreathingComplete" 
           component={DeepBreathingCompleteScreen}
-          options={{ headerShown: false }}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
         />
 
       </Stack.Navigator>

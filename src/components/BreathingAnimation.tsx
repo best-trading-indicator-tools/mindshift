@@ -5,8 +5,8 @@ import Sound from 'react-native-sound';
 import { audioService, AUDIO_FILES } from '../services/audioService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BREATH_DURATION = 5000; // 5 seconds
-const HOLD_DURATION = 5000;   // 5 seconds
+const BREATH_DURATION = 2000; // 5 seconds
+const HOLD_DURATION = 2000;   // 5 seconds
 const GONG_DURATION = 2000;   // 2 seconds
 const INITIAL_DELAY = 2000; // 2 seconds
 const TOTAL_CYCLES = 1;
@@ -311,8 +311,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         return 'Breath out';
       case 'hold-out':
         return 'Hold';
-      case 'complete':
-        return 'Have a great day!';
       default:
         return '';
     }
@@ -322,15 +320,21 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   useEffect(() => {
     if (phase === 'complete') {
       if (completionSound) {
-        completionSound.play();
+        completionSound.play((success) => {
+          if (success) {
+            // Stop the sound after 3 seconds
+            setTimeout(() => {
+              completionSound.stop();
+            }, 3000);
+          }
+        });
       }
-      const timer = setTimeout(() => {
-        onPhaseComplete(); // Notifie le parent que l'exercice est terminé
-      }, 1000);
-      return () => clearTimeout(timer);
+      // Notifier le parent immédiatement
+      onPhaseComplete();
     }
   }, [phase, completionSound]);
 
+  
   if (isInitializing) {
     return (
       <View style={styles.container}>
@@ -348,17 +352,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
 
   if (phase === 'complete') {
     return (
-      <View style={styles.fullScreenButton}>
-        <LinearGradient
-          colors={['#3730A3', '#6366F1', '#818CF8']}
-          style={[styles.fullScreenGradient, { marginTop: 0 }]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <Text style={styles.completionText}>
-            Have a good day!
-          </Text>
-        </LinearGradient>
+      <View style={styles.container}>
       </View>
     );
   }
