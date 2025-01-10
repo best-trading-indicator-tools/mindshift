@@ -40,21 +40,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
         navigation.navigate('DailyGratitude', {
           context: route.params?.context || 'daily',
           challengeId: route.params?.challengeId,
-          returnTo: route.params?.returnTo,
-          onComplete: () => {
-            console.log('Exercise completed callback');
-            if (route.params?.challengeId) {
-              navigation.navigate('ChallengeDetail', {
-                challenge: {
-                  id: route.params.challengeId,
-                  title: 'Ultimate',
-                  duration: 21,
-                  description: '',
-                  image: null
-                }
-              });
-            }
-          }
+          returnTo: route.params?.returnTo
         });
       } catch (error) {
         console.error('Navigation error:', error);

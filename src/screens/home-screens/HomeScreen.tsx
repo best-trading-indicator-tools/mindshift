@@ -445,32 +445,64 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleReset = async () => {
-    try {
-      // Clear the missions storage
-      await AsyncStorage.removeItem('selectedDailyMissions');
-      await AsyncStorage.removeItem('lastMissionsUpdateDate');
-      
-      // Reset all daily exercises
-      await resetAllDailyExercises();
-      await clearNotifications();
-      
-      // Re-select missions after reset
-      await selectDailyMissions();
-      
-      // Reload all audio resources
+    Alert.alert(
+      'Reset All Data',
+      'This will reset all your progress, including challenges and daily missions. Are you sure?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // First get all keys from AsyncStorage
+              const allKeys = await AsyncStorage.getAllKeys();
+              
+              // Remove all keys from AsyncStorage
+              await AsyncStorage.multiRemove(allKeys);
+              
+              // Clear notifications
+              await clearNotifications();
+              
+              // Re-select missions after reset
+              await selectDailyMissions();
+              
+              // Reload all audio resources
+              await Promise.all([
+                ResourcePreloadService.preloadSunBreathResources()
+              ]);
 
-      await Promise.all([
-        ResourcePreloadService.preloadSunBreathResources()
-      ]);
-
-      checkExerciseCompletions();
-      loadStreak();
-      updateProgress();
-      Alert.alert('Success', 'All daily exercises have been reset.');
-    } catch (error) {
-      console.error('Error resetting exercises:', error);
-      Alert.alert('Error', 'Failed to reset exercises. Please try again.');
-    }
+              // Reset UI state
+              setCompletedExercises([]);
+              setProgressPercentage(0);
+              setStreak(0);
+              
+              // Force refresh UI
+              await checkExerciseCompletions();
+              await loadStreak();
+              await updateProgress();
+              
+              // Force navigation refresh by going to Login and back to MainTabs
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [
+                  { name: 'Login' },
+                  { name: 'MainTabs' }
+                ],
+              });
+              
+              Alert.alert('Success', 'All data has been reset successfully.');
+            } catch (error) {
+              console.error('Error resetting app:', error);
+              Alert.alert('Error', 'Failed to reset app data. Please try again.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleVisionBoardNavigation = async () => {

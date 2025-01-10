@@ -18,7 +18,7 @@ import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitude'>;
 
-const MIN_ENTRIES = 10;
+const MIN_ENTRIES = 1;
 
 interface GratitudeEntry {
   what: string;
@@ -26,6 +26,7 @@ interface GratitudeEntry {
 }
 
 const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
   const [showPostExercise, setShowPostExercise] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
@@ -57,23 +58,19 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     if (isComplete() && !isSubmitting) {
       try {
         setIsSubmitting(true);
-        if (route.params?.context === 'challenge') {
-          if (route.params.onComplete) {
+        if (context === 'challenge' && challengeId) {
+          if (route.params?.onComplete) {
             route.params.onComplete();
           }
-          if (route.params.returnTo === 'ChallengeDetail') {
-            navigation.navigate('ChallengeDetail', {
-              challenge: {
-                id: route.params.challengeId || '',
-                title: 'Ultimate',
-                duration: 21,
-                description: '',
-                image: null
-              }
-            });
-          } else {
-            navigation.goBack();
-          }
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: challengeId,
+              title: 'Ultimate',
+              duration: 21,
+              description: 'Your subconscious mind shapes your reality.',
+              image: require('../../../assets/illustrations/challenges/challenge-21.png')
+            }
+          });
         } else {
           await markDailyExerciseAsCompleted('daily-gratitude');
           setShowPostExercise(true);
@@ -86,8 +83,25 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExit = () => {
+  const handleExitPress = () => {
     setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
+    setShowExitModal(false);
+    if (returnTo) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: challengeId || '1',
+          title: 'Ultimate',
+          duration: 21,
+          description: 'Your subconscious mind shapes your reality.',
+          image: require('../../../assets/illustrations/challenges/challenge-21.png')
+        }
+      });
+    } else {
+      navigation.replace('MainTabs');
+    }
   };
 
   if (showPostExercise) {
@@ -119,7 +133,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
       <SafeAreaView style={styles.safeArea}>
         <TouchableOpacity 
           style={styles.exitButton}
-          onPress={handleExit}
+          onPress={handleExitPress}
         >
           <MaterialCommunityIcons name="close" size={24} color="#B91C1C" />
         </TouchableOpacity>
@@ -199,7 +213,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.modalExitButton}
-              onPress={() => navigation.navigate('MainTabs')}
+              onPress={handleConfirmExit}
             >
               <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>

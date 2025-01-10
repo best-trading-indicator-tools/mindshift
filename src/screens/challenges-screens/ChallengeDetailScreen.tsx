@@ -215,6 +215,15 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         ...prev,
         [exerciseId]: true
       }));
+
+      // Refresh last unlocked exercise
+      for (let i = exercises.length - 1; i >= 0; i--) {
+        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
+        if (isUnlocked) {
+          setLastUnlockedExercise(exercises[i]);
+          break;
+        }
+      }
     } catch (error) {
       console.error('Error marking exercise as completed:', error);
     }
@@ -363,16 +372,20 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.exercisesContainer}>
               {exercises
                 .filter(exercise => exercise.week === selectedWeek)
-                .map((exercise, index) => (
-                  <ExerciseCard
-                    key={exercise.id}
-                    {...exercise}
-                    challengeId={challenge.id}
-                    isCompleted={completedExercises[exercise.id] || false}
-                    onComplete={() => handleExerciseStart(exercise.id)}
-                    index={index}
-                  />
-                ))}
+                .map((exercise) => {
+                  // Find the absolute index from the full exercises list
+                  const absoluteIndex = exercises.findIndex(e => e.id === exercise.id);
+                  return (
+                    <ExerciseCard
+                      key={exercise.id}
+                      {...exercise}
+                      challengeId={challenge.id}
+                      isCompleted={completedExercises[exercise.id] || false}
+                      onComplete={() => handleExerciseStart(exercise.id)}
+                      index={absoluteIndex}
+                    />
+                  );
+                })}
             </View>
           </>
         )}
