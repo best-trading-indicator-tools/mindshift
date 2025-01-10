@@ -22,6 +22,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     if (returnTo) {
       navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
     } else {
+      console.log('Navigating handleconfirmExit to MainTabs');
       navigation.replace('MainTabs');
     }
   };
@@ -46,28 +47,14 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     });
 
     const timer = setTimeout(() => {
-      if (context === 'challenge' && returnTo) {
-        // For challenge context, reset navigation stack to challenge screen
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { name: 'MainTabs' },
-              {
-                name: returnTo,
-                params: challengeId ? { challengeId } : undefined
-              }
-            ]
-          })
-        );
+      console.log('Navigating after timeout with:', { returnTo, context });
+      if (returnTo) {
+        navigation.push(returnTo, challengeId ? { challengeId } : undefined);
       } else {
-        // For daily context, reset navigation stack to home
+        // Use CommonActions to ensure we get to MainTabs/Home
         navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { name: 'MainTabs' }
-            ]
+          CommonActions.navigate({
+            name: 'MainTabs'
           })
         );
       }
@@ -79,7 +66,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
         sound.release();
       }
     };
-  }, [context, returnTo, challengeId, navigation]);
+  }, [navigation, returnTo, challengeId]);
 
   useEffect(() => {
     console.log("Modal state changed:", showExitModal);

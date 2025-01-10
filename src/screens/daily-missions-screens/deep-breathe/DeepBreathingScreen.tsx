@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -37,7 +37,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     };
   }, []);
 
-  const handleExerciseComplete = async () => {
+  const handleExerciseComplete = useCallback(async () => {
     try {
       // First cleanup all resources
       if (breathingAnimationRef.current) {
@@ -55,21 +55,21 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       // Clear any pending state updates
       setShowExitModal(false);
       
-      // Use immediate navigation
-      navigation.replace('DeepBreathingComplete', {
+      // Navigate directly to complete screen using push to avoid intro screen
+      navigation.push('DeepBreathingComplete', {
         context,
         challengeId,
         returnTo
       });
     } catch (error) {
       console.error('Failed to complete exercise:', error);
-      navigation.replace('DeepBreathingComplete', {
+      navigation.push('DeepBreathingComplete', {
         context,
         challengeId,
         returnTo
       });
     }
-  };
+  }, [navigation, context, challengeId, returnTo]);
 
   const handleExit = () => {
     if (breathingAnimationRef.current) {
