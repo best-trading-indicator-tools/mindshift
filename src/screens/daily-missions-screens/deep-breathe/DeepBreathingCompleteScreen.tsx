@@ -31,7 +31,10 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
   const handleConfirmExit = () => {
     setShowExitModal(false);
     if (returnTo) {
-      navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+      //navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+      console.log('returnToooooooooooooooooooooooooooo', returnTo);
+      navigation.dispatch(StackActions.popToTop());
+      navigation.navigate('MainTabs');
     } else {
       navigation.dispatch(StackActions.popToTop());
       navigation.navigate('MainTabs');
@@ -59,8 +62,19 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
 
     const timer = setTimeout(() => {
       if (returnTo) {
-        navigation.push(returnTo, challengeId ? { challengeId } : undefined);
+        console.log('returnToooooooooooooooooooooooooooo', returnTo);
+        navigation.dispatch(StackActions.popToTop());
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params?.challengeId || '1',
+            title: 'Ultimate',
+            duration: 21,
+            description: 'Your subconscious mind shapes your reality.',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
       } else {
+        console.log('maintabs return');
         navigation.dispatch(StackActions.popToTop());
         navigation.navigate('MainTabs');
       }
