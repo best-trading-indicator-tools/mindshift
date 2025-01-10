@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -22,7 +22,7 @@ const introContent = [
   }
 ];
 
-const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation }) => {
+const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
 
@@ -32,10 +32,33 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation }) => {
     } else {
       try {
         await AsyncStorage.setItem('daily_gratitude_intro_seen', 'true');
+        console.log('Attempting to navigate with params:', {
+          context: route.params?.context || 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo
+        });
+        navigation.navigate('DailyGratitude', {
+          context: route.params?.context || 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo,
+          onComplete: () => {
+            console.log('Exercise completed callback');
+            if (route.params?.challengeId) {
+              navigation.navigate('ChallengeDetail', {
+                challenge: {
+                  id: route.params.challengeId,
+                  title: 'Ultimate',
+                  duration: 21,
+                  description: '',
+                  image: null
+                }
+              });
+            }
+          }
+        });
       } catch (error) {
-        console.error('Error saving intro state:', error);
+        console.error('Navigation error:', error);
       }
-      navigation.push('Gratitude');
     }
   };
 
@@ -44,6 +67,10 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const currentContent = introContent[currentStep - 1];
+
+  useEffect(() => {
+    console.log('DailyGratitudeIntro mounted with route params:', route.params);
+  }, [route.params]);
 
   return (
     <View style={styles.container}>
@@ -105,7 +132,7 @@ const styles = StyleSheet.create({
   nextButton: {
     backgroundColor: '#B91C1C',
     marginHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 120,
     paddingVertical: 16,
     borderRadius: 12,
     position: 'absolute',

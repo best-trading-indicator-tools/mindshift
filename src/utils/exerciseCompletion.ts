@@ -148,8 +148,21 @@ export const isChallengeExerciseUnlocked = async (challengeId: string, exerciseI
       return true;
     }
 
+    // Get the previous exercise ID from the exercises array
+    const exercises = [
+      'deep-breathing',
+      'daily-gratitude',
+      'active-incantations',
+      'passive-incantations',
+      'golden-checklist',
+      'gratitude-beads',
+      'sun-breath',
+      'vision-board',
+      'mentor-board'
+    ];
+
     // For other exercises, check if the previous exercise is completed
-    const previousExerciseId = `exercise-${exerciseIndex - 1}`;
+    const previousExerciseId = exercises[exerciseIndex - 1];
     const isPreviousCompleted = await isChallengeExerciseCompleted(challengeId, previousExerciseId);
     return isPreviousCompleted;
   } catch (error) {

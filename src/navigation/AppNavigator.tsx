@@ -128,6 +128,7 @@ export type RootStackParamList = {
   DailyGratitudeIntro: {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
+    context?: 'daily' | 'challenge';
   } | undefined;
   DailyGratitude: {
     context?: 'daily' | 'challenge';
@@ -316,7 +317,11 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen
           name="DailyGratitude"
           component={DailyGratitudeScreen}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right'
+          }}
         />
         <Stack.Screen 
           name="GoldenChecklist" 

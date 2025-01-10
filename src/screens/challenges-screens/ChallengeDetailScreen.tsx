@@ -236,7 +236,11 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         navigation.navigate('DeepBreathingIntro', navigationParams);
         break;
       case 'daily-gratitude':
-        navigation.navigate('DailyGratitudeIntro', navigationParams);
+        navigation.navigate('DailyGratitudeIntro', {
+          returnTo: 'ChallengeDetail',
+          challengeId: challenge.id,
+          context: 'challenge'
+        });
         break;
       case 'active-incantations':
         navigation.navigate('ActiveIncantationsIntro', navigationParams);

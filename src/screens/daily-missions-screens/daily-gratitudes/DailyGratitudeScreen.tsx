@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,10 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    console.log('DailyGratitude screen mounted with route params:', route.params);
+  }, [route.params]);
 
   const handleAddEntry = () => {
     setEntries([...entries, { what: '', why: '' }]);
