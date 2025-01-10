@@ -68,11 +68,11 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     });
 
     const timer = setTimeout(() => {
-      if (returnTo) {
-        console.log('returnToooooooooooooooooooooooooooo', returnTo);
+      if (context === 'challenge' && returnTo) {
+        console.log('Returning to challenge:', returnTo);
         navigation.navigate('ChallengeDetail', {
           challenge: {
-            id: route.params?.challengeId || '1',
+            id: challengeId || '1',
             title: 'Ultimate',
             duration: 21,
             description: 'Your subconscious mind shapes your reality.',
@@ -80,8 +80,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
           }
         });
       } else {
-        console.log('maintabs return');
-        //navigation.dispatch(StackActions.popToTop());
+        console.log('Returning to MainTabs');
         navigation.navigate('MainTabs');
       }
     }, 3000);
@@ -92,7 +91,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
         sound.release();
       }
     };
-  }, [navigation, returnTo, challengeId]);
+  }, [navigation, context, returnTo, challengeId]);
 
   useEffect(() => {
     console.log("Modal state changed:", showExitModal);

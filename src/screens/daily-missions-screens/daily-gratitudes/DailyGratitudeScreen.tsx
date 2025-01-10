@@ -10,6 +10,7 @@ import {
   Platform,
   SafeAreaView,
   Modal,
+  Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -59,18 +60,23 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
       try {
         setIsSubmitting(true);
         if (context === 'challenge' && challengeId) {
-          if (route.params?.onComplete) {
-            route.params.onComplete();
-          }
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: 'Your subconscious mind shapes your reality.',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          const validEntries = entries.filter(isEntryComplete);
+          if (validEntries.length >= MIN_ENTRIES) {
+            if (route.params?.onComplete) {
+              route.params.onComplete();
             }
-          });
+            navigation.navigate('ChallengeDetail', {
+              challenge: {
+                id: challengeId,
+                title: 'Ultimate',
+                duration: 21,
+                description: 'Your subconscious mind shapes your reality.',
+                image: require('../../../assets/illustrations/challenges/challenge-21.png')
+              }
+            });
+          } else {
+            Alert.alert('Cannot Complete', 'Please add at least one gratitude entry before completing.');
+          }
         } else {
           await markDailyExerciseAsCompleted('daily-gratitude');
           setShowPostExercise(true);

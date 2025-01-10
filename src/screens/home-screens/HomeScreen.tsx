@@ -379,7 +379,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const loadStreak = async () => {
     try {
       const currentStreak = await getStreak();
-      console.log('Current streak:', currentStreak);
+      //console.log('Current streak:', currentStreak);
       setStreak(currentStreak);
     } catch (error) {
       console.error('Error loading streak:', error);

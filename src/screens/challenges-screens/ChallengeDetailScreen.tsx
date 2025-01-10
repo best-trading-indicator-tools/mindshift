@@ -118,9 +118,18 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       }
     };
 
+    // Add focus listener to reload states
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadCompletionStatus();
+      findLastUnlockedExercise();
+    });
+
+    // Initial load
     loadCompletionStatus();
     findLastUnlockedExercise();
-  }, [challenge?.id]);
+
+    return unsubscribe;
+  }, [challenge?.id, navigation]);
 
   useEffect(() => {
     if (!challenge) {
@@ -208,22 +217,51 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   ];
 
+  const findLastUnlockedExercise = async () => {
+    for (let i = exercises.length - 1; i >= 0; i--) {
+      const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
+      if (isUnlocked) {
+        setLastUnlockedExercise(exercises[i]);
+        break;
+      }
+    }
+  };
+
   const handleExerciseComplete = async (exerciseId: string) => {
     try {
+      console.log('Completing exercise:', exerciseId);
       await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
+      
+      // Update completed exercises state
       setCompletedExercises(prev => ({
         ...prev,
         [exerciseId]: true
       }));
 
-      // Refresh last unlocked exercise
-      for (let i = exercises.length - 1; i >= 0; i--) {
-        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
-        if (isUnlocked) {
-          setLastUnlockedExercise(exercises[i]);
-          break;
-        }
+      // Get the index of the completed exercise
+      const completedIndex = exercises.findIndex(e => e.id === exerciseId);
+      console.log('Completed index:', completedIndex);
+      
+      // Get the next exercise
+      const nextExercise = exercises[completedIndex + 1];
+      console.log('Next exercise:', nextExercise);
+      
+      // If there is a next exercise, unlock it
+      if (nextExercise) {
+        setLastUnlockedExercise(nextExercise);
+        console.log('Unlocked next exercise:', nextExercise);
       }
+
+      // Refresh all exercise states to ensure UI is up to date
+      const completionStatus: Record<string, boolean> = {};
+      await Promise.all(
+        exercises.map(async (exercise) => {
+          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
+        })
+      );
+      setCompletedExercises(completionStatus);
+      console.log('Updated completion status:', completionStatus);
+
     } catch (error) {
       console.error('Error marking exercise as completed:', error);
     }
@@ -235,9 +273,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       challengeId: challenge.id,
       context: 'challenge' as const
     };
-
-    // Set the pending completion before navigating
-    setPendingCompletion(exerciseId);
 
     // Navigate to the appropriate exercise screen based on the exercise ID
     switch (exerciseId) {

@@ -47,10 +47,9 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       // If it's a daily mission, mark it as completed
       if (context === 'daily') {
         await markDailyExerciseAsCompleted('deep-breathing');
+        // Only mark general stats for daily missions
+        await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
       }
-
-      // Always mark the exercise as completed in general stats
-      await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
       
       // Clear any pending state updates
       setShowExitModal(false);

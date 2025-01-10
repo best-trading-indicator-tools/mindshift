@@ -6,12 +6,12 @@ export const ResourcePreloadService = {
 
   async preloadSunBreathResources(): Promise<void> {
     if (this.preloadedSunBreathResources) {
-      console.log('🎵 Sun Breath resources already preloaded, skipping...');
+      //console.log('🎵 Sun Breath resources already preloaded, skipping...');
       return;
     }
 
     try {
-      console.log('🎵 Starting to preload Sun Breath audio files...');
+      //console.log('🎵 Starting to preload Sun Breath audio files...');
       
       // Load and cache audio files
       await Promise.all([
@@ -20,7 +20,7 @@ export const ResourcePreloadService = {
       ]);
 
       // Preload and verify videos are in memory cache
-      console.log('🎥 Starting to preload Sun Breath videos...');
+      //console.log('🎥 Starting to preload Sun Breath videos...');
       const videosPreloaded = await videoService.preloadAllBreathingVideos();
       
       if (!videosPreloaded) {
