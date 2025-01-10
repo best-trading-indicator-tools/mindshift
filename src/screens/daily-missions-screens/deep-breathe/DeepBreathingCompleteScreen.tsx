@@ -6,12 +6,23 @@ import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
 const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const { context = 'daily', challengeId, returnTo } = route.params || {};
+
+  // Debug log for initial params
+  useEffect(() => {
+    console.log('Complete Screen Mounted with params:', {
+      context,
+      challengeId,
+      returnTo,
+      routeParams: route.params
+    });
+  }, []);
 
   const handleExit = () => {
     setShowExitModal(true);
@@ -22,8 +33,8 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     if (returnTo) {
       navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
     } else {
-      console.log('Navigating handleconfirmExit to MainTabs');
-      navigation.replace('MainTabs');
+      navigation.dispatch(StackActions.popToTop());
+      navigation.navigate('MainTabs');
     }
   };
 
@@ -47,16 +58,11 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     });
 
     const timer = setTimeout(() => {
-      console.log('Navigating after timeout with:', { returnTo, context });
       if (returnTo) {
         navigation.push(returnTo, challengeId ? { challengeId } : undefined);
       } else {
-        // Use CommonActions to ensure we get to MainTabs/Home
-        navigation.dispatch(
-          CommonActions.navigate({
-            name: 'MainTabs'
-          })
-        );
+        navigation.dispatch(StackActions.popToTop());
+        navigation.navigate('MainTabs');
       }
     }, 3000);
 
@@ -119,10 +125,10 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
               <Text style={styles.continueText}>Continue</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.exitButton, { backgroundColor: '#DC2626' }]}
+              style={styles.modalExitButton}
               onPress={handleConfirmExit}
             >
-              <Text style={[styles.exitText, { color: 'white' }]}>Exit</Text>
+              <Text style={styles.modalExitText}>Exit</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -159,8 +165,8 @@ const styles = StyleSheet.create({
   },
   exitButton: {
     backgroundColor: '#FCD34D',
-    paddingVertical: 20,
-    paddingHorizontal: 60,
+    paddingVertical: 16,
+    paddingHorizontal: 40,
     borderRadius: 30,
     marginTop: 40,
     shadowColor: '#000',
@@ -168,12 +174,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
-    zIndex: 1001,
     width: '100%',
   },
   exitButtonText: {
     color: '#000000',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -181,42 +186,54 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 20,
-    width: '80%',
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
     alignItems: 'center',
-    zIndex: 1000,
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   modalText: {
     fontSize: 16,
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
   },
   continueButton: {
-    backgroundColor: '#4A90E2',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    backgroundColor: '#FFD700',
   },
   continueText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  exitText: {
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  modalExitButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
+    backgroundColor: '#E31837',
+  },
+  modalExitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 

@@ -55,7 +55,7 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       // Clear any pending state updates
       setShowExitModal(false);
       
-      // Navigate directly to complete screen using push to avoid intro screen
+      // Simply push to complete screen
       navigation.push('DeepBreathingComplete', {
         context,
         challengeId,
@@ -77,18 +77,9 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     setShowExitModal(false);
     if (returnTo) {
-      navigation.dispatch(
-        CommonActions.navigate({
-          name: returnTo,
-          params: challengeId ? { challengeId } : undefined
-        })
-      );
+      navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
     } else {
-      navigation.dispatch(
-        CommonActions.navigate({
-          name: 'MainTabs'
-        })
-      );
+      navigation.replace('MainTabs');
     }
   };
 
