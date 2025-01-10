@@ -5,64 +5,56 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { CommonActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
-const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation }) => {
+const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   const handleExit = () => {
-    console.log("exit phase 1")
     setShowExitModal(true);
   };
 
   const handleConfirmExit = () => {
-    console.log("handleConfirmExit started");
     setShowExitModal(false);
-    console.log("Modal closed");
-    console.log("Navigating to MainTabs...");
-    navigation.navigate('MainTabs');
-    console.log("Navigation command sent");
+    if (returnTo) {
+      navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+    } else {
+      navigation.replace('MainTabs');
+    }
   };
 
   const handleContinue = () => {
-    console.log("handleContinue called");
     setShowExitModal(false);
   };
 
   useEffect(() => {
-    console.log("DeepBreathingComplete mounted - Start of useEffect");
     Sound.setCategory('Playback', true);
-    console.log("Sound category set");
 
     const sound = new Sound(require('../../../assets/audio/haveagreatday.wav'), error => {
-      console.log("Sound initialization started");
       if (error) {
         console.error('Failed to load completion sound:', error);
         return;
       }
-      console.log("Sound loaded successfully");
       sound.play(success => {
-        console.log("Sound play attempted");
         if (!success) {
           console.error('Failed to play completion sound');
         }
       });
     });
 
-    console.log("About to call markDailyExerciseAsCompleted");
-    markDailyExerciseAsCompleted('deep-breathing');
-    console.log("deep breathing markDailyExerciseAsCompleted called");
-
     const timer = setTimeout(() => {
-      console.log("Auto navigation timer triggered");
-      navigation.navigate('MainTabs');
+      if (returnTo) {
+        navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+      } else {
+        navigation.replace('MainTabs');
+      }
     }, 3000);
 
     return () => {
-      console.log("DeepBreathingComplete cleanup");
       clearTimeout(timer);
       if (sound) {
         sound.release();

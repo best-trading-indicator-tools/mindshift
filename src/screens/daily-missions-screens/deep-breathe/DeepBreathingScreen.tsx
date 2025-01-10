@@ -19,9 +19,10 @@ import { CommonActions, StackActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathing'>;
 
-const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
+const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const breathingAnimationRef = useRef<BreathingRef>(null);
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   useEffect(() => {
     // Save the current status bar style
@@ -38,21 +39,36 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleExerciseComplete = async () => {
     try {
+      // First cleanup all resources
       if (breathingAnimationRef.current) {
         breathingAnimationRef.current.cleanupAudio();
       }
-      await markDailyExerciseAsCompleted('deep-breathing');
+
+      // If it's a daily mission, mark it as completed
+      if (context === 'daily') {
+        await markDailyExerciseAsCompleted('deep-breathing');
+      }
+
+      // Always mark the exercise as completed in general stats
       await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
       
-      // S'assurer que le modal est fermé avant de naviguer
+      // Clear any pending state updates
       setShowExitModal(false);
       
-      // Naviguer vers l'écran de completion
-      navigation.push('DeepBreathingComplete', {});
+      // Use replace instead of push to avoid stack issues
+      navigation.replace('DeepBreathingComplete', {
+        context,
+        challengeId,
+        returnTo,
+      });
     } catch (error) {
       console.error('Failed to complete exercise:', error);
-      setShowExitModal(false);  // S'assurer que le modal est fermé même en cas d'erreur
-      navigation.push('DeepBreathingComplete', {});
+      setShowExitModal(false);
+      navigation.replace('DeepBreathingComplete', {
+        context,
+        challengeId,
+        returnTo,
+      });
     }
   };
 
@@ -61,7 +77,20 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation }) => {
       breathingAnimationRef.current.cleanupAudio();
     }
     setShowExitModal(false);
-    navigation.navigate('MainTabs');
+    if (returnTo) {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: returnTo,
+          params: challengeId ? { challengeId } : undefined
+        })
+      );
+    } else {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'MainTabs'
+        })
+      );
+    }
   };
 
   const handleContinue = () => {

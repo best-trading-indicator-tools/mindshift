@@ -84,17 +84,63 @@ const ExerciseCard: React.FC<Exercise & {
 };
 
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+  const challenge = route.params?.challenge;
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [lastUnlockedExercise, setLastUnlockedExercise] = useState<Exercise | null>(null);
   const [pendingCompletion, setPendingCompletion] = useState<string | null>(null);
-  
-  if (!route.params?.challenge) {
+
+  useEffect(() => {
+    if (!challenge) {
+      return;
+    }
+    
+    // Load completion status for all exercises
+    const loadCompletionStatus = async () => {
+      const completionStatus: Record<string, boolean> = {};
+      await Promise.all(
+        exercises.map(async (exercise) => {
+          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
+        })
+      );
+      setCompletedExercises(completionStatus);
+    };
+
+    // Find last unlocked exercise
+    const findLastUnlockedExercise = async () => {
+      for (let i = exercises.length - 1; i >= 0; i--) {
+        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
+        if (isUnlocked) {
+          setLastUnlockedExercise(exercises[i]);
+          break;
+        }
+      }
+    };
+
+    loadCompletionStatus();
+    findLastUnlockedExercise();
+  }, [challenge?.id]);
+
+  useEffect(() => {
+    if (!challenge) {
+      return;
+    }
+
+    // Handle pending completion when navigation focuses
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (pendingCompletion) {
+        handleExerciseComplete(pendingCompletion);
+        setPendingCompletion(null);
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, pendingCompletion, challenge]);
+
+  if (!challenge) {
     return null;
   }
-  
-  const { challenge } = route.params;
 
   const weeks = [
     { id: 1, title: 'Week 1' },
@@ -161,45 +207,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       week: 2
     }
   ];
-
-  useEffect(() => {
-    // Load completion status for all exercises
-    const loadCompletionStatus = async () => {
-      const completionStatus: Record<string, boolean> = {};
-      await Promise.all(
-        exercises.map(async (exercise) => {
-          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
-        })
-      );
-      setCompletedExercises(completionStatus);
-    };
-
-    // Find last unlocked exercise
-    const findLastUnlockedExercise = async () => {
-      for (let i = exercises.length - 1; i >= 0; i--) {
-        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
-        if (isUnlocked) {
-          setLastUnlockedExercise(exercises[i]);
-          break;
-        }
-      }
-    };
-
-    loadCompletionStatus();
-    findLastUnlockedExercise();
-  }, [challenge.id, exercises]);
-
-  useEffect(() => {
-    // Handle pending completion when navigation focuses
-    const unsubscribe = navigation.addListener('focus', () => {
-      if (pendingCompletion) {
-        handleExerciseComplete(pendingCompletion);
-        setPendingCompletion(null);
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation, pendingCompletion]);
 
   const handleExerciseComplete = async (exerciseId: string) => {
     try {
