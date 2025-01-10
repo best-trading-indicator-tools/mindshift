@@ -71,22 +71,30 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [navigation, context, challengeId, returnTo]);
 
   const handleExit = () => {
+    // First cleanup all resources
     if (breathingAnimationRef.current) {
       breathingAnimationRef.current.cleanupAudio();
     }
     setShowExitModal(false);
-    if (returnTo) {
-      navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
-    } else {
-      navigation.replace('MainTabs');
-    }
+
+    // Small delay to ensure cleanup is complete before navigation
+    setTimeout(() => {
+      if (returnTo) {
+        navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+      } else {
+        navigation.replace('MainTabs');
+      }
+    }, 100);
   };
 
   const handleContinue = () => {
     setShowExitModal(false);
-    if (breathingAnimationRef.current) {
-      breathingAnimationRef.current.handleResume();
-    }
+    // Small delay to ensure modal is closed before resuming
+    setTimeout(() => {
+      if (breathingAnimationRef.current) {
+        breathingAnimationRef.current.handleResume();
+      }
+    }, 100);
   };
 
   return (
