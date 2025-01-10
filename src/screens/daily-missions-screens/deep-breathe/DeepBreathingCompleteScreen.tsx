@@ -63,7 +63,6 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     const timer = setTimeout(() => {
       if (returnTo) {
         console.log('returnToooooooooooooooooooooooooooo', returnTo);
-        navigation.dispatch(StackActions.popToTop());
         navigation.navigate('ChallengeDetail', {
           challenge: {
             id: route.params?.challengeId || '1',
