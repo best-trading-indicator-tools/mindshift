@@ -7,7 +7,6 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BREATH_DURATION = 2000;
 const HOLD_DURATION = 2000;
 const GONG_DURATION = 2000;
-const INITIAL_DELAY = 3000;
 const TOTAL_CYCLES = 1;
 
 // Configure sound globally once
@@ -35,7 +34,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   const [breathsLeft, setBreathsLeft] = useState(TOTAL_CYCLES);
   const [phase, setPhase] = useState<'in' | 'hold-in' | 'out' | 'hold-out' | 'complete'>('in');
   const [countdown, setCountdown] = useState(BREATH_DURATION / 1000);
-  const [initialCountdown, setInitialCountdown] = useState(INITIAL_DELAY / 1000);
+  const [initialCountdown, setInitialCountdown] = useState(3);
   const [showInitialCountdown, setShowInitialCountdown] = useState(true);
   const animation = useRef(new Animated.Value(0)).current;
   const gongSound = useRef<Sound | null>(null);
@@ -168,6 +167,11 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       // Play gong for breath in
       if (gongSound.current) {
         gongSound.current.play();
+        setTimeout(() => {
+          if (gongSound.current && !isUnmountedRef.current) {
+            gongSound.current.stop();
+          }
+        }, GONG_DURATION);
       }
     } else if (currentPhase === 'out') {
       Animated.timing(animation, {
@@ -179,6 +183,11 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
       // Play gong for breath out
       if (gongSound.current) {
         gongSound.current.play();
+        setTimeout(() => {
+          if (gongSound.current && !isUnmountedRef.current) {
+            gongSound.current.stop();
+          }
+        }, GONG_DURATION);
       }
     } else {
       // For hold phases, stop any ongoing animation

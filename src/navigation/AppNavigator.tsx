@@ -77,6 +77,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
   } | undefined;
   GoldenChecklistIntro: {
     returnTo?: keyof RootStackParamList;
