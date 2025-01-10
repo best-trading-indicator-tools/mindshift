@@ -25,6 +25,8 @@ const ExerciseCard: React.FC<Exercise & {
   isCompleted: boolean; 
   onComplete: () => void;
   index: number;
+  isUnlocked: boolean;
+  isCurrent: boolean;
 }> = ({ 
   id, 
   title, 
@@ -32,18 +34,10 @@ const ExerciseCard: React.FC<Exercise & {
   isCompleted,
   onComplete,
   challengeId,
-  index
+  index,
+  isUnlocked,
+  isCurrent
 }) => {
-  const [isUnlocked, setIsUnlocked] = useState(false);
-
-  useEffect(() => {
-    const checkUnlockStatus = async () => {
-      const unlocked = await isChallengeExerciseUnlocked(challengeId, id, index);
-      setIsUnlocked(unlocked);
-    };
-    checkUnlockStatus();
-  }, [challengeId, id, index, isCompleted]);
-
   return (
     <View style={styles.exerciseCard}>
       <View style={styles.exerciseContent}>
@@ -87,6 +81,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const challenge = route.params?.challenge;
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [lastUnlockedExercise, setLastUnlockedExercise] = useState<Exercise | null>(null);
   const [pendingCompletion, setPendingCompletion] = useState<string | null>(null);
@@ -230,83 +225,125 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleExerciseComplete = async (exerciseId: string) => {
     try {
       console.log('Completing exercise:', exerciseId);
+      
+      // 1. Mark as completed in storage first
       await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
       
-      // Update completed exercises state
+      // 2. Update local state
       setCompletedExercises(prev => ({
         ...prev,
         [exerciseId]: true
       }));
 
-      // Get the index of the completed exercise
-      const completedIndex = exercises.findIndex(e => e.id === exerciseId);
-      console.log('Completed index:', completedIndex);
+      // 3. Find and set next exercise
+      const currentIndex = exercises.findIndex(ex => ex.id === exerciseId);
+      const nextExercise = exercises[currentIndex + 1];
       
-      // Get the next exercise
-      const nextExercise = exercises[completedIndex + 1];
-      console.log('Next exercise:', nextExercise);
-      
-      // If there is a next exercise, unlock it
       if (nextExercise) {
         setLastUnlockedExercise(nextExercise);
-        console.log('Unlocked next exercise:', nextExercise);
       }
 
-      // Refresh all exercise states to ensure UI is up to date
-      const completionStatus: Record<string, boolean> = {};
-      await Promise.all(
-        exercises.map(async (exercise) => {
-          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
-        })
+      // 4. Refresh completion status for all exercises
+      const completionStatus = await Promise.all(
+        exercises.map(ex => isChallengeExerciseCompleted(challenge.id, ex.id))
       );
-      setCompletedExercises(completionStatus);
-      console.log('Updated completion status:', completionStatus);
+      
+      setCompletedExercises(
+        exercises.reduce((acc, ex, i) => {
+          acc[ex.id] = completionStatus[i];
+          return acc;
+        }, {} as Record<string, boolean>)
+      );
 
     } catch (error) {
-      console.error('Error marking exercise as completed:', error);
+      console.error('Error completing exercise:', error);
     }
   };
 
-  const handleExerciseStart = async (exerciseId: string) => {
+  // Simplified focus handler that always refreshes state
+  useEffect(() => {
+    if (!challenge) return;
+
+    const refreshState = async () => {
+      try {
+        // 1. Get completion status
+        const completionStatus = await Promise.all(
+          exercises.map(ex => isChallengeExerciseCompleted(challenge.id, ex.id))
+        );
+        
+        // 2. Update completion state
+        const newCompletionState = exercises.reduce((acc, ex, i) => {
+          acc[ex.id] = completionStatus[i];
+          return acc;
+        }, {} as Record<string, boolean>);
+        
+        setCompletedExercises(newCompletionState);
+
+        // 3. Find first incomplete exercise for unlocking
+        const nextIncompleteIndex = completionStatus.findIndex(status => !status);
+        if (nextIncompleteIndex !== -1) {
+          setLastUnlockedExercise(exercises[nextIncompleteIndex]);
+        }
+
+        // 4. Handle pending completion if any
+        if (pendingCompletion) {
+          await handleExerciseComplete(pendingCompletion);
+          setPendingCompletion(null);
+        }
+      } catch (error) {
+        console.error('Error refreshing state:', error);
+      }
+    };
+
+    const unsubscribe = navigation.addListener('focus', refreshState);
+    
+    // Initial load
+    refreshState();
+
+    return unsubscribe;
+  }, [challenge?.id, navigation, pendingCompletion]);
+
+  const isExerciseUnlocked = useCallback((exercise: Exercise): boolean => {
+    const index = exercises.findIndex(ex => ex.id === exercise.id);
+    if (index === 0) return true;
+    return completedExercises[exercises[index - 1].id] === true;
+  }, [exercises, completedExercises]);
+
+  const handleExerciseStart = (exerciseId: string) => {
     const navigationParams = {
       returnTo: 'ChallengeDetail' as keyof RootStackParamList,
       challengeId: challenge.id,
       context: 'challenge' as const
     };
 
-    // Navigate to the appropriate exercise screen based on the exercise ID
-    switch (exerciseId) {
-      case 'deep-breathing':
-        navigation.navigate('DeepBreathingIntro', navigationParams);
-        break;
-      case 'daily-gratitude':
-        navigation.navigate('DailyGratitudeIntro', {
-          returnTo: 'ChallengeDetail',
-          challengeId: challenge.id,
-          context: 'challenge'
-        });
-        break;
-      case 'active-incantations':
-        navigation.navigate('ActiveIncantationsIntro', navigationParams);
-        break;
-      case 'passive-incantations':
-        navigation.navigate('PassiveIncantationsIntro', navigationParams);
-        break;
-      case 'golden-checklist':
-        navigation.navigate('GoldenChecklistIntro', navigationParams);
-        break;
-      case 'gratitude-beads':
-        navigation.navigate('GratitudeBeadsIntro', navigationParams);
-        break;
-      case 'sun-breath':
-        navigation.navigate('SunBreathTutorial', navigationParams);
-        break;
-      case 'vision-board':
-        navigation.navigate('VisionBoardIntro', navigationParams);
-        break;
-      case 'mentor-board':
-        navigation.navigate('MentorBoardIntro', navigationParams);
-        break;
+    setPendingCompletion(exerciseId);
+
+    type NavigationScreens = 
+      | 'DeepBreathingIntro'
+      | 'DailyGratitudeIntro'
+      | 'ActiveIncantationsIntro'
+      | 'PassiveIncantationsIntro'
+      | 'GoldenChecklistIntro'
+      | 'GratitudeBeadsIntro'
+      | 'SunBreathTutorial'
+      | 'VisionBoardIntro'
+      | 'MentorBoardIntro';
+
+    const navigationMap: Record<string, NavigationScreens> = {
+      'deep-breathing': 'DeepBreathingIntro',
+      'daily-gratitude': 'DailyGratitudeIntro',
+      'active-incantations': 'ActiveIncantationsIntro',
+      'passive-incantations': 'PassiveIncantationsIntro',
+      'golden-checklist': 'GoldenChecklistIntro',
+      'gratitude-beads': 'GratitudeBeadsIntro',
+      'sun-breath': 'SunBreathTutorial',
+      'vision-board': 'VisionBoardIntro',
+      'mentor-board': 'MentorBoardIntro'
+    };
+
+    const screen = navigationMap[exerciseId];
+    if (screen) {
+      navigation.navigate(screen, navigationParams);
     }
   };
 
@@ -314,6 +351,25 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     if (lastUnlockedExercise) {
       handleExerciseStart(lastUnlockedExercise.id);
     }
+  };
+
+  const renderExerciseCard = (exercise: Exercise, index: number) => {
+    const isCompleted = completedExercises[exercise.id];
+    const isUnlocked = isExerciseUnlocked(exercise);
+    const isCurrent = currentExercise?.id === exercise.id;
+
+    return (
+      <ExerciseCard
+        key={exercise.id}
+        {...exercise}
+        challengeId={challenge.id}
+        isCompleted={isCompleted}
+        onComplete={() => handleExerciseStart(exercise.id)}
+        index={index}
+        isUnlocked={isUnlocked}
+        isCurrent={isCurrent}
+      />
+    );
   };
 
   return (
@@ -407,20 +463,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.exercisesContainer}>
               {exercises
                 .filter(exercise => exercise.week === selectedWeek)
-                .map((exercise) => {
-                  // Find the absolute index from the full exercises list
-                  const absoluteIndex = exercises.findIndex(e => e.id === exercise.id);
-                  return (
-                    <ExerciseCard
-                      key={exercise.id}
-                      {...exercise}
-                      challengeId={challenge.id}
-                      isCompleted={completedExercises[exercise.id] || false}
-                      onComplete={() => handleExerciseStart(exercise.id)}
-                      index={absoluteIndex}
-                    />
-                  );
-                })}
+                .map((exercise, index) => renderExerciseCard(exercise, index))}
             </View>
           </>
         )}
