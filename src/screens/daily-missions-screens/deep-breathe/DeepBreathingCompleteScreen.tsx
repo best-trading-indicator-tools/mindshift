@@ -5,7 +5,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { CommonActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
@@ -47,10 +46,30 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
     });
 
     const timer = setTimeout(() => {
-      if (returnTo) {
-        navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+      if (context === 'challenge' && returnTo) {
+        // For challenge context, reset navigation stack to challenge screen
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              { name: 'MainTabs' },
+              {
+                name: returnTo,
+                params: challengeId ? { challengeId } : undefined
+              }
+            ]
+          })
+        );
       } else {
-        navigation.replace('MainTabs');
+        // For daily context, reset navigation stack to home
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              { name: 'MainTabs' }
+            ]
+          })
+        );
       }
     }, 3000);
 
@@ -60,7 +79,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
         sound.release();
       }
     };
-  }, []);
+  }, [context, returnTo, challengeId, navigation]);
 
   useEffect(() => {
     console.log("Modal state changed:", showExitModal);

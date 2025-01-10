@@ -157,12 +157,25 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     setPhase(currentPhase);
     startTimeRef.current = Date.now();
 
-    Animated.timing(animation, {
-      toValue: currentPhase === 'in' ? 1 : 0,
-      duration: BREATH_DURATION,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start();
+    // Handle animation based on phase
+    if (currentPhase === 'in') {
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: BREATH_DURATION,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    } else if (currentPhase === 'out') {
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: BREATH_DURATION,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // For hold phases, stop any ongoing animation
+      animation.stopAnimation();
+    }
 
     if (currentPhase === 'in' || currentPhase === 'out') {
       if (breathSound.current) {

@@ -55,19 +55,18 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
       // Clear any pending state updates
       setShowExitModal(false);
       
-      // Use replace instead of push to avoid stack issues
+      // Use immediate navigation
       navigation.replace('DeepBreathingComplete', {
         context,
         challengeId,
-        returnTo,
+        returnTo
       });
     } catch (error) {
       console.error('Failed to complete exercise:', error);
-      setShowExitModal(false);
       navigation.replace('DeepBreathingComplete', {
         context,
         challengeId,
-        returnTo,
+        returnTo
       });
     }
   };
