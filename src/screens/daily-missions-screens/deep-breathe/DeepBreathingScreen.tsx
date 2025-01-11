@@ -77,14 +77,11 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     setShowExitModal(false);
 
-    // Small delay to ensure cleanup is complete before navigation
-    setTimeout(() => {
-      if (returnTo) {
-        navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
-      } else {
-        navigation.replace('MainTabs');
-      }
-    }, 100);
+    if (returnTo) {
+      navigation.replace(returnTo, challengeId ? { challengeId } : undefined);
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
 
   const handleContinue = () => {
