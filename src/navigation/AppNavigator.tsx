@@ -190,6 +190,7 @@ export type RootStackParamList = {
       image: any;
     };
     pendingCompletion?: string;
+    skipCompletion?: boolean;
   };
   DeepBreathingComplete: {
     context?: 'challenge' | 'daily';

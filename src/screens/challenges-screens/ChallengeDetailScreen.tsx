@@ -6,6 +6,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted, isChallengeExerciseUnlocked } from '../../utils/exerciseCompletion';
 import { addNotification } from '../../services/notificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -266,42 +267,35 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
     const refreshState = async () => {
       try {
+        // Check if we're coming from gratitude intro exit
+        const exitingFromIntro = await AsyncStorage.getItem('exiting_gratitude_intro');
+        if (exitingFromIntro === 'true') {
+          // Clear the flag
+          await AsyncStorage.removeItem('exiting_gratitude_intro');
+          return;
+        }
+
         // 1. Get completion status
         const completionStatus = await Promise.all(
           exercises.map(ex => isChallengeExerciseCompleted(challenge.id, ex.id))
         );
-        
-        // 2. Update completion state
-        const newCompletionState = exercises.reduce((acc, ex, i) => {
-          acc[ex.id] = completionStatus[i];
-          return acc;
-        }, {} as Record<string, boolean>);
-        
-        setCompletedExercises(newCompletionState);
 
-        // 3. Find first incomplete exercise for unlocking
-        const nextIncompleteIndex = completionStatus.findIndex(status => !status);
-        if (nextIncompleteIndex !== -1) {
-          setLastUnlockedExercise(exercises[nextIncompleteIndex]);
-        }
+        setCompletedExercises(
+          exercises.reduce((acc, ex, i) => {
+            acc[ex.id] = completionStatus[i];
+            return acc;
+          }, {} as Record<string, boolean>)
+        );
 
-        // 4. Handle pending completion if any
-        if (pendingCompletion) {
-          await handleExerciseComplete(pendingCompletion);
-          setPendingCompletion(null);
-        }
+        // Update last unlocked exercise
+        await findLastUnlockedExercise();
       } catch (error) {
-        console.error('Error refreshing state:', error);
+        console.error('Error refreshing challenge state:', error);
       }
     };
 
-    const unsubscribe = navigation.addListener('focus', refreshState);
-    
-    // Initial load
     refreshState();
-
-    return unsubscribe;
-  }, [challenge?.id, navigation, pendingCompletion]);
+  }, [challenge, exercises]);
 
   const isExerciseUnlocked = useCallback((exercise: Exercise): boolean => {
     const index = exercises.findIndex(ex => ex.id === exercise.id);
@@ -315,8 +309,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       challengeId: challenge.id,
       context: 'challenge' as const
     };
-
-    setPendingCompletion(exerciseId);
 
     type NavigationScreens = 
       | 'DeepBreathingIntro'

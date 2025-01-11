@@ -32,12 +32,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     } else {
       try {
         await AsyncStorage.setItem('daily_gratitude_intro_seen', 'true');
-        console.log('Attempting to navigate with params:', {
-          context: route.params?.context || 'daily',
-          challengeId: route.params?.challengeId,
-          returnTo: route.params?.returnTo
-        });
-        navigation.navigate('DailyGratitude', {
+        navigation.replace('DailyGratitude', {
           context: route.params?.context || 'daily',
           challengeId: route.params?.challengeId,
           returnTo: route.params?.returnTo
@@ -48,8 +43,13 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExit = () => {
-    navigation.goBack();
+  const handleExit = async () => {
+    if (route.params?.returnTo === 'ChallengeDetail' && route.params?.challengeId) {
+      await AsyncStorage.setItem('exiting_gratitude_intro', 'true');
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
 
   const currentContent = introContent[currentStep - 1];

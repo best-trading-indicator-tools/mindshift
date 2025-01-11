@@ -41,113 +41,38 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   const breathSound = useRef<Sound | null>(null);
   const completionSound = useRef<Sound | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
   const startTimeRef = useRef<number>(0);
   const isUnmountedRef = useRef(false);
-
-  const cleanup = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    if (gongSound.current) {
-      gongSound.current.stop();
-      gongSound.current.release();
-    }
-    if (breathSound.current) {
-      breathSound.current.stop();
-      breathSound.current.release();
-    }
-    if (completionSound.current) {
-      completionSound.current.stop();
-      completionSound.current.release();
-    }
-  }, []);
 
   useEffect(() => {
     isUnmountedRef.current = false;
 
-    // Load sounds first
-    const loadSounds = async () => {
-      return new Promise<void>((resolve) => {
-        // Load all sounds in parallel
-        const loadPromises = [
-          new Promise<void>((res) => {
-            gongSound.current = new Sound(require('../assets/audio/gong.wav'), (error) => {
-              if (!error && gongSound.current) {
-                gongSound.current.setVolume(soundOptions.volume);
-                gongSound.current.setNumberOfLoops(soundOptions.numberOfLoops);
-              }
-              res();
-            });
-          }),
-          new Promise<void>((res) => {
-            breathSound.current = new Sound(require('../assets/audio/nature.wav'), (error) => {
-              if (!error && breathSound.current) {
-                breathSound.current.setVolume(soundOptions.volume);
-                breathSound.current.setNumberOfLoops(soundOptions.numberOfLoops);
-              }
-              res();
-            });
-          }),
-          new Promise<void>((res) => {
-            completionSound.current = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
-              if (!error && completionSound.current) {
-                completionSound.current.setVolume(soundOptions.volume);
-                completionSound.current.setNumberOfLoops(soundOptions.numberOfLoops);
-              }
-              res();
-            });
-          })
-        ];
+    // Créer les sons sans attendre les callbacks
+    gongSound.current = new Sound(require('../assets/audio/gong.wav'), () => {});
+    breathSound.current = new Sound(require('../assets/audio/nature.wav'), () => {});
+    completionSound.current = new Sound(require('../assets/audio/haveagreatday.wav'), () => {});
 
-        Promise.all(loadPromises).then(() => resolve());
-      });
-    };
-
-    // Start exercise after sounds are loaded
-    InteractionManager.runAfterInteractions(async () => {
-      if (isUnmountedRef.current) return;
-      
-      await loadSounds();
-      if (isUnmountedRef.current) return;
-      
-      setIsInitializing(false);
-      
-      // Initial countdown from 3 to 1
-      let count = 3;
-      intervalRef.current = setInterval(() => {
-        if (isUnmountedRef.current) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
-          return;
-        }
-
-        if (count > 0) {
-          setInitialCountdown(count);
-          count--;
-        } else {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
-          setShowInitialCountdown(false);
-          startTimeRef.current = Date.now();
-          startExercise();
-        }
-      }, 1000);
-    });
+    // Démarrer le compte à rebours immédiatement
+    let count = 3;
+    const countdownInterval = setInterval(() => {
+      if (count > 0) {
+        setInitialCountdown(count);
+        count--;
+      } else {
+        clearInterval(countdownInterval);
+        setShowInitialCountdown(false);
+        startTimeRef.current = Date.now();
+        startPhase('in');
+      }
+    }, 1000);
 
     return () => {
       isUnmountedRef.current = true;
-      cleanup();
+      clearInterval(countdownInterval);
+      if (gongSound.current) gongSound.current.release();
+      if (breathSound.current) breathSound.current.release();
+      if (completionSound.current) completionSound.current.release();
     };
-  }, [cleanup]);
-
-  const startExercise = useCallback(() => {
-    if (gongSound.current) {
-      gongSound.current.play();
-    }
-    startPhase('in');
   }, []);
 
   const startPhase = useCallback((currentPhase: typeof phase) => {
@@ -157,74 +82,51 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     startTimeRef.current = Date.now();
 
     // Handle animation based on phase
-    if (currentPhase === 'in') {
+    if (currentPhase === 'in' || currentPhase === 'out') {
+      const toValue = currentPhase === 'in' ? 1 : 0;
       Animated.timing(animation, {
-        toValue: 1,
+        toValue,
         duration: BREATH_DURATION,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }).start();
-      // Play gong for breath in
+
+      // Play sounds
       if (gongSound.current) {
+        gongSound.current.stop();
         gongSound.current.play();
-        setTimeout(() => {
-          if (gongSound.current && !isUnmountedRef.current) {
-            gongSound.current.stop();
-          }
-        }, GONG_DURATION);
       }
-    } else if (currentPhase === 'out') {
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: BREATH_DURATION,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-      // Play gong for breath out
-      if (gongSound.current) {
-        gongSound.current.play();
-        setTimeout(() => {
-          if (gongSound.current && !isUnmountedRef.current) {
-            gongSound.current.stop();
-          }
-        }, GONG_DURATION);
+      if (breathSound.current) {
+        breathSound.current.stop();
+        breathSound.current.play();
       }
     } else {
-      // For hold phases, stop any ongoing animation
       animation.stopAnimation();
     }
 
-    if (currentPhase === 'in' || currentPhase === 'out') {
-      if (breathSound.current) {
-        breathSound.current.play();
-      }
-    }
-
+    // Update countdown
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
 
+    const duration = currentPhase.includes('hold') ? HOLD_DURATION : BREATH_DURATION;
+    let timeLeft = Math.ceil(duration / 1000);
+    setCountdown(timeLeft);
+
     intervalRef.current = setInterval(() => {
       if (isUnmountedRef.current) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
+        clearInterval(intervalRef.current!);
         return;
       }
 
-      const elapsed = Date.now() - startTimeRef.current;
-      const duration = currentPhase.includes('hold') ? HOLD_DURATION : BREATH_DURATION;
-      const secondsLeft = Math.ceil((duration - elapsed) / 1000);
-
-      if (secondsLeft > 0) {
-        setCountdown(secondsLeft);
+      timeLeft--;
+      if (timeLeft > 0) {
+        setCountdown(timeLeft);
       } else {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
+        clearInterval(intervalRef.current!);
         moveToNextPhase(currentPhase);
       }
-    }, 100);
+    }, 1000);
   }, [animation]);
 
   const moveToNextPhase = useCallback((currentPhase: typeof phase) => {
@@ -288,7 +190,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
           }
           setShowInitialCountdown(false);
           startTimeRef.current = Date.now();
-          startExercise();
+          startPhase('in');
         }
       }, 1000);
     } else {
@@ -356,13 +258,26 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
         }
       }, 100);
     }
-  }, [phase, showInitialCountdown, initialCountdown, animation, startExercise, moveToNextPhase]);
+  }, [phase, showInitialCountdown, initialCountdown, animation, startPhase]);
 
   useImperativeHandle(ref, () => ({
     handlePause,
     handleResume,
-    cleanupAudio: cleanup
-  }), [handlePause, handleResume, cleanup]);
+    cleanupAudio: () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (gongSound.current) {
+        gongSound.current.release();
+      }
+      if (breathSound.current) {
+        breathSound.current.release();
+      }
+      if (completionSound.current) {
+        completionSound.current.release();
+      }
+    }
+  }), [handlePause, handleResume]);
 
   const getWaveStyle = (offset: number) => ({
     transform: [
@@ -394,7 +309,7 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     }
   };
 
-  if (isInitializing || showInitialCountdown) {
+  if (showInitialCountdown) {
     return (
       <View style={styles.container}>
         <View style={styles.textContainer}>
