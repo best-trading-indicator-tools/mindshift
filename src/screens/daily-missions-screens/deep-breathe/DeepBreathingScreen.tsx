@@ -13,7 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import BreathingAnimation, { BreathingRef } from '../../../components/BreathingAnimation';
 import ExitExerciseButton from '../../../components/ExitExerciseButton';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import { CommonActions, StackActions } from '@react-navigation/native';
 
@@ -44,17 +44,21 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
         breathingAnimationRef.current.cleanupAudio();
       }
 
-      // If it's a daily mission, mark it as completed
+      // Mark completion based on context
       if (context === 'daily') {
         await markDailyExerciseAsCompleted('deep-breathing');
         // Only mark general stats for daily missions
         await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
+      } else if (context === 'challenge' && challengeId) {
+        // Mark as completed in challenge context
+        await markChallengeExerciseAsCompleted(challengeId, 'deep-breathing');
+        console.log('Marked deep breathing as completed for challenge:', challengeId);
       }
       
       // Clear any pending state updates
       setShowExitModal(false);
       
-      // Simply push to complete screen
+      // Navigate to complete screen
       navigation.push('DeepBreathingComplete', {
         context,
         challengeId,

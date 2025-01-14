@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -86,43 +86,78 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [lastUnlockedExercise, setLastUnlockedExercise] = useState<Exercise | null>(null);
   const [pendingCompletion, setPendingCompletion] = useState<string | null>(null);
+  
+  // Add cache ref
+  const challengeStateCache = useRef<{
+    completionStatus?: Record<string, boolean>;
+    lastUpdate?: number;
+  }>({});
 
   useEffect(() => {
     if (!challenge) {
       return;
     }
     
-    // Load completion status for all exercises
-    const loadCompletionStatus = async () => {
-      const completionStatus: Record<string, boolean> = {};
-      await Promise.all(
-        exercises.map(async (exercise) => {
-          completionStatus[exercise.id] = await isChallengeExerciseCompleted(challenge.id, exercise.id);
-        })
-      );
-      setCompletedExercises(completionStatus);
-    };
-
-    // Find last unlocked exercise
-    const findLastUnlockedExercise = async () => {
-      for (let i = exercises.length - 1; i >= 0; i--) {
-        const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
-        if (isUnlocked) {
-          setLastUnlockedExercise(exercises[i]);
-          break;
+    // Optimized state loading with caching
+    const loadChallengeState = async () => {
+      try {
+        // Check cache first (valid for 5 seconds)
+        const now = Date.now();
+        if (
+          challengeStateCache.current.completionStatus &&
+          challengeStateCache.current.lastUpdate &&
+          now - challengeStateCache.current.lastUpdate < 5000
+        ) {
+          setCompletedExercises(challengeStateCache.current.completionStatus);
+          return;
         }
+
+        // Batch load all exercise states at once
+        const key = `@challenge_${challenge.id}_exercises`;
+        const storedState = await AsyncStorage.getItem(key);
+        
+        if (storedState) {
+          const parsedState = JSON.parse(storedState);
+          setCompletedExercises(parsedState);
+          challengeStateCache.current = {
+            completionStatus: parsedState,
+            lastUpdate: now
+          };
+        } else {
+          // Initial state if none exists
+          const initialState = exercises.reduce((acc, ex) => {
+            acc[ex.id] = false;
+            return acc;
+          }, {} as Record<string, boolean>);
+          
+          await AsyncStorage.setItem(key, JSON.stringify(initialState));
+          setCompletedExercises(initialState);
+          challengeStateCache.current = {
+            completionStatus: initialState,
+            lastUpdate: now
+          };
+        }
+
+        // Find last unlocked exercise efficiently
+        const exerciseEntries = Object.entries(challengeStateCache.current.completionStatus || {});
+        for (let i = exerciseEntries.length - 1; i >= 0; i--) {
+          const [exId, completed] = exerciseEntries[i];
+          if (completed || i === 0) {
+            const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
+            setLastUnlockedExercise(nextExercise);
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading challenge state:', error);
       }
     };
 
     // Add focus listener to reload states
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadCompletionStatus();
-      findLastUnlockedExercise();
-    });
+    const unsubscribe = navigation.addListener('focus', loadChallengeState);
 
     // Initial load
-    loadCompletionStatus();
-    findLastUnlockedExercise();
+    loadChallengeState();
 
     return unsubscribe;
   }, [challenge?.id, navigation]);
@@ -213,48 +248,45 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   ];
 
-  const findLastUnlockedExercise = async () => {
-    for (let i = exercises.length - 1; i >= 0; i--) {
-      const isUnlocked = await isChallengeExerciseUnlocked(challenge.id, exercises[i].id, i);
-      if (isUnlocked) {
-        setLastUnlockedExercise(exercises[i]);
-        break;
-      }
-    }
-  };
-
   const handleExerciseComplete = async (exerciseId: string) => {
     try {
-      console.log('Completing exercise:', exerciseId);
+      const key = `@challenge_${challenge.id}_exercises`;
       
-      // 1. Mark as completed in storage first
-      await markChallengeExerciseAsCompleted(challenge.id, exerciseId);
-      
-      // 2. Update local state
-      setCompletedExercises(prev => ({
-        ...prev,
+      // Update both cache and storage atomically
+      const updatedState = {
+        ...challengeStateCache.current.completionStatus,
         [exerciseId]: true
-      }));
+      };
 
-      // 3. Find and set next exercise
+      // Batch updates
+      await Promise.all([
+        AsyncStorage.setItem(key, JSON.stringify(updatedState)),
+        markChallengeExerciseAsCompleted(challenge.id, exerciseId)
+      ]);
+
+      // Update cache and state immediately
+      challengeStateCache.current = {
+        completionStatus: updatedState,
+        lastUpdate: Date.now()
+      };
+      
+      // Force state update to trigger re-render
+      setCompletedExercises({...updatedState});
+
+      // Update last unlocked exercise immediately
       const currentIndex = exercises.findIndex(ex => ex.id === exerciseId);
-      const nextExercise = exercises[currentIndex + 1];
-      
-      if (nextExercise) {
+      if (currentIndex >= 0 && currentIndex < exercises.length - 1) {
+        const nextExercise = exercises[currentIndex + 1];
         setLastUnlockedExercise(nextExercise);
+        
+        // Force a state update for unlocked status
+        const newState = {
+          ...updatedState,
+          [exerciseId]: true // Ensure current exercise is marked as completed
+        };
+        setCompletedExercises(newState);
+        challengeStateCache.current.completionStatus = newState;
       }
-
-      // 4. Refresh completion status for all exercises
-      const completionStatus = await Promise.all(
-        exercises.map(ex => isChallengeExerciseCompleted(challenge.id, ex.id))
-      );
-      
-      setCompletedExercises(
-        exercises.reduce((acc, ex, i) => {
-          acc[ex.id] = completionStatus[i];
-          return acc;
-        }, {} as Record<string, boolean>)
-      );
 
     } catch (error) {
       console.error('Error completing exercise:', error);
@@ -275,20 +307,29 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           return;
         }
 
-        // 1. Get completion status
-        const completionStatus = await Promise.all(
-          exercises.map(ex => isChallengeExerciseCompleted(challenge.id, ex.id))
-        );
-
-        setCompletedExercises(
-          exercises.reduce((acc, ex, i) => {
-            acc[ex.id] = completionStatus[i];
-            return acc;
-          }, {} as Record<string, boolean>)
-        );
-
-        // Update last unlocked exercise
-        await findLastUnlockedExercise();
+        // Load challenge state using the optimized method
+        const key = `@challenge_${challenge.id}_exercises`;
+        const storedState = await AsyncStorage.getItem(key);
+        
+        if (storedState) {
+          const parsedState = JSON.parse(storedState);
+          setCompletedExercises(parsedState);
+          challengeStateCache.current = {
+            completionStatus: parsedState,
+            lastUpdate: Date.now()
+          };
+          
+          // Find and set last unlocked exercise
+          const exerciseEntries = Object.entries(parsedState);
+          for (let i = exerciseEntries.length - 1; i >= 0; i--) {
+            const [exId, completed] = exerciseEntries[i];
+            if (completed || i === 0) {
+              const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
+              setLastUnlockedExercise(nextExercise);
+              break;
+            }
+          }
+        }
       } catch (error) {
         console.error('Error refreshing challenge state:', error);
       }
@@ -299,9 +340,26 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const isExerciseUnlocked = useCallback((exercise: Exercise): boolean => {
     const index = exercises.findIndex(ex => ex.id === exercise.id);
-    if (index === 0) return true;
-    return completedExercises[exercises[index - 1].id] === true;
+    if (index === 0) return true; // First exercise is always unlocked
+    
+    // Check if the previous exercise is completed
+    const previousExercise = exercises[index - 1];
+    const isUnlocked = completedExercises[previousExercise.id] === true;
+    
+    console.log(`Exercise ${exercise.id} unlock status:`, {
+      index,
+      previousExerciseId: previousExercise.id,
+      isUnlocked,
+      completionState: completedExercises[previousExercise.id]
+    });
+    
+    return isUnlocked;
   }, [exercises, completedExercises]);
+
+  // Add debug logging for completion status
+  useEffect(() => {
+    console.log('Completed exercises updated:', completedExercises);
+  }, [completedExercises]);
 
   const handleExerciseStart = (exerciseId: string) => {
     const navigationParams = {

@@ -55,17 +55,26 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
   useEffect(() => {
     Sound.setCategory('Playback', true);
 
-    const sound = new Sound(require('../../../assets/audio/haveagreatday.wav'), error => {
-      if (error) {
-        console.error('Failed to load completion sound:', error);
-        return;
-      }
-      sound.play(success => {
-        if (!success) {
-          console.error('Failed to play completion sound');
+    let sound: Sound;
+    try {
+      sound = new Sound(
+        require('../../../assets/audio/haveagreatday.wav'),
+        (error) => {
+          if (error) {
+            console.error('Failed to load completion sound:', error);
+            return;
+          }
+          
+          sound.play((success) => {
+            if (!success) {
+              console.error('Failed to play completion sound');
+            }
+          });
         }
-      });
-    });
+      );
+    } catch (err) {
+      console.error('Error initializing sound:', err);
+    }
 
     const timer = setTimeout(() => {
       if (context === 'challenge' && returnTo) {

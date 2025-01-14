@@ -44,15 +44,95 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   const startTimeRef = useRef<number>(0);
   const isUnmountedRef = useRef(false);
 
+  // Séparation de l'initialisation des sons
+  useEffect(() => {
+    console.log('🎵 [MOUNT] Initializing sounds...');
+    InteractionManager.runAfterInteractions(() => {
+      const initSounds = () => {
+        // Nettoyage préalable
+        if (gongSound.current) {
+          console.log('🗑️ Cleaning up existing gong sound');
+          gongSound.current.release();
+        }
+        if (breathSound.current) {
+          console.log('🗑️ Cleaning up existing breath sound');
+          breathSound.current.release();
+        }
+        if (completionSound.current) {
+          console.log('🗑️ Cleaning up existing completion sound');
+          completionSound.current.release();
+        }
+
+        // Reset des refs
+        console.log('🔄 Resetting sound refs to null');
+        gongSound.current = null;
+        breathSound.current = null;
+        completionSound.current = null;
+
+        // Initialisation avec gestion d'erreur et volume
+        console.log('🎵 Creating new gong sound');
+        gongSound.current = new Sound(require('../assets/audio/gong.wav'), (error) => {
+          if (error) {
+            console.error('❌ Error loading gong sound:', error);
+          } else if (gongSound.current) {
+            console.log('✅ Gong sound loaded successfully');
+            gongSound.current.setVolume(soundOptions.volume);
+          }
+        });
+        
+        console.log('🎵 Creating new breath sound');
+        breathSound.current = new Sound(require('../assets/audio/nature.wav'), (error) => {
+          if (error) {
+            console.error('❌ Error loading breath sound:', error);
+          } else if (breathSound.current) {
+            console.log('✅ Breath sound loaded successfully');
+            breathSound.current.setVolume(soundOptions.volume);
+          }
+        });
+        
+        console.log('🎵 Creating new completion sound');
+        completionSound.current = new Sound(require('../assets/audio/haveagreatday.wav'), (error) => {
+          if (error) {
+            console.error('❌ Error loading completion sound:', error);
+          } else if (completionSound.current) {
+            console.log('✅ Completion sound loaded successfully');
+            completionSound.current.setVolume(soundOptions.volume);
+          }
+        });
+      };
+
+      initSounds();
+    });
+
+    return () => {
+      console.log('🎵 [UNMOUNT] Cleaning up sounds...');
+      // Nettoyage explicite des sons
+      if (gongSound.current) {
+        console.log('🛑 Stopping and releasing gong sound');
+        gongSound.current.stop();
+        gongSound.current.release();
+        gongSound.current = null;
+      }
+      if (breathSound.current) {
+        console.log('🛑 Stopping and releasing breath sound');
+        breathSound.current.stop();
+        breathSound.current.release();
+        breathSound.current = null;
+      }
+      if (completionSound.current) {
+        console.log('🛑 Stopping and releasing completion sound');
+        completionSound.current.stop();
+        completionSound.current.release();
+        completionSound.current = null;
+      }
+      console.log('✨ All sounds cleaned up');
+    };
+  }, []);
+
+  // Séparation du compte à rebours initial
   useEffect(() => {
     isUnmountedRef.current = false;
 
-    // Créer les sons sans attendre les callbacks
-    gongSound.current = new Sound(require('../assets/audio/gong.wav'), () => {});
-    breathSound.current = new Sound(require('../assets/audio/nature.wav'), () => {});
-    completionSound.current = new Sound(require('../assets/audio/haveagreatday.wav'), () => {});
-
-    // Démarrer le compte à rebours immédiatement
     let count = 3;
     const countdownInterval = setInterval(() => {
       if (count > 0) {
@@ -69,9 +149,6 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     return () => {
       isUnmountedRef.current = true;
       clearInterval(countdownInterval);
-      if (gongSound.current) gongSound.current.release();
-      if (breathSound.current) breathSound.current.release();
-      if (completionSound.current) completionSound.current.release();
     };
   }, []);
 
@@ -158,14 +235,23 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
   }, [breathsLeft, startPhase, onPhaseComplete]);
 
   const handlePause = useCallback(() => {
+    console.log('⏸️ Pausing exercise...');
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    if (gongSound.current) gongSound.current.stop();
-    if (breathSound.current) breathSound.current.stop();
-    if (completionSound.current) completionSound.current.stop();
+    if (gongSound.current) {
+      console.log('⏸️ Stopping gong sound');
+      gongSound.current.stop();
+    }
+    if (breathSound.current) {
+      console.log('⏸️ Stopping breath sound');
+      breathSound.current.stop();
+    }
+    if (completionSound.current) {
+      console.log('⏸️ Stopping completion sound');
+      completionSound.current.stop();
+    }
     
-    // Store the current time when paused
     startTimeRef.current = Date.now() - ((phase.includes('hold') ? HOLD_DURATION : BREATH_DURATION) - (countdown * 1000));
   }, [phase, countdown]);
 
@@ -264,18 +350,23 @@ const BreathingAnimation = forwardRef<BreathingRef, BreathingAnimationProps>(({
     handlePause,
     handleResume,
     cleanupAudio: () => {
+      console.log('🧹 Cleaning up audio resources...');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
       if (gongSound.current) {
+        console.log('🧹 Releasing gong sound');
         gongSound.current.release();
       }
       if (breathSound.current) {
+        console.log('🧹 Releasing breath sound');
         breathSound.current.release();
       }
       if (completionSound.current) {
+        console.log('🧹 Releasing completion sound');
         completionSound.current.release();
       }
+      console.log('✨ Audio cleanup complete');
     }
   }), [handlePause, handleResume]);
 
