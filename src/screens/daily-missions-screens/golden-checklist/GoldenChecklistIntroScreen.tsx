@@ -7,18 +7,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklistIntro'>;
 
-const GoldenChecklistIntroScreen: React.FC<Props> = ({ navigation }) => {
+const GoldenChecklistIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleNext = async () => {
     try {
       await AsyncStorage.setItem('golden_checklist_intro_seen', 'true');
     } catch (error) {
       console.error('Error saving intro state:', error);
     }
-    navigation.push('GoldenChecklist');
+    navigation.push('GoldenChecklist', {
+      context: route.params?.challengeId ? 'challenge' : 'daily',
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
   };
 
   const handleExit = () => {
-    navigation.push('GoldenChecklist');
+    navigation.push('GoldenChecklist', {
+      context: route.params?.challengeId ? 'challenge' : 'daily',
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
   };
 
   return (

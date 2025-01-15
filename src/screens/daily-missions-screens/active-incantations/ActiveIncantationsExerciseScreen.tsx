@@ -12,7 +12,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SCROLL_DURATION = 5000; // 5 seconds per incantation
 
 const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { incantations, context = 'daily', challengeId, returnTo } = route.params;
+  const { incantations, context = 'daily', challengeId, returnTo } = route.params || {};
   const [isPaused, setIsPaused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);

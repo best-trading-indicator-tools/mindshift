@@ -77,7 +77,7 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
-    onComplete?: () => void;
+    //onComplete?: () => void;
   } | undefined;
   GoldenChecklistIntro: {
     returnTo?: keyof RootStackParamList;
@@ -179,6 +179,9 @@ export type RootStackParamList = {
   ManageActiveIncantations: undefined;
   ActiveIncantationsExercise: {
     incantations: string[];
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
     onComplete?: () => void;
   };
   ChallengeDetail: {
