@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsExercise'>;
 
@@ -11,7 +12,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SCROLL_DURATION = 5000; // 5 seconds per incantation
 
 const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { incantations } = route.params;
+  const { incantations, context = 'daily', challengeId } = route.params;
   const [isPaused, setIsPaused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -42,6 +43,29 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
   const handleExitPress = () => {
     setIsPaused(true);
     setIsExitModalVisible(true);
+  };
+
+  const handleExit = async () => {
+    try {
+      if (context === 'challenge' && challengeId) {
+        await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: 'Your subconscious mind shapes your reality.',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
+      } else {
+        await markDailyExerciseAsCompleted('active-incantations');
+        navigation.navigate('MainTabs');
+      }
+    } catch (error) {
+      console.error('Error completing active incantations exercise:', error);
+      navigation.navigate('MainTabs');
+    }
   };
 
   const handleModalClose = () => {
@@ -173,7 +197,7 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalExitButton}
-                  onPress={() => navigation.navigate('MainTabs')}
+                  onPress={handleExit}
                 >
                   <Text style={styles.modalExitText}>Exit</Text>
                 </TouchableOpacity>
