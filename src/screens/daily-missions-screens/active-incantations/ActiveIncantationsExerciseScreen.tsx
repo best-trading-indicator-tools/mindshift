@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions, Modal, SafeAreaView, StatusBar } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -12,7 +12,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SCROLL_DURATION = 5000; // 5 seconds per incantation
 
 const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { incantations, context = 'daily', challengeId } = route.params;
+  const { incantations, context = 'daily', challengeId, returnTo } = route.params;
   const [isPaused, setIsPaused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,23 +20,65 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
   const [scrollDuration, setScrollDuration] = useState(SCROLL_DURATION / 1000); // Convert to seconds
 
+  const navigateAway = useCallback(() => {
+    if (returnTo) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: challengeId || '1',
+          title: 'Ultimate',
+          duration: 21,
+          description: 'Your subconscious mind shapes your reality.',
+          image: require('../../../assets/illustrations/challenges/challenge-21.png')
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  }, [navigation, returnTo, challengeId]);
+
   useEffect(() => {
     if (!isPaused && currentIndex < incantations.length) {
       const animation = Animated.timing(scrollY, {
         toValue: (currentIndex + 1) * SCREEN_HEIGHT,
-        duration: scrollDuration * 1000, // Convert seconds to milliseconds
+        duration: scrollDuration * 1000,
         useNativeDriver: true,
       });
 
       animation.start(({ finished }) => {
         if (finished) {
-          setCurrentIndex(prev => prev + 1);
+          setCurrentIndex(prev => {
+            const newIndex = prev + 1;
+            if (newIndex === incantations.length) {
+              handleCompletion();
+              navigateAway();
+            }
+            return newIndex;
+          });
         }
       });
 
       return () => animation.stop();
     }
-  }, [currentIndex, isPaused, scrollDuration]);
+  }, [currentIndex, isPaused, scrollDuration, navigateAway]);
+
+  const handleCompletion = async () => {
+    try {
+      if (context === 'challenge' && challengeId) {
+        await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
+      } else {
+        await markDailyExerciseAsCompleted('active-incantations');
+      }
+    } catch (error) {
+      console.error('Error completing active incantations exercise:', error);
+    }
+  };
+
+  const handleLastIncantation = async () => {
+    setCurrentIndex(incantations.length - 1);
+    scrollY.setValue((incantations.length - 1) * SCREEN_HEIGHT);
+    await handleCompletion();
+    navigateAway();
+  };
 
   const togglePause = () => setIsPaused(!isPaused);
 
@@ -49,19 +91,10 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
     try {
       if (context === 'challenge' && challengeId) {
         await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: 'Your subconscious mind shapes your reality.',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
       } else {
         await markDailyExerciseAsCompleted('active-incantations');
-        navigation.navigate('MainTabs');
       }
+      navigateAway();
     } catch (error) {
       console.error('Error completing active incantations exercise:', error);
       navigation.navigate('MainTabs');
@@ -135,6 +168,13 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
             onPress={handleNextIncantation}
           >
             <MaterialCommunityIcons name="chevron-right" size={36} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.lastButton} 
+            onPress={handleLastIncantation}
+          >
+            <MaterialCommunityIcons name="chevron-double-right" size={36} color="#FFFFFF" />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -267,9 +307,10 @@ const styles = StyleSheet.create({
   },
   incantationContainer: {
     height: SCREEN_HEIGHT,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
+    paddingTop: 100,
   },
   incantationText: {
     color: '#FFFFFF',
@@ -398,6 +439,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     top: '50%',
+    transform: [{ translateY: -18 }],
+    zIndex: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  lastButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: '25%',
     transform: [{ translateY: -18 }],
     zIndex: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

@@ -150,13 +150,14 @@ const defaultIncantationsText = [
   "I am the master of my thoughts and actions"
 ];
 
-const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
+const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [incantations, setIncantations] = useState<IncantationItem[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingIncantation, setEditingIncantation] = useState<IncantationItem | null>(null);
   const [editingText, setEditingText] = useState('');
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   // Add ref for the scroll view
   const scrollRef = React.useRef(null);
@@ -224,7 +225,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity 
           style={styles.nextButton}
           onPress={() => navigation.navigate('ActiveIncantationsExercise', { 
-            incantations: incantations.map(item => item.text) 
+            incantations: incantations.map(item => item.text),
+            context,
+            challengeId,
+            returnTo
           })}
         >
           <Text style={styles.nextButtonText}>Next</Text>

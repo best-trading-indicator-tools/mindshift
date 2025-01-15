@@ -25,15 +25,20 @@ const introContent = [
   }
 ];
 
-const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
+const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigation.push('ManageActiveIncantations');
+      navigation.push('ManageActiveIncantations', {
+        context,
+        challengeId,
+        returnTo
+      });
     }
   };
 
@@ -63,7 +68,11 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
         {isLastStep ? (
           <TouchableOpacity
             style={styles.startButton}
-            onPress={() => navigation.push('ManageActiveIncantations')}
+            onPress={() => navigation.push('ManageActiveIncantations', {
+              context,
+              challengeId,
+              returnTo
+            })}
           >
             <Text style={styles.startButtonText}>Start Practice</Text>
           </TouchableOpacity>
