@@ -15,7 +15,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitude'>;
 
@@ -62,6 +62,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
         if (context === 'challenge' && challengeId) {
           const validEntries = entries.filter(isEntryComplete);
           if (validEntries.length >= MIN_ENTRIES) {
+            await markChallengeExerciseAsCompleted(challengeId, 'daily-gratitude');
             if (route.params?.onComplete) {
               route.params.onComplete();
             }
