@@ -9,9 +9,7 @@ export type ExerciseType =
   | 'deep-breathing'
   | 'active-incantations'
   | 'passive-incantations'
-  | 'voix-nasale'
-  | 'fry-vocal'
-  | 'gratitude'
+  | 'daily-gratitude'
   | 'gratitude-beads'
   | 'golden-checklist'
   | 'vision-board'
@@ -71,7 +69,7 @@ export const updateStreak = async () => {
       isExerciseCompletedToday('deep-breathing'),
       isExerciseCompletedToday('active-incantations'),
       isExerciseCompletedToday('passive-incantations'),
-      isExerciseCompletedToday('gratitude'),
+      isExerciseCompletedToday('daily-gratitude'),
       isExerciseCompletedToday('golden-checklist'),
     ]);
 
@@ -151,7 +149,7 @@ export const checkDailyProgress = async () => {
         : mission.title === 'Passive Incantations'
         ? 'passive-incantations'
         : mission.title === 'Daily Gratitude'
-        ? 'gratitude'
+        ? 'daily-gratitude'
         : mission.title === 'Golden Checklist'
         ? 'golden-checklist'
         : mission.title === 'Gratitude Beads'

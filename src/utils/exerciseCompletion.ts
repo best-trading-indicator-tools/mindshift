@@ -15,6 +15,7 @@ interface ExerciseCompletion {
 // For daily/carousel exercises
 export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<void> => {
   try {
+    // Mark completion in new format
     const key = `${DAILY_COMPLETION_KEY_PREFIX}${exerciseId}`;
     const completion: ExerciseCompletion = {
       exerciseId,
@@ -22,6 +23,19 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
       context: 'daily'
     };
     await AsyncStorage.setItem(key, JSON.stringify(completion));
+
+    // Also mark completion in old format for exerciseService.ts
+    const today = new Date();
+    const completionsJson = await AsyncStorage.getItem('exercise_completions');
+    const completions = completionsJson ? JSON.parse(completionsJson) : {};
+    
+    completions[exerciseId] = {
+      date: today.toDateString(),
+      exerciseName: exerciseId,
+      completedAt: today.toISOString()
+    };
+    
+    await AsyncStorage.setItem('exercise_completions', JSON.stringify(completions));
 
     // Get all selected daily missions and their completion status
     const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
