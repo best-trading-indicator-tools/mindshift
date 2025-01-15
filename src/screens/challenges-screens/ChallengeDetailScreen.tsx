@@ -79,7 +79,14 @@ const ExerciseCard: React.FC<Exercise & {
 };
 
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const challenge = route.params?.challenge;
+  const challengeId = route.params?.challenge?.id;
+  const challenge = {
+    id: challengeId,
+    title: 'Ultimate',
+    duration: 21,
+    description: 'Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
+    image: require('../../assets/illustrations/challenges/challenge-21.png')
+  };
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
