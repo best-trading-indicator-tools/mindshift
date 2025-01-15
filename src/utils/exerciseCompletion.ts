@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addNotification } from '../services/notificationService';
 
 // Separate key prefixes for different contexts
 const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
@@ -21,6 +22,52 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
       context: 'daily'
     };
     await AsyncStorage.setItem(key, JSON.stringify(completion));
+
+    // Get all selected daily missions and their completion status
+    const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+    if (storedMissions) {
+      const missions = JSON.parse(storedMissions);
+      const completedMissions = await Promise.all(
+        missions.map((mission: any) => isDailyExerciseCompleted(
+          mission.title === 'Deep Breathing' 
+            ? 'deep-breathing'
+            : mission.title === 'Active Incantations'
+            ? 'active-incantations'
+            : mission.title === 'Passive Incantations'
+            ? 'passive-incantations'
+            : mission.title === 'Daily Gratitude'
+            ? 'daily-gratitude'
+            : mission.title === 'Golden Checklist'
+            ? 'golden-checklist'
+            : mission.title === 'Gratitude Beads'
+            ? 'gratitude-beads'
+            : mission.title === 'The Sun Breath'
+            ? 'sun-breath'
+            : ''
+        ))
+      );
+
+      const completedCount = completedMissions.filter(Boolean).length;
+      const totalMissions = missions.length;
+
+      // Add notification for daily exercise completion with progress
+      await addNotification({
+        id: `daily-${exerciseId}-${Date.now()}`,
+        title: 'Daily Exercise Completed',
+        message: `Great progress! You've completed ${completedCount} out of ${totalMissions} daily missions.`,
+        type: 'success'
+      });
+
+      // If all daily missions are completed, send a special notification
+      if (completedCount === totalMissions) {
+        await addNotification({
+          id: `daily-complete-${Date.now()}`,
+          title: 'Daily Missions Completed!',
+          message: 'Congratulations! You\'ve completed all your daily missions. Your dedication is inspiring!',
+          type: 'success'
+        });
+      }
+    }
   } catch (error) {
     console.error('Error marking daily exercise as completed:', error);
   }
@@ -48,6 +95,27 @@ export const markChallengeExerciseAsCompleted = async (challengeId: string, exer
       challengeId
     };
     await AsyncStorage.setItem(key, JSON.stringify(completion));
+
+    // Get challenge progress after marking this exercise as completed
+    const progress = await getChallengeProgress(challengeId);
+
+    // Add notification for challenge exercise completion
+    await addNotification({
+      id: `challenge-${challengeId}-${exerciseId}-${Date.now()}`,
+      title: 'Challenge Exercise Completed',
+      message: `Great progress! You've completed ${progress.completedCount} out of ${progress.totalExercises} exercises in this challenge.`,
+      type: 'success'
+    });
+
+    // If all exercises are completed, send a special notification
+    if (progress.completedCount === progress.totalExercises) {
+      await addNotification({
+        id: `challenge-${challengeId}-complete-${Date.now()}`,
+        title: 'Challenge Completed!',
+        message: 'Congratulations! You\'ve completed all exercises in this challenge. Your dedication is inspiring!',
+        type: 'success'
+      });
+    }
   } catch (error) {
     console.error('Error marking challenge exercise as completed:', error);
   }
