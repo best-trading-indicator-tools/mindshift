@@ -26,7 +26,6 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { markExerciseAsCompleted } from '../../../services/exerciseService';
 import { Affirmation, loadTags, saveTags, STORAGE_KEYS } from '../../../services/affirmationService';
 import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,

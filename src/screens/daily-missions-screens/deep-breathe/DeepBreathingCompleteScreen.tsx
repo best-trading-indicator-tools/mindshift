@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -7,34 +7,27 @@ import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { CommonActions } from '@react-navigation/native';
 import { StackActions } from '@react-navigation/native';
+import { markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;
 
 const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const { context = 'daily', challengeId, returnTo } = route.params || {};
 
-  // Debug log for initial params
-  useEffect(() => {
-    console.log('Complete Screen Mounted with params:', {
-      context,
-      challengeId,
-      returnTo,
-      routeParams: route.params
-    });
-  }, []);
+  const markAsCompleted = useCallback(async () => {
+    if (context === 'challenge' && challengeId && !isCompleted) {
+      await markChallengeExerciseAsCompleted(challengeId, 'deep-breathing');
+      setIsCompleted(true);
+    }
+  }, [context, challengeId, isCompleted]);
 
-  const handleExit = () => {
-    setShowExitModal(true);
-  };
-
-  const handleConfirmExit = () => {
-    setShowExitModal(false);
+  const navigateAway = useCallback(() => {
     if (returnTo) {
-      console.log('returnToooooooooooooooooooooooooooo', returnTo);
       navigation.navigate('ChallengeDetail', {
         challenge: {
-          id: route.params?.challengeId || '1',
+          id: challengeId || '1',
           title: 'Ultimate',
           duration: 21,
           description: 'Your subconscious mind shapes your reality.',
@@ -42,10 +35,18 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
         }
       });
     } else {
-      console.log('maintabs return');
-      //navigation.dispatch(StackActions.popToTop());
       navigation.navigate('MainTabs');
     }
+  }, [navigation, returnTo, challengeId]);
+
+  const handleExit = () => {
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = async () => {
+    setShowExitModal(false);
+    await markAsCompleted();
+    navigateAway();
   };
 
   const handleContinue = () => {
@@ -76,22 +77,9 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
       console.error('Error initializing sound:', err);
     }
 
-    const timer = setTimeout(() => {
-      if (context === 'challenge' && returnTo) {
-        console.log('Returning to challenge:', returnTo);
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: challengeId || '1',
-            title: 'Ultimate',
-            duration: 21,
-            description: 'Your subconscious mind shapes your reality.',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        console.log('Returning to MainTabs');
-        navigation.navigate('MainTabs');
-      }
+    const timer = setTimeout(async () => {
+      await markAsCompleted();
+      navigateAway();
     }, 3000);
 
     return () => {
@@ -100,11 +88,7 @@ const DeepBreathingCompleteScreen: React.FC<Props> = ({ navigation, route }) => 
         sound.release();
       }
     };
-  }, [navigation, context, returnTo, challengeId]);
-
-  useEffect(() => {
-    console.log("Modal state changed:", showExitModal);
-  }, [showExitModal]);
+  }, [markAsCompleted, navigateAway]);
 
   return (
     <View style={StyleSheet.absoluteFill}>

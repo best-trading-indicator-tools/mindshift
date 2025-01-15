@@ -44,19 +44,12 @@ const DeepBreathingScreen: React.FC<Props> = ({ navigation, route }) => {
         breathingAnimationRef.current.cleanupAudio();
       }
 
-      // Mark completion based on context
+      // Mark completion only for daily context
       if (context === 'daily') {
         await markDailyExerciseAsCompleted('deep-breathing');
         // Only mark general stats for daily missions
         await markExerciseAsCompleted('deep-breathing', 'Deep Breathing');
-      } else if (context === 'challenge' && challengeId) {
-        // Mark as completed in challenge context
-        await markChallengeExerciseAsCompleted(challengeId, 'deep-breathing');
-        console.log('Marked deep breathing as completed for challenge:', challengeId);
       }
-      
-      // Clear any pending state updates
-      setShowExitModal(false);
       
       // Navigate to complete screen
       navigation.push('DeepBreathingComplete', {
