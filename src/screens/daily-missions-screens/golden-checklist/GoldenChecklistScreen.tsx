@@ -363,17 +363,21 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
     if (checkedItems.length === CHECKLIST_ITEMS.length) {
       try {
         if (context === 'challenge' && challengeId) {
+          console.log('golden checklist challenge completed');
           await markChallengeExerciseAsCompleted(challengeId, 'golden-checklist');
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: challengeId || '1',
-              title: 'Ultimate',
-              duration: 21,
-              description: 'Your subconscious mind shapes your reality.',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
-            },
-            returnTo: returnTo
-          });
+          if (returnTo) {
+            navigation.navigate('ChallengeDetail', {
+              challenge: {
+                id: challengeId || '1',
+                title: 'Ultimate',
+                duration: 21,
+                description: 'Your subconscious mind shapes your reality.',
+                image: require('../../../assets/illustrations/challenges/challenge-21.png')
+              }
+            });
+          } else {
+            navigation.navigate('MainTabs');
+          }
         } else {
           await markDailyExerciseAsCompleted('golden-checklist');
           navigation.navigate('MainTabs');
@@ -834,14 +838,4 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#000000',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  deleteButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-});
-
-export default GoldenChecklistScreen; 
+    fontSize: 
