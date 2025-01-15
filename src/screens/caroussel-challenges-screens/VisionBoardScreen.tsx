@@ -48,14 +48,14 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [editingBoard, setEditingBoard] = useState<VisionBoard | null>(null);
 
   const handleExit = () => {
-    if (route.params?.context === 'challenge' && route.params.challengeId) {
+    if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
       navigation.navigate('ChallengeDetail', {
         challenge: {
           id: route.params.challengeId,
           title: 'Ultimate',
           duration: 21,
-          description: '',
-          image: null
+          description: 'Visualize your dreams and manifest your future.',
+          image: require('../../assets/illustrations/challenges/challenge-21.png')
         }
       });
     } else {
@@ -81,9 +81,6 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
         if (hasCompletedBoard) {
           if (route.params?.context === 'challenge' && route.params.challengeId) {
             await markChallengeExerciseAsCompleted(route.params.challengeId, 'vision-board');
-            if (route.params.onComplete) {
-              route.params.onComplete();
-            }
           } else {
             await markExerciseAsCompleted('vision-board', 'Vision Board');
           }
@@ -185,9 +182,19 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
             ]}
             onPress={() => {
               if (board.sections.length === 0) {
-                navigation.navigate('NewVisionBoardSection', { boardId: board.id });
+                navigation.navigate('NewVisionBoardSection', { 
+                  boardId: board.id,
+                  context: route.params?.context,
+                  challengeId: route.params?.challengeId,
+                  returnTo: route.params?.returnTo
+                });
               } else {
-                navigation.navigate('VisionBoardSections', { boardId: board.id });
+                navigation.navigate('VisionBoardSections', { 
+                  boardId: board.id,
+                  context: route.params?.context,
+                  challengeId: route.params?.challengeId,
+                  returnTo: route.params?.returnTo
+                });
               }
             }}
           >

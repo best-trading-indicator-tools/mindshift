@@ -208,14 +208,14 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isReorderMode, setIsReorderMode] = React.useState(false);
 
   const handleExit = () => {
-    if (params.context === 'challenge' && params.challengeId) {
+    if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
       navigation.navigate('ChallengeDetail', {
         challenge: {
-          id: params.challengeId,
+          id: route.params.challengeId,
           title: 'Ultimate',
           duration: 21,
-          description: '',
-          image: null
+          description: 'Visualize your dreams and manifest your future.',
+          image: require('../../assets/illustrations/challenges/challenge-21.png')
         }
       });
     } else {

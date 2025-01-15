@@ -87,7 +87,6 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
-    onComplete?: () => void;
   } | undefined;
   VisionBoardIntro: {
     returnTo?: keyof RootStackParamList;
@@ -106,6 +105,9 @@ export type RootStackParamList = {
   VisionBoardSections: {
     boardId: string;
     refresh?: number;
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
   };
   VisionBoardSectionPhotos: { 
     boardId: string; 
@@ -113,7 +115,10 @@ export type RootStackParamList = {
     sectionName: string 
   };
   NewVisionBoardSection: { 
-    boardId: string 
+    boardId: string;
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
   };
   VisionBoardEditSectionName: { 
     boardId: string; 

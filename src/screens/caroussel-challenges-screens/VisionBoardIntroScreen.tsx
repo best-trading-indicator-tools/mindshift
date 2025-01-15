@@ -39,16 +39,14 @@ const VisionBoardIntroScreen: React.FC = () => {
         navigation.navigate('VisionBoard', {
           context: route.params?.challengeId ? 'challenge' : 'daily',
           challengeId: route.params?.challengeId,
-          returnTo: route.params?.returnTo,
-          onComplete: route.params?.onComplete
+          returnTo: route.params?.returnTo
         });
       } catch (error) {
         console.error('Error saving intro state:', error);
         navigation.navigate('VisionBoard', {
           context: route.params?.challengeId ? 'challenge' : 'daily',
           challengeId: route.params?.challengeId,
-          returnTo: route.params?.returnTo,
-          onComplete: route.params?.onComplete
+          returnTo: route.params?.returnTo
         });
       }
     }
