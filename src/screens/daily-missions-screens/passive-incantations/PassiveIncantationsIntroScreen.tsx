@@ -18,9 +18,10 @@ const introContent = [
   }
 ];
 
-const PassiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
+const PassiveIncantationsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   const handleNext = async () => {
     if (currentStep < totalSteps) {
@@ -31,7 +32,11 @@ const PassiveIncantationsIntroScreen: React.FC<Props> = ({ navigation }) => {
       } catch (error) {
         console.error('Error saving intro state:', error);
       }
-      navigation.navigate('PassiveIncantations');
+      navigation.navigate('PassiveIncantations', {
+        context,
+        challengeId,
+        returnTo
+      });
     }
   };
 
@@ -101,7 +106,7 @@ const styles = StyleSheet.create({
   nextButton: {
     backgroundColor: '#B91C1C',
     marginHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 120,
     paddingVertical: 16,
     borderRadius: 12,
     position: 'absolute',

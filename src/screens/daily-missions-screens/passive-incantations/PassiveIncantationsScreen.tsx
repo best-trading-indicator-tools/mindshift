@@ -44,7 +44,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Sound from 'react-native-sound';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 
@@ -96,6 +96,7 @@ const PassiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isDeletingRecording, setIsDeletingRecording] = useState<string | null>(null);
   const backgroundMusic = useRef<Sound | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
 
   const backgroundImages = [
     require('../../../assets/illustrations/zen1.jpg'),
@@ -630,23 +631,17 @@ const PassiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) => {
       setCurrentRecordingText('');
       setCurrentLoopCount(0);
 
-      if (route.params?.context === 'challenge') {
-        if (route.params.onComplete) {
-          route.params.onComplete();
-        }
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId || '',
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: null
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
+      if (context === 'challenge' && challengeId) {
+        await markChallengeExerciseAsCompleted(challengeId, 'passive-incantations');
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: 'Your subconscious mind shapes your reality.',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+          }
+        });
       } else {
         await markDailyExerciseAsCompleted('passive-incantations');
         navigation.navigate('MainTabs');
@@ -2778,4 +2773,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PassiveIncantationsScreen;                                                                              
+export default PassiveIncantationsScreen; 
