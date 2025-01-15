@@ -16,6 +16,7 @@ import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDaily
 import { clearNotifications } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResourcePreloadService } from '../../services/resourcePreloadService';
+import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -323,16 +324,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      interface CompletionStatus {
-        date: string;
-        exerciseName: string;
-        completedAt: string;
-      }
-
-      interface Completions {
-        [key: string]: CompletionStatus;
-      }
-
       const missions = JSON.parse(storedMissions).map((mission: typeof DAILY_MISSIONS[0]): MissionMapping => ({
         key: mission.title === 'Deep Breathing' 
           ? 'deep-breathing'
@@ -341,7 +332,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           : mission.title === 'Passive Incantations'
           ? 'passive-incantations'
           : mission.title === 'Daily Gratitude'
-          ? 'gratitude'
+          ? 'daily-gratitude'
           : mission.title === 'Golden Checklist'
           ? 'golden-checklist'
           : mission.title === 'Gratitude Beads'
@@ -352,13 +343,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         name: mission.title
       }));
 
-      // Get completion status for each mission
-      const completionsJson = await AsyncStorage.getItem(EXERCISE_COMPLETION_KEY);
-      const completions: Completions = completionsJson ? JSON.parse(completionsJson) : {};
-      const today = new Date().toDateString();
-
+      // Check completion status for each mission using isDailyExerciseCompleted
+      const completionPromises = missions.map((mission: MissionMapping) => 
+        isDailyExerciseCompleted(mission.key)
+      );
+      
+      const completionResults = await Promise.all(completionPromises);
+      
       const completed = missions
-        .filter((mission: MissionMapping) => completions[mission.key]?.date === today)
+        .filter((_: MissionMapping, index: number) => completionResults[index])
         .map((mission: MissionMapping) => mission.key);
 
       setCompletedExercises(completed);
@@ -368,8 +361,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       console.log('Exercise completions updated:', {
         completed,
-        percentage,
-        today
+        percentage
       });
     } catch (error) {
       console.error('Error checking exercise completions:', error);

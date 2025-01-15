@@ -79,6 +79,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
             Alert.alert('Cannot Complete', 'Please add at least one gratitude entry before completing.');
           }
         } else {
+          console.log("marking daily gratitude as HOME completed");
           await markDailyExerciseAsCompleted('daily-gratitude');
           setShowPostExercise(true);
         }
