@@ -176,10 +176,9 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         setCompletedExercises(newCompletedState);
         
         // Find last unlocked exercise
-        for (let i = exercises.length - 1; i >= 0; i--) {
-          if (completionResults[i] || i === 0) {
-            const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
-            setLastUnlockedExercise(nextExercise);
+        for (let i = 0; i < exercises.length; i++) {
+          if (!completionResults[i]) {
+            setLastUnlockedExercise(exercises[i]);
             break;
           }
         }
@@ -375,14 +374,14 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <TouchableOpacity 
           style={[
             styles.continueButton,
-            isAllExercisesCompleted ? styles.completedButton : styles.continueButtonDisabled
+            isAllExercisesCompleted && styles.completedButton
           ]}
           onPress={handleContinue}
           disabled={isAllExercisesCompleted}
         >
           <Text style={[
             styles.continueButtonText,
-            isAllExercisesCompleted ? styles.completedButtonText : styles.continueButtonTextDisabled
+            isAllExercisesCompleted && styles.completedButtonText
           ]}>
             {isAllExercisesCompleted ? 'Completed' : 'Continue'}
           </Text>
@@ -502,12 +501,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   continueButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#FCD34D',
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 30,
+    borderRadius: 15,
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -518,14 +517,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   continueButtonDisabled: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#FCD34D33',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 30,
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: '#FCD34D66',
   },
   continueButtonText: {
     color: '#000000',
@@ -534,18 +533,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   continueButtonTextDisabled: {
-    color: '#666666',
+    color: '#000000',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+    opacity: 0.5,
   },
   completedButton: {
     backgroundColor: '#4CAF50',
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 30,
+    borderRadius: 0,
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
