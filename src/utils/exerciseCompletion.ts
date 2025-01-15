@@ -53,8 +53,8 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
       // Add notification for daily exercise completion with progress
       await addNotification({
         id: `daily-${exerciseId}-${Date.now()}`,
-        title: 'Daily Exercise Completed',
-        message: `Great progress! You've completed ${completedCount} out of ${totalMissions} daily missions.`,
+        title: '✨ Daily Exercise Completed',
+        message: `🎯 Great progress! You've completed ${completedCount} out of ${totalMissions} daily missions. Keep going! 💪`,
         type: 'success'
       });
 
@@ -62,8 +62,8 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
       if (completedCount === totalMissions) {
         await addNotification({
           id: `daily-complete-${Date.now()}`,
-          title: 'Daily Missions Completed!',
-          message: 'Congratulations! You\'ve completed all your daily missions. Your dedication is inspiring!',
+          title: '🌟 Daily Missions Completed!',
+          message: '🎉 Congratulations! You\'ve completed all your daily missions. Your dedication is inspiring! 🏆',
           type: 'success'
         });
       }
@@ -102,8 +102,8 @@ export const markChallengeExerciseAsCompleted = async (challengeId: string, exer
     // Add notification for challenge exercise completion
     await addNotification({
       id: `challenge-${challengeId}-${exerciseId}-${Date.now()}`,
-      title: 'Challenge Exercise Completed',
-      message: `Great progress! You've completed ${progress.completedCount} out of ${progress.totalExercises} exercises in this challenge.`,
+      title: '🎯 Challenge Exercise Completed',
+      message: `⭐ Great progress! You've completed ${progress.completedCount} out of ${progress.totalExercises} exercises in this challenge. Keep pushing! 💪`,
       type: 'success'
     });
 
@@ -111,8 +111,8 @@ export const markChallengeExerciseAsCompleted = async (challengeId: string, exer
     if (progress.completedCount === progress.totalExercises) {
       await addNotification({
         id: `challenge-${challengeId}-complete-${Date.now()}`,
-        title: 'Challenge Completed!',
-        message: 'Congratulations! You\'ve completed all exercises in this challenge. Your dedication is inspiring!',
+        title: '🏆 Challenge Completed!',
+        message: '🎉 Congratulations! You\'ve completed all exercises in this challenge. Your dedication is truly inspiring! ⭐',
         type: 'success'
       });
     }
