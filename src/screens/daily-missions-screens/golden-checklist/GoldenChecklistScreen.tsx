@@ -13,7 +13,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;
 
@@ -294,6 +294,7 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [customItems, setCustomItems] = useState<CustomChecklistItem[]>([]);
+  const { context = 'daily', challengeId, returnTo } = route.params || {};
   const [newItem, setNewItem] = useState<{
     title: string;
     subtitle: string;
@@ -361,23 +362,18 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleComplete = async () => {
     if (checkedItems.length === CHECKLIST_ITEMS.length) {
       try {
-        if (route.params?.context === 'challenge') {
-          if (route.params.onComplete) {
-            route.params.onComplete();
-          }
-          if (route.params.returnTo === 'ChallengeDetail') {
-            navigation.navigate('ChallengeDetail', {
-              challenge: {
-                id: route.params.challengeId || '',
-                title: 'Ultimate',
-                duration: 21,
-                description: '',
-                image: null
-              }
-            });
-          } else {
-            navigation.goBack();
-          }
+        if (context === 'challenge' && challengeId) {
+          await markChallengeExerciseAsCompleted(challengeId, 'golden-checklist');
+          navigation.navigate('ChallengeDetail', {
+            challenge: {
+              id: challengeId || '1',
+              title: 'Ultimate',
+              duration: 21,
+              description: 'Your subconscious mind shapes your reality.',
+              image: require('../../../assets/illustrations/challenges/challenge-21.png')
+            },
+            returnTo: returnTo
+          });
         } else {
           await markDailyExerciseAsCompleted('golden-checklist');
           navigation.navigate('MainTabs');
