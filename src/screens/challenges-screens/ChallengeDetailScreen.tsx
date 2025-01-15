@@ -93,57 +93,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     lastUpdate?: number;
   }>({});
 
-  useEffect(() => {
-    if (!challenge) {
-      return;
-    }
-    
-    const loadChallengeState = async () => {
-      try {
-        // Check completion status for each exercise
-        const completionPromises = exercises.map(exercise => 
-          isChallengeExerciseCompleted(challenge.id, exercise.id)
-        );
-        
-        const completionResults = await Promise.all(completionPromises);
-        
-        const newCompletedState = exercises.reduce((acc, exercise, index) => {
-          acc[exercise.id] = completionResults[index];
-          return acc;
-        }, {} as Record<string, boolean>);
-        
-        setCompletedExercises(newCompletedState);
-        
-        // Find last unlocked exercise
-        for (let i = exercises.length - 1; i >= 0; i--) {
-          if (completionResults[i] || i === 0) {
-            const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
-            setLastUnlockedExercise(nextExercise);
-            break;
-          }
-        }
-      } catch (error) {
-        console.error('Error loading challenge state:', error);
-      }
-    };
-
-    const unsubscribe = navigation.addListener('focus', loadChallengeState);
-    loadChallengeState(); // Initial load
-
-    return unsubscribe;
-  }, [challenge, navigation, exercises]);
-
-  if (!challenge) {
-    return null;
-  }
-
-  const weeks = [
-    { id: 1, title: 'Week 1' },
-    { id: 2, title: 'Week 2' },
-    { id: 3, title: 'Week 3' },
-    { id: 4, title: 'Week 4' },
-  ];
-
   const exercises: Exercise[] = [
     // Week 1 Exercises
     {
@@ -201,6 +150,59 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       description: 'Create your personal board of mentors to guide and inspire your journey.',
       week: 2
     }
+  ];
+
+  const isAllExercisesCompleted = exercises.every(exercise => completedExercises[exercise.id]);
+
+  useEffect(() => {
+    if (!challenge) {
+      return;
+    }
+    
+    const loadChallengeState = async () => {
+      try {
+        // Check completion status for each exercise
+        const completionPromises = exercises.map(exercise => 
+          isChallengeExerciseCompleted(challenge.id, exercise.id)
+        );
+        
+        const completionResults = await Promise.all(completionPromises);
+        
+        const newCompletedState = exercises.reduce((acc, exercise, index) => {
+          acc[exercise.id] = completionResults[index];
+          return acc;
+        }, {} as Record<string, boolean>);
+        
+        setCompletedExercises(newCompletedState);
+        
+        // Find last unlocked exercise
+        for (let i = exercises.length - 1; i >= 0; i--) {
+          if (completionResults[i] || i === 0) {
+            const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
+            setLastUnlockedExercise(nextExercise);
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading challenge state:', error);
+      }
+    };
+
+    const unsubscribe = navigation.addListener('focus', loadChallengeState);
+    loadChallengeState(); // Initial load
+
+    return unsubscribe;
+  }, [challenge, navigation, exercises]);
+
+  if (!challenge) {
+    return null;
+  }
+
+  const weeks = [
+    { id: 1, title: 'Week 1' },
+    { id: 2, title: 'Week 2' },
+    { id: 3, title: 'Week 3' },
+    { id: 4, title: 'Week 4' },
   ];
 
   const handleExerciseComplete = async (exerciseId: string) => {
@@ -373,12 +375,17 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <TouchableOpacity 
           style={[
             styles.continueButton,
-            !lastUnlockedExercise && styles.continueButtonDisabled
+            isAllExercisesCompleted ? styles.completedButton : styles.continueButtonDisabled
           ]}
           onPress={handleContinue}
-          disabled={!lastUnlockedExercise}
+          disabled={isAllExercisesCompleted}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={[
+            styles.continueButtonText,
+            isAllExercisesCompleted ? styles.completedButtonText : styles.continueButtonTextDisabled
+          ]}>
+            {isAllExercisesCompleted ? 'Completed' : 'Continue'}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.tabContainer}>
@@ -640,6 +647,24 @@ const styles = StyleSheet.create({
   continueButtonDisabled: {
     backgroundColor: '#666666',
     opacity: 0.5,
+  },
+  completedButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  completedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continueButtonTextDisabled: {
+    color: '#999999',
   },
 });
 
