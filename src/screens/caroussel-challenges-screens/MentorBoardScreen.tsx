@@ -20,6 +20,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useFocusEffect } from '@react-navigation/native';
 import { MentorBoard } from '../../types/mentorBoard';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
+import { markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
 import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../../services/mentorBoardService';
 import WikimediaImagePicker from '../../components/WikimediaImagePicker';
 import DraggableCollage from '../../components/DraggableCollage';
@@ -38,7 +39,7 @@ const DEFAULT_COLORS = [
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoard'>;
 
-const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
+const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
   const [mentorBoards, setMentorBoards] = useState<MentorBoard[]>([]);
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
@@ -71,7 +72,11 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
       // Check if we should mark exercise as completed
       const hasCompletedBoard = boards.some(board => board.mentors.length > 0);
       if (hasCompletedBoard) {
-        await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+        if (route.params?.context === 'challenge' && route.params.challengeId) {
+          await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
+        } else {
+          await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+        }
       }
     } catch (error) {
       console.error('Error loading mentor boards:', error);
@@ -158,11 +163,31 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.headerRight}>
           <TouchableOpacity 
             style={styles.exitButton}
-            onPress={() => {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs' }],
-              });
+            onPress={async () => {
+              // Check if there's at least one board with mentors
+              const hasCompletedBoard = mentorBoards.some(board => board.mentors.length > 0);
+              
+              if (hasCompletedBoard) {
+                if (route.params?.context === 'challenge' && route.params.challengeId) {
+                  await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
+                } else {
+                  await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+                }
+              }
+
+              if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
+                navigation.navigate('ChallengeDetail', {
+                  challenge: {
+                    id: route.params.challengeId,
+                    title: 'Ultimate',
+                    duration: 21,
+                    description: 'Create your own board of mentors to inspire and guide you.',
+                    image: require('../../assets/illustrations/challenges/challenge-21.png')
+                  }
+                });
+              } else {
+                navigation.navigate('MainTabs');
+              }
             }}
           >
             <Text style={styles.exitButtonText}>Exit</Text>
@@ -177,86 +202,105 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {mentorBoards.map((board) => (
-          <TouchableOpacity
-            key={board.id}
-            style={styles.boardCard}
-            onPress={() => {
-              navigation.navigate('MentorBoardDetails', { boardId: board.id });
-            }}
+        {mentorBoards.length === 0 ? (
+          <TouchableOpacity 
+            style={styles.emptyStateContainer}
+            onPress={() => setShowNewBoardModal(true)}
           >
-            <View style={styles.boardHeader}>
-              <View style={styles.boardTitleSection}>
-                <Text style={styles.boardName}>{board.name}</Text>
-                <Text style={styles.mentorCount}>{board.mentors.length} Mentors</Text>
-              </View>
-              <View style={styles.boardActions}>
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setEditingBoard(board);
-                    setShowEditModal(true);
-                  }}
-                >
-                  <MaterialCommunityIcons name="pencil" size={24} color="#666666" />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleDeleteBoard(board);
-                  }}
-                >
-                  <MaterialCommunityIcons name="delete" size={24} color="#E31837" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setShowColorPicker(true);
-                  }}
-                >
-                  <MaterialCommunityIcons name="dots-horizontal" size={24} color="#666666" />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.mentorPreview}>
-              {board.mentors.length > 0 ? (
-                <DraggableCollage 
-                  key={`${board.id}-${board.mentors.length}`}
-                  mentors={board.mentors} 
-                  containerHeight={500}
-                  backgroundColor={selectedColor}
-                  onReorder={async (newOrder) => {
-                    const updatedBoard = {
-                      ...board,
-                      mentors: newOrder,
-                    };
-                    
-                    // First update local state
-                    runOnJS(setMentorBoards)(prevBoards => 
-                      prevBoards.map(b => 
-                        b.id === board.id ? updatedBoard : b
-                      )
-                    );
-                    
-                    // Then save to storage
-                    await runOnJS(saveMentorBoard)(updatedBoard);
-                  }}
-                />
-              ) : (
-                <TouchableOpacity 
-                  style={[styles.emptyPreview, { backgroundColor: selectedColor, height: 500 }]}
-                  onPress={() => {
-                    setSelectedBoard(board);
-                    setShowImagePicker(true);
-                  }}
-                >
-                  <Text style={styles.emptyText}>Tap to add mentors</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <Image 
+              source={require('../../assets/illustrations/mentorboard.jpg')}
+              style={styles.emptyStateImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.emptyStateText}>Tap to create your first mentor board</Text>
           </TouchableOpacity>
-        ))}
+        ) : (
+          mentorBoards.map((board) => (
+            <TouchableOpacity
+              key={board.id}
+              style={styles.boardCard}
+              onPress={() => {
+                navigation.navigate('MentorBoardDetails', { 
+                  boardId: board.id,
+                  context: route.params?.context,
+                  challengeId: route.params?.challengeId,
+                  returnTo: route.params?.returnTo
+                });
+              }}
+            >
+              <View style={styles.boardHeader}>
+                <View style={styles.boardTitleSection}>
+                  <Text style={styles.boardName}>{board.name}</Text>
+                  <Text style={styles.mentorCount}>{board.mentors.length} Mentors</Text>
+                </View>
+                <View style={styles.boardActions}>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      setEditingBoard(board);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="pencil" size={24} color="#666666" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleDeleteBoard(board);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="delete" size={24} color="#E31837" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      setShowColorPicker(true);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="dots-horizontal" size={24} color="#666666" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.mentorPreview}>
+                {board.mentors.length > 0 ? (
+                  <DraggableCollage 
+                    key={`${board.id}-${board.mentors.length}`}
+                    mentors={board.mentors} 
+                    containerHeight={500}
+                    backgroundColor={selectedColor}
+                    onReorder={async (newOrder) => {
+                      const updatedBoard = {
+                        ...board,
+                        mentors: newOrder,
+                      };
+                      
+                      // First update local state
+                      runOnJS(setMentorBoards)(prevBoards => 
+                        prevBoards.map(b => 
+                          b.id === board.id ? updatedBoard : b
+                        )
+                      );
+                      
+                      // Then save to storage
+                      await runOnJS(saveMentorBoard)(updatedBoard);
+                    }}
+                  />
+                ) : (
+                  <TouchableOpacity 
+                    style={[styles.emptyPreview, { backgroundColor: selectedColor, height: 500 }]}
+                    onPress={() => {
+                      setSelectedBoard(board);
+                      setShowImagePicker(true);
+                    }}
+                  >
+                    <Text style={styles.emptyText}>Tap to add mentors</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       {/* New Board Modal */}
@@ -631,6 +675,27 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#E5E7EB',
     marginBottom: 16,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 400,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
+  },
+  emptyStateImage: {
+    width: '100%',
+    height: 300,
+    marginBottom: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#666666',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

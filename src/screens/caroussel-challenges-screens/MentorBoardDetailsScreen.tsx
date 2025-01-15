@@ -125,7 +125,21 @@ const MentorBoardDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.doneButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
+              navigation.navigate('ChallengeDetail', {
+                challenge: {
+                  id: route.params.challengeId,
+                  title: 'Ultimate',
+                  duration: 21,
+                  description: 'Create your own board of mentors to inspire and guide you.',
+                  image: require('../../assets/illustrations/challenges/challenge-21.png')
+                }
+              });
+            } else {
+              navigation.goBack();
+            }
+          }}
         >
           <Text style={[styles.buttonText, styles.doneButtonText]}>Done</Text>
         </TouchableOpacity>

@@ -96,7 +96,6 @@ export type RootStackParamList = {
     context?: 'daily' | 'challenge';
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
-    onComplete?: () => void;
   } | undefined;
   MentorBoardIntro: {
     returnTo?: keyof RootStackParamList;
@@ -129,7 +128,10 @@ export type RootStackParamList = {
     exerciseName: string;
   };
   MentorBoardDetails: { 
-    boardId: string 
+    boardId: string;
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
   };
   DailyGratitudeIntro: {
     returnTo?: keyof RootStackParamList;

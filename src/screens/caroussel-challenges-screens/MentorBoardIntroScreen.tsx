@@ -15,7 +15,7 @@ import ProgressHeader from '../../components/ProgressHeader';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardIntro'>;
 
-const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
+const MentorBoardIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const TOTAL_STEPS = 4; // Including the actual board creation step
 
@@ -23,7 +23,11 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation }) => {
     if (currentPage < 2) {
       setCurrentPage(currentPage + 1);
     } else {
-      navigation.navigate('MentorBoard');
+      navigation.navigate('MentorBoard', {
+        context: route.params?.challengeId ? 'challenge' : 'daily',
+        challengeId: route.params?.challengeId,
+        returnTo: route.params?.returnTo
+      });
     }
   };
 
