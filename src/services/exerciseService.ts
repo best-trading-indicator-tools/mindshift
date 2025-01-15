@@ -175,27 +175,8 @@ export const checkDailyProgress = async () => {
     const lastCompletedJson = await AsyncStorage.getItem('last_completed_count');
     const lastCompleted = lastCompletedJson ? parseInt(lastCompletedJson) : 0;
 
-    // Only send progress notification if we have more completed exercises than before
-    if (completedCount > lastCompleted && remainingMissions > 0) {
-      await addNotification({
-        id: `daily-reminder-${Date.now()}`,
-        title: 'Daily Progress',
-        message: `You've completed ${completedCount} out of ${totalMissions} missions today. Keep going!`,
-        type: 'reminder'
-      });
-      
-      // Update the last completed count
-      await AsyncStorage.setItem('last_completed_count', completedCount.toString());
-    }
-
-    // Send completion notification if all missions are completed for the first time today
+    // Update last completed count if all missions are completed
     if (completedCount === totalMissions && lastCompleted < totalMissions) {
-      await addNotification({
-        id: `all-complete-${Date.now()}`,
-        title: 'Outstanding!',
-        message: "You've completed all your daily missions! Your dedication is inspiring. Keep up the great work!",
-        type: 'success'
-      });
       await AsyncStorage.setItem('last_completed_count', completedCount.toString());
     }
 
