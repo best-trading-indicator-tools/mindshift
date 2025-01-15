@@ -11,6 +11,7 @@ interface ChallengeCardProps {
   duration: number;
   description: string;
   image: ImageSourcePropType;
+  hasStarted?: boolean;
   onPress?: () => void;
 }
 
@@ -19,6 +20,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   duration,
   description,
   image,
+  hasStarted = false,
   onPress,
 }) => {
   return (
@@ -47,7 +49,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
         </Text>
 
         <TouchableOpacity style={styles.continueButton} onPress={onPress}>
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={styles.continueButtonText}>{hasStarted ? 'Continue' : 'Start'}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

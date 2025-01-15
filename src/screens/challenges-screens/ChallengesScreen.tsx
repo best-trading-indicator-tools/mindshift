@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../../navigation/types';
 import ChallengeCard from '../../components/ChallengeCard';
+import { getChallengeProgress } from '../../utils/exerciseCompletion';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Challenges'>,
@@ -24,6 +25,21 @@ const challenges = [
 ];
 
 const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
+  const [challengeProgress, setChallengeProgress] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const loadProgress = async () => {
+      const progressMap: Record<string, boolean> = {};
+      for (const challenge of challenges) {
+        const progress = await getChallengeProgress(challenge.id);
+        progressMap[challenge.id] = progress.completedCount > 0;
+      }
+      setChallengeProgress(progressMap);
+    };
+
+    loadProgress();
+  }, []);
+
   const handleVisionBoardPress = () => {
     navigation.navigate('VisionBoard', {
       source: 'challenges'
@@ -47,6 +63,7 @@ const ChallengesScreen: React.FC<Props> = ({ navigation }) => {
             duration={challenge.duration}
             description={challenge.description}
             image={challenge.image}
+            hasStarted={challengeProgress[challenge.id]}
             onPress={() => {
               navigation.navigate('ChallengeDetail', {
                 challenge,
