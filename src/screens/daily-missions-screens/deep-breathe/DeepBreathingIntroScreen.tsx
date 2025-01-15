@@ -30,16 +30,11 @@ const DeepBreathingIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       try {
         await AsyncStorage.setItem('deep_breathing_intro_seen', 'true');
         
-        navigation.dispatch(
-          CommonActions.navigate({
-            name: 'DeepBreathing',
-            params: {
-              context: route.params?.challengeId ? 'challenge' : 'daily',
-              challengeId: route.params?.challengeId,
-              returnTo: route.params?.returnTo
-            }
-          })
-        );
+        navigation.navigate('DeepBreathing', {
+          context: route.params?.challengeId ? 'challenge' : 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo
+        });
       } catch (error) {
         console.error('Error saving intro state:', error);
       }

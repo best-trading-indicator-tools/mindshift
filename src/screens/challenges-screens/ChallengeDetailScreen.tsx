@@ -161,6 +161,14 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     
     const loadChallengeState = async () => {
       try {
+        // Check if we're coming from gratitude intro exit
+        const exitingFromIntro = await AsyncStorage.getItem('exiting_gratitude_intro');
+        if (exitingFromIntro === 'true') {
+          // Clear the flag
+          await AsyncStorage.removeItem('exiting_gratitude_intro');
+          return;
+        }
+
         // Check completion status for each exercise
         const completionPromises = exercises.map(exercise => 
           isChallengeExerciseCompleted(challenge.id, exercise.id)
@@ -174,6 +182,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         }, {} as Record<string, boolean>);
         
         setCompletedExercises(newCompletedState);
+        challengeStateCache.current = {
+          completionStatus: newCompletedState,
+          lastUpdate: Date.now()
+        };
         
         // Find last unlocked exercise
         for (let i = 0; i < exercises.length; i++) {
@@ -225,51 +237,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       console.error('Error completing exercise:', error);
     }
   };
-
-  // Simplified focus handler that always refreshes state
-  useEffect(() => {
-    if (!challenge) return;
-
-    const refreshState = async () => {
-      try {
-        // Check if we're coming from gratitude intro exit
-        const exitingFromIntro = await AsyncStorage.getItem('exiting_gratitude_intro');
-        if (exitingFromIntro === 'true') {
-          // Clear the flag
-          await AsyncStorage.removeItem('exiting_gratitude_intro');
-          return;
-        }
-
-        // Load challenge state using the optimized method
-        const key = `@challenge_${challenge.id}_exercises`;
-        const storedState = await AsyncStorage.getItem(key);
-        
-        if (storedState) {
-          const parsedState = JSON.parse(storedState);
-          setCompletedExercises(parsedState);
-          challengeStateCache.current = {
-            completionStatus: parsedState,
-            lastUpdate: Date.now()
-          };
-          
-          // Find and set last unlocked exercise
-          const exerciseEntries = Object.entries(parsedState);
-          for (let i = exerciseEntries.length - 1; i >= 0; i--) {
-            const [exId, completed] = exerciseEntries[i];
-            if (completed || i === 0) {
-              const nextExercise = exercises[Math.min(i + 1, exercises.length - 1)];
-              setLastUnlockedExercise(nextExercise);
-              break;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error refreshing challenge state:', error);
-      }
-    };
-
-    refreshState();
-  }, [challenge, exercises]);
 
   const isExerciseUnlocked = useCallback((exercise: Exercise): boolean => {
     const index = exercises.findIndex(ex => ex.id === exercise.id);
@@ -383,7 +350,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             styles.continueButtonText,
             isAllExercisesCompleted && styles.completedButtonText
           ]}>
-            {isAllExercisesCompleted ? 'Completed' : 'Continue'}
+            {isAllExercisesCompleted ? 'Completed' : Object.values(completedExercises).some(completed => completed) ? 'Continue' : 'Start'}
           </Text>
         </TouchableOpacity>
 
