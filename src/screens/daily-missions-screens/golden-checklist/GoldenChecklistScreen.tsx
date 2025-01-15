@@ -838,4 +838,14 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#000000',
-    fontSize: 
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+});
+
+export default GoldenChecklistScreen; 

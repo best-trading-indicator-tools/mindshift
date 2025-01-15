@@ -114,4 +114,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  nextButtonText:
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});
+
+export default PassiveIncantationsIntroScreen; 

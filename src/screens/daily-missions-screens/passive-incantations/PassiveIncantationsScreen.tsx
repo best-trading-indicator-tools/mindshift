@@ -2773,4 +2773,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PassiveIncantationsScreen;                
+export default PassiveIncantationsScreen; 
