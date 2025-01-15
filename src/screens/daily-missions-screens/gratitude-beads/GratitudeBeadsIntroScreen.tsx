@@ -32,7 +32,7 @@ const introContent = [
   }
 ];
 
-const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation }) => {
+const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
 
@@ -42,17 +42,23 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation }) => {
     } else if (currentStep === totalSteps) {
       try {
         await AsyncStorage.setItem('gratitude_beads_intro_seen', 'true');
-        //navigation.push('GratitudeBeads');
       } catch (error) {
         console.error('Error saving intro state:', error);
-        //navigation.push('GratitudeBeads');
       }
-      navigation.push('GratitudeBeads');
+      navigation.navigate('GratitudeBeads', {
+        context: route.params?.challengeId ? 'challenge' : 'daily',
+        challengeId: route.params?.challengeId,
+        returnTo: route.params?.returnTo
+      });
     }
   };
 
   const handleExit = () => {
-    navigation.goBack();
+    navigation.navigate('GratitudeBeads', {
+      context: route.params?.challengeId ? 'challenge' : 'daily',
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
   };
 
   const currentContent = introContent[currentStep - 1];

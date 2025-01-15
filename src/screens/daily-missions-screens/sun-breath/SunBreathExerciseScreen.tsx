@@ -13,6 +13,7 @@ import BreathSettingsModal from '../../../components/BreathSettingsModal';
 import ProgressHeader from '../../../components/ProgressHeader';
 import { tutorialSteps } from './SunBreathTutorialScreen';
 import LinearGradient from 'react-native-linear-gradient';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathExercise'>;
 type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathExercise'>;
@@ -130,34 +131,29 @@ const SunBreathExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExitConfirm = () => {
+  const handleExitConfirm = async () => {
     isNavigating.current = true;
     setShowExitModal(false);
     
-    // Handle exit based on context
-    if (route.params?.context === 'challenge') {
-      // Let the challenge flow handle the completion if needed
-      if (route.params.onComplete) {
-        route.params.onComplete();
-      }
-      
-      // Navigate back to challenge if specified
-      if (route.params.returnTo === 'ChallengeDetail') {
+    try {
+      // Handle exit based on context
+      if (route.params?.context === 'challenge' && route.params.challengeId) {
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'sun-breath');
         navigation.navigate('ChallengeDetail', {
           challenge: {
-            id: route.params.challengeId || '',
+            id: route.params.challengeId,
             title: 'Ultimate',
             duration: 21,
             description: '',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
+            image: null
           }
         });
       } else {
-        navigation.goBack();
+        await markDailyExerciseAsCompleted('sun-breath');
+        navigation.navigate('MainTabs');
       }
-    } else {
-      // Default behavior for daily mission
-      navigation.navigate('MainTabs');
+    } catch (error) {
+      console.error('Error completing exercise:', error);
     }
   };
 
@@ -240,16 +236,20 @@ const SunBreathExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
       const cycleTime = (currentSettings.inhaleSeconds + currentSettings.holdSeconds + currentSettings.exhaleSeconds) * 1000;
       const nextCycleTimer = setTimeout(() => {
         console.log(`🔄 Current cycle: ${currentCycle}, Total cycles: ${currentSettings.cycles}`);
-        if (currentCycle < currentSettings.cycles) {
-          console.log(`✅ Starting cycle ${currentCycle + 1}`);
-          setCurrentCycle(prev => prev + 1);
-          startBreathingCycle(0, currentSettings);
-        } else {
+        if (currentCycle >= currentSettings.cycles) {
           console.log(`🎉 Completed all ${currentSettings.cycles} cycles`);
           if (!isNavigating.current) {
             isNavigating.current = true;
-            navigation.push('SunBreathComplete');
+            navigation.push('SunBreathComplete', {
+              context: route.params?.context,
+              challengeId: route.params?.challengeId,
+              returnTo: route.params?.returnTo
+            });
           }
+        } else {
+          console.log(`✅ Starting cycle ${currentCycle + 1}`);
+          setCurrentCycle(prev => prev + 1);
+          startBreathingCycle(0, currentSettings);
         }
       }, delay + cycleTime);
       cycleTimersRef.current.push(nextCycleTimer);

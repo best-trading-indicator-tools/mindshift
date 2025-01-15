@@ -19,14 +19,14 @@ import Sound from 'react-native-sound';
 import Svg, { Path } from 'react-native-svg';
 import RNFS from 'react-native-fs';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
 
-const TOTAL_BEADS = 20;
+const TOTAL_BEADS = 2;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
 const HOLD_DURATION = 300; // Reduced from 500ms to 300ms for better responsiveness
@@ -372,23 +372,17 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     Vibration.vibrate(COMPLETION_VIBRATION);
     
     try {
-      if (route.params?.context === 'challenge') {
-        if (route.params.onComplete) {
-          route.params.onComplete();
-        }
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId || '',
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: null
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
+      if (route.params?.context === 'challenge' && route.params.challengeId) {
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: null
+          }
+        });
       } else {
         await markDailyExerciseAsCompleted('gratitude-beads');
         // Show completion modal

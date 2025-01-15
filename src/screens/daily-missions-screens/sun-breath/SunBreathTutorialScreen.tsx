@@ -6,8 +6,10 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
 import { audioService, AUDIO_FILES } from '../../../services/audioService';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTutorial'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathTutorial'>;
 
 export const tutorialSteps = [
   {
@@ -38,8 +40,7 @@ export const tutorialSteps = [
 ];
 
 
-const SunBreathTutorialScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+const SunBreathTutorialScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAudioLoading, setIsAudioLoading] = useState(true);
 
@@ -70,13 +71,21 @@ const SunBreathTutorialScreen: React.FC = () => {
       setCurrentStep(currentStep + 1);
     } else {
       if (!isAudioLoading) {
-        navigation.navigate('SunBreathExercise');
+        navigation.navigate('SunBreathExercise', {
+          context: route.params?.challengeId ? 'challenge' : 'daily',
+          challengeId: route.params?.challengeId,
+          returnTo: route.params?.returnTo
+        });
       }
     }
   };
 
   const handleExit = () => {
-    navigation.navigate('MainTabs');
+    navigation.navigate('SunBreathExercise', {
+      context: route.params?.challengeId ? 'challenge' : 'daily',
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
   };
 
   const currentTutorial = tutorialSteps[currentStep];

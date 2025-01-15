@@ -5,7 +5,7 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-naviga
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { markDailyExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathComplete'>;
 type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathComplete'>;
@@ -17,23 +17,17 @@ const SunBreathCompleteScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleComplete = async () => {
     try {
-      if (route.params?.context === 'challenge') {
-        if (route.params.onComplete) {
-          route.params.onComplete();
-        }
-        if (route.params.returnTo === 'ChallengeDetail') {
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: route.params.challengeId || '',
-              title: 'Ultimate',
-              duration: 21,
-              description: '',
-              image: null
-            }
-          });
-        } else {
-          navigation.goBack();
-        }
+      if (route.params?.context === 'challenge' && route.params.challengeId) {
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'sun-breath');
+        navigation.navigate('ChallengeDetail', {
+          challenge: {
+            id: route.params.challengeId,
+            title: 'Ultimate',
+            duration: 21,
+            description: '',
+            image: null
+          }
+        });
       } else {
         await markDailyExerciseAsCompleted('sun-breath');
         navigation.navigate('MainTabs');

@@ -14,7 +14,7 @@ const GoldenChecklistIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     } catch (error) {
       console.error('Error saving intro state:', error);
     }
-    navigation.push('GoldenChecklist', {
+    navigation.navigate('GoldenChecklist', {
       context: route.params?.challengeId ? 'challenge' : 'daily',
       challengeId: route.params?.challengeId,
       returnTo: route.params?.returnTo
@@ -22,7 +22,7 @@ const GoldenChecklistIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleExit = () => {
-    navigation.push('GoldenChecklist', {
+    navigation.navigate('GoldenChecklist', {
       context: route.params?.challengeId ? 'challenge' : 'daily',
       challengeId: route.params?.challengeId,
       returnTo: route.params?.returnTo
