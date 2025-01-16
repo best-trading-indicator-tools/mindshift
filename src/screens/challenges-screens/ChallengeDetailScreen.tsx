@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions, ImageBackground } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -7,6 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { isChallengeExerciseCompleted, markChallengeExerciseAsCompleted, isChallengeExerciseUnlocked } from '../../utils/exerciseCompletion';
 import { addNotification } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ interface Exercise {
   title: string;
   description: string;
   week: number;
+  image?: any;
 }
 
 const ExerciseCard: React.FC<Exercise & { 
@@ -37,10 +39,24 @@ const ExerciseCard: React.FC<Exercise & {
   challengeId,
   index,
   isUnlocked,
-  isCurrent
+  isCurrent,
+  image
 }) => {
   return (
     <View style={styles.exerciseCard}>
+      {image && (
+        <>
+          <Image
+            source={image}
+            style={styles.exerciseBackgroundImage}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['rgba(21, 25, 50, 0.3)', 'rgba(21, 25, 50, 0.6)']}
+            style={styles.gradientOverlay}
+          />
+        </>
+      )}
       <View style={styles.exerciseContent}>
         <View style={styles.exerciseHeader}>
           <Text style={styles.exerciseTitle}>{title}</Text>
@@ -106,19 +122,22 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       id: 'deep-breathing',
       title: 'Deep Breathing',
       description: 'Practice deep breathing exercises to reduce stress and increase mindfulness.',
-      week: 1
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
     },
     {
       id: 'daily-gratitude',
       title: 'Daily Gratitude',
       description: 'Express gratitude for three things in your life to cultivate positivity and appreciation.',
-      week: 1
+      week: 1,
+      image: require('../../assets/illustrations/challenges/daily-gratitude.png')
     },
     {
       id: 'active-incantations',
       title: 'Active Incantations',
       description: 'Practice powerful affirmations to reinforce positive beliefs and mindset.',
-      week: 1
+      week: 1,
+      image: require('../../assets/illustrations/challenges/active-incantations.png')
     },
     {
       id: 'passive-incantations',
@@ -308,6 +327,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         index={index}
         isUnlocked={isUnlocked}
         isCurrent={isCurrent}
+        image={exercise.image}
       />
     );
   };
@@ -594,49 +614,65 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
+    position: 'relative',
+    height: 240,
+  },
+  exerciseBackgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 1,
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
   exerciseContent: {
-    padding: 16,
+    padding: 20,
+    height: '100%',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    position: 'relative',
+    zIndex: 2,
   },
   exerciseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    width: '100%',
   },
   exerciseTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  completedText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    marginLeft: 4,
+    flexShrink: 1,
+    marginRight: 8,
   },
   exerciseDescription: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 16,
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 20,
+    width: '100%',
+    lineHeight: 22,
   },
   startButton: {
     backgroundColor: '#FCD34D',
-    padding: 12,
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    width: '100%',
   },
   startButtonText: {
     color: '#000000',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   previewText: {
     color: '#FFFFFF',
@@ -650,21 +686,36 @@ const styles = StyleSheet.create({
   lockedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#666666',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: 'rgba(102, 102, 102, 0.8)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   lockedText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '500',
     marginLeft: 4,
   },
   startButtonLocked: {
-    backgroundColor: '#666666',
+    backgroundColor: 'rgba(102, 102, 102, 0.8)',
   },
   startButtonTextLocked: {
-    color: '#999999',
+    color: '#FFFFFF',
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  completedText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '500',
+    marginLeft: 4,
   },
 });
 
