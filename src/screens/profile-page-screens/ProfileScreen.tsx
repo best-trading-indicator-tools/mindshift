@@ -255,19 +255,18 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               <View key={day} style={styles.dayColumn}>
                 <Text style={[
                   styles.dayText,
-                  isCompleted || isToday ? styles.dayTextActive : styles.dayTextInactive
+                  isToday ? styles.dayTextActive : isCompleted ? styles.dayTextActive : styles.dayTextInactive
                 ]}>
                   {day}
                 </Text>
                 <View style={[
                   styles.dayIndicator,
-                  isCompleted ? styles.dayCompleted : null,
-                  isToday && isCompleted ? styles.dayToday : null,
+                  !isToday && isCompleted ? styles.dayCompleted : null,
                 ]}>
-                  {isCompleted ? (
+                  {isToday ? (
+                    <MaterialCommunityIcons name="fire" size={32} color="#FFD700" />
+                  ) : isCompleted ? (
                     <MaterialCommunityIcons name="check" size={24} color="#000000" />
-                  ) : isToday && isCompleted ? (
-                    <MaterialCommunityIcons name="fire" size={24} color="#FFD700" />
                   ) : null}
                 </View>
               </View>
