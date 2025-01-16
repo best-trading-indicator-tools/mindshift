@@ -1,17 +1,66 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
 import { Text } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Switch } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NotificationsPush'>;
+const NOTIFICATION_SETTINGS_KEY = '@notification_settings';
 
 const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
   const [dailyInspiration, setDailyInspiration] = useState(false);
   const [challengeTracking, setChallengeTracking] = useState(false);
   const [contentExploration, setContentExploration] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [notificationTime, setNotificationTime] = useState(new Date(new Date().setHours(9, 0, 0, 0))); // Default to 9 AM
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const savedSettings = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        setChallengeTracking(parsed.enabled);
+        setNotificationTime(new Date(parsed.notificationTime));
+      }
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
+    }
+  };
+
+  const saveSettings = async (enabled: boolean, time: Date) => {
+    try {
+      const settings = {
+        enabled,
+        notificationTime: time.toISOString(),
+      };
+      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (selectedDate) {
+      setNotificationTime(selectedDate);
+      saveSettings(challengeTracking, selectedDate);
+    }
+  };
+
+  const handleChallengeTrackingChange = (value: boolean) => {
+    setChallengeTracking(value);
+    saveSettings(value, notificationTime);
+  };
 
   const notifications = [
     {
@@ -24,7 +73,8 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
       title: 'Challenge Tracking',
       description: 'Stay on track with reminders so you don\'t miss any new training sessions.',
       value: challengeTracking,
-      onValueChange: setChallengeTracking,
+      onValueChange: handleChallengeTrackingChange,
+      showTime: true,
     },
     {
       title: 'Content Exploration',
@@ -56,9 +106,62 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
             <Text style={styles.notificationDescription}>{item.description}</Text>
+            
+            {item.showTime && item.value && (
+              <TouchableOpacity 
+                style={styles.timeSelector}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Text style={styles.timeText}>
+                  Notification time: {notificationTime.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                  })}
+                </Text>
+                <MaterialCommunityIcons name="clock-outline" size={24} color="#FFD700" />
+              </TouchableOpacity>
+            )}
           </View>
         ))}
       </View>
+
+      {showTimePicker && Platform.OS === 'ios' && (
+        <View style={styles.timePickerContainer}>
+          <View style={styles.timePickerHeader}>
+            <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+              <Text style={styles.cancelButton}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => {
+                setShowTimePicker(false);
+                saveSettings(challengeTracking, notificationTime);
+              }}
+            >
+              <Text style={styles.doneButton}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <DateTimePicker
+            value={notificationTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
+            onChange={handleTimeChange}
+            textColor="#FFFFFF"
+            style={styles.timePicker}
+          />
+        </View>
+      )}
+
+      {showTimePicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={notificationTime}
+          mode="time"
+          is24Hour={false}
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -99,14 +202,57 @@ const styles = StyleSheet.create({
   },
   notificationTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: 'bold',
+    color: '#fff',
   },
   notificationDescription: {
     fontSize: 14,
-    color: '#FFFFFF',
-    lineHeight: 20,
+    color: '#888',
+    marginTop: 4,
+  },
+  timeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  timeText: {
+    color: '#FFD700',
+    fontSize: 14,
+  },
+  timePickerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1A1A1A',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  timePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A2A',
+  },
+  cancelButton: {
+    color: '#888',
+    fontSize: 16,
+  },
+  doneButton: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  timePicker: {
+    height: 200,
+    backgroundColor: '#1A1A1A',
   },
 });
 
-export default NotificationsPushScreen; 
+export default NotificationsPushScreen;
