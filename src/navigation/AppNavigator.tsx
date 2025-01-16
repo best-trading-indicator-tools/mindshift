@@ -46,6 +46,7 @@ import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/act
 import ChallengeDetailScreen from '../screens/challenges-screens/ChallengeDetailScreen';
 import DeepBreathingCompleteScreen from '../screens/daily-missions-screens/deep-breathe/DeepBreathingCompleteScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import NotificationsPushScreen from '../screens/settings/NotificationsPushScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -321,6 +322,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="NotificationsPush" component={NotificationsPushScreen} />
         <Stack.Screen 
           name="DeepBreathing" 
           component={DeepBreathingScreen}
