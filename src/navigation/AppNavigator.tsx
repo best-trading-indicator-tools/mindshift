@@ -183,7 +183,11 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
   } | undefined;
   SunBreathSettings: undefined;
-  ManageActiveIncantations: undefined;
+  ManageActiveIncantations: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
+  } | undefined;
   ActiveIncantationsExercise: {
     incantations: string[];
     context?: 'daily' | 'challenge';

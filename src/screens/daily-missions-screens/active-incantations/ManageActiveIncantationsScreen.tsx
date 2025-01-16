@@ -326,8 +326,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
             data={incantations}
             onDragEnd={({ data, from, to }) => {
               if (from !== to) {
-                setIncantations(data);
-                saveNewOrder(data);
+                setTimeout(() => {
+                  setIncantations(data);
+                  saveNewOrder(data);
+                }, 100);
               }
             }}
             keyExtractor={item => item.id}
@@ -336,12 +338,12 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
             dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
             containerStyle={{ flex: 1 }}
             animationConfig={{
-              damping: 20,
-              mass: 0.2,
-              stiffness: 100,
-              overshootClamping: false,
-              restSpeedThreshold: 0.2,
-              restDisplacementThreshold: 0.2,
+              damping: 50,
+              mass: 0.3,
+              stiffness: 200,
+              overshootClamping: true,
+              restSpeedThreshold: 0.3,
+              restDisplacementThreshold: 0.3,
             }}
             simultaneousHandlers={scrollRef}
           />
