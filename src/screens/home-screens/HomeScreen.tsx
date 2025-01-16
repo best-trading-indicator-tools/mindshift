@@ -8,12 +8,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
 import { MeditationIllustration, WalkingIllustration, GratitudeIllustration } from '../../components/Illustrations';
 import ProgressBar from '../../components/ProgressBar';
-import { NotificationBell } from '../../components/NotificationBell';
 import CircularProgress from '../../components/CircularProgress';
 import auth from '@react-native-firebase/auth';
 import MissionItem from '../../components/MissionItem';
 import { isExerciseCompletedToday, getStreak, resetAllDailyExercises, checkDailyProgress, clearAllAppData, EXERCISE_COMPLETION_KEY } from '../../services/exerciseService';
-import { clearNotifications } from '../../services/notificationService';
+import { clearNotifications, getNotifications } from '../../services/notificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResourcePreloadService } from '../../services/resourcePreloadService';
 import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
@@ -168,7 +167,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const windowWidth = Dimensions.get('window').width;
   const cardWidth = windowWidth * 0.7;
   const cardSpacing = 12;
-  const [hasNotifications, setHasNotifications] = useState(true);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const [dailyMissions, setDailyMissions] = useState<typeof DAILY_MISSIONS>([]);
   const isCheckingRef = useRef(false);
@@ -618,6 +617,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     preloadResourcesIfNeeded();
   }, [dailyMissions]);
 
+  const checkNotifications = useCallback(async () => {
+    const notifications = await getNotifications();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    setHasUnreadNotifications(notifications.some(notification => 
+      !notification.isRead && new Date(notification.timestamp) >= today
+    ));
+  }, []);
+
+  useEffect(() => {
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 1000);
+    return () => clearInterval(interval);
+  }, [checkNotifications]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -633,9 +648,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               {renderIcon('fire', 24, '#FFD700')}
               <Text style={styles.streakText}>{streak}</Text>
             </View>
-            <View style={styles.bellContainer}>
-              <NotificationBell />
-            </View>
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <MaterialCommunityIcons 
+                name="bell-outline" 
+                size={24} 
+                color="#FFFFFF" 
+              />
+              {hasUnreadNotifications && <View style={styles.notificationBadge} />}
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -827,6 +850,16 @@ const styles = StyleSheet.create({
   },
   notificationButton: {
     padding: 8,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF0000',
   },
   statsContainer: {
     flexDirection: 'row',

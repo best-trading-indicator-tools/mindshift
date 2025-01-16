@@ -15,6 +15,7 @@ import { Notification, getNotifications, markNotificationAsRead } from '../../se
 const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasUnread, setHasUnread] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -28,6 +29,7 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       
       setNotifications(filteredNotifs);
+      setHasUnread(filteredNotifs.some(n => !n.isRead));
     } catch (error) {
       console.error('Error loading notifications:', error);
       Alert.alert(
@@ -42,6 +44,8 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   useEffect(() => {
     loadNotifications();
+    const interval = setInterval(loadNotifications, 1000);
+    return () => clearInterval(interval);
   }, [loadNotifications]);
 
   const handleNotificationPress = useCallback(async (notification: Notification) => {

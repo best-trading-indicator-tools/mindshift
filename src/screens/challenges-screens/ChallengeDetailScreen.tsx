@@ -169,10 +169,10 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     },
     {
       id: 'sun-breath',
-      title: 'Sun Breath',
+      title: 'Sun Breathe',
       description: 'Energize your body and mind with this powerful breathing technique.',
       week: 2,
-      image: require('../../assets/illustrations/challenges/sun-breath.png')
+      image: require('../../assets/illustrations/challenges/sun-breathe.png')
     },
     {
       id: 'vision-board',
