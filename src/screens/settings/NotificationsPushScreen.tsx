@@ -16,7 +16,8 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
   const [challengeTracking, setChallengeTracking] = useState(false);
   const [contentExploration, setContentExploration] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [notificationTime, setNotificationTime] = useState(new Date(new Date().setHours(9, 0, 0, 0))); // Default to 9 AM
+  const [notificationTime, setNotificationTime] = useState(new Date(new Date().setHours(9, 0, 0, 0)));
+  const [tempTime, setTempTime] = useState(new Date(new Date().setHours(9, 0, 0, 0)));
 
   useEffect(() => {
     loadSettings();
@@ -28,7 +29,9 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         setChallengeTracking(parsed.enabled);
-        setNotificationTime(new Date(parsed.notificationTime));
+        const savedTime = new Date(parsed.notificationTime);
+        setNotificationTime(savedTime);
+        setTempTime(savedTime);
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -50,11 +53,25 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
   const handleTimeChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowTimePicker(false);
+      if (selectedDate) {
+        setNotificationTime(selectedDate);
+        setTempTime(selectedDate);
+        saveSettings(challengeTracking, selectedDate);
+      }
+    } else if (selectedDate) {
+      setTempTime(selectedDate);
     }
-    if (selectedDate) {
-      setNotificationTime(selectedDate);
-      saveSettings(challengeTracking, selectedDate);
-    }
+  };
+
+  const handleDone = () => {
+    setShowTimePicker(false);
+    setNotificationTime(tempTime);
+    saveSettings(challengeTracking, tempTime);
+  };
+
+  const handleCancel = () => {
+    setShowTimePicker(false);
+    setTempTime(notificationTime);
   };
 
   const handleChallengeTrackingChange = (value: boolean) => {
@@ -129,25 +146,20 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
       {showTimePicker && Platform.OS === 'ios' && (
         <View style={styles.timePickerContainer}>
           <View style={styles.timePickerHeader}>
-            <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+            <TouchableOpacity onPress={handleCancel}>
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => {
-                setShowTimePicker(false);
-                saveSettings(challengeTracking, notificationTime);
-              }}
-            >
+            <TouchableOpacity onPress={handleDone}>
               <Text style={styles.doneButton}>Done</Text>
             </TouchableOpacity>
           </View>
           <DateTimePicker
-            value={notificationTime}
+            value={tempTime}
             mode="time"
             is24Hour={false}
             display="spinner"
             onChange={handleTimeChange}
-            textColor="#FFFFFF"
+            textColor="black"
             style={styles.timePicker}
           />
         </View>
@@ -155,7 +167,7 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
 
       {showTimePicker && Platform.OS === 'android' && (
         <DateTimePicker
-          value={notificationTime}
+          value={tempTime}
           mode="time"
           is24Hour={false}
           display="default"
@@ -228,7 +240,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#DADADA',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
@@ -238,20 +250,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2A2A2A',
+    borderBottomColor: '#CCCCCC',
   },
   cancelButton: {
-    color: '#888',
+    color: '#888888',
     fontSize: 16,
   },
   doneButton: {
-    color: '#FFD700',
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'bold',
   },
   timePicker: {
     height: 200,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#DADADA',
   },
 });
 
