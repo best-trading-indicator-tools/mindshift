@@ -1,4 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import PushNotification from 'react-native-push-notification';
+import { getChallengeProgress } from '../utils/exerciseCompletion';
 
 export interface Notification {
   id: string;
@@ -10,6 +14,176 @@ export interface Notification {
 }
 
 const NOTIFICATIONS_STORAGE_KEY = '@notifications';
+const NOTIFICATION_SETTINGS_KEY = '@notification_settings';
+const CHALLENGE_COMPLETION_KEY_PREFIX = '@challenge_exercise_completion:';
+const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
+
+// Initialize push notifications
+export const initPushNotifications = () => {
+  PushNotification.configure({
+    onNotification: function (notification: any) {
+      console.log('NOTIFICATION:', notification);
+      // Required on iOS only
+      notification.finish(PushNotificationIOS.FetchResult.NoData);
+    },
+    // IOS ONLY
+    permissions: {
+      alert: true,
+      badge: true,
+      sound: true,
+    },
+    popInitialNotification: true,
+    requestPermissions: Platform.OS === 'ios',
+  });
+
+  if (Platform.OS === 'android') {
+    // Create the notification channel for Android
+    PushNotification.createChannel(
+      {
+        channelId: 'challenge-reminders',
+        channelName: 'Challenge Reminders',
+        channelDescription: 'Reminders for challenge exercises',
+        playSound: true,
+        soundName: 'default',
+        importance: 4,
+        vibrate: true,
+      },
+      (created: boolean) => console.log(`Channel 'challenge-reminders' created: ${created}`)
+    );
+  }
+};
+
+const scheduleNotification = async (
+  type: 'challenge' | 'daily',
+  time: Date,
+  title: string,
+  message: string
+) => {
+  try {
+    // Create a new date for tomorrow at the specified time
+    const scheduledTime = new Date();
+    scheduledTime.setDate(scheduledTime.getDate() + 1); // tomorrow
+    scheduledTime.setHours(time.getHours());
+    scheduledTime.setMinutes(time.getMinutes());
+    scheduledTime.setSeconds(0);
+    scheduledTime.setMilliseconds(0);
+
+    // Cancel existing notifications of this type
+    if (Platform.OS === 'ios') {
+      PushNotificationIOS.getPendingNotificationRequests((requests) => {
+        const existingIds = requests
+          .filter((req: { id: string }) => req.id.startsWith(type))
+          .map((req: { id: string }) => req.id);
+        existingIds.forEach((id: string) => {
+          PushNotificationIOS.removePendingNotificationRequests([id]);
+        });
+      });
+    } else {
+      PushNotification.cancelAllLocalNotifications();
+    }
+
+    // Schedule new notification
+    if (Platform.OS === 'ios') {
+      PushNotificationIOS.addNotificationRequest({
+        id: `${type}-reminder-${Date.now()}`,
+        title,
+        body: message,
+        fireDate: scheduledTime,
+      });
+    } else {
+      PushNotification.localNotificationSchedule({
+        channelId: 'challenge-reminders',
+        title,
+        message,
+        date: scheduledTime,
+        allowWhileIdle: true,
+      });
+    }
+  } catch (error) {
+    console.error(`Error scheduling ${type} notification:`, error);
+    throw error;
+  }
+};
+
+export const checkAndScheduleDailyMissionNotification = async () => {
+  try {
+    const settingsJson = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+    if (!settingsJson) return;
+    
+    const settings = JSON.parse(settingsJson);
+    if (!settings.dailyEnabled || !settings.dailyTime) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const allKeys = await AsyncStorage.getAllKeys();
+    const dailyKeys = allKeys.filter(key => key.startsWith(DAILY_COMPLETION_KEY_PREFIX));
+    
+    const completions = await Promise.all(
+      dailyKeys.map(async key => {
+        const value = await AsyncStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+      })
+    );
+
+    const didExerciseToday = completions.some(
+      completion => completion && completion.completedAt.startsWith(today)
+    );
+    if (didExerciseToday) return;
+
+    const storedMissions = await AsyncStorage.getItem('selectedDailyMissions');
+    if (!storedMissions) return;
+    
+    const missions = JSON.parse(storedMissions);
+    if (!missions.length) return;
+
+    await scheduleNotification(
+      'daily',
+      new Date(settings.dailyTime),
+      "Time for Your Daily Missions! 🎯",
+      `You haven't completed any daily missions today. Take a moment to maintain your mindfulness practice!`
+    );
+
+  } catch (error) {
+    console.error('Error scheduling daily mission notification:', error);
+    throw error;
+  }
+};
+
+export const checkAndScheduleChallengeNotification = async () => {
+  try {
+    const settingsJson = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+    if (!settingsJson) return;
+    
+    const settings = JSON.parse(settingsJson);
+    if (!settings.challengeEnabled || !settings.challengeTime) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const allKeys = await AsyncStorage.getAllKeys();
+    const challengeKeys = allKeys.filter(key => key.startsWith(CHALLENGE_COMPLETION_KEY_PREFIX));
+    
+    const completions = await Promise.all(
+      challengeKeys.map(async key => {
+        const value = await AsyncStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+      })
+    );
+
+    const didExerciseToday = completions.some(
+      completion => completion && completion.completedAt.startsWith(today)
+    );
+    if (didExerciseToday) return;
+
+    await scheduleNotification(
+      'challenge',
+      new Date(settings.challengeTime),
+      "Time for Your Challenge! 💪",
+      `You haven't completed any challenge exercises today. Keep up your progress!`
+    );
+
+  } catch (error) {
+    console.error('Error scheduling challenge notification:', error);
+    throw error;
+  }
+};
 
 export const addNotification = async (notification: Omit<Notification, 'timestamp' | 'isRead'>) => {
   try {

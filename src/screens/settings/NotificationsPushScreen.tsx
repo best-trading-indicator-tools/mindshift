@@ -1,105 +1,196 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
-import { Text } from '@rneui/themed';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Switch } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch, SafeAreaView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initPushNotifications, checkAndScheduleChallengeNotification, checkAndScheduleDailyMissionNotification } from '../../services/notificationService';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'NotificationsPush'>;
 const NOTIFICATION_SETTINGS_KEY = '@notification_settings';
 
+interface NotificationSettings {
+  challengeEnabled: boolean;
+  challengeTime: string;
+  dailyEnabled: boolean;
+  dailyTime: string;
+}
+
+interface Props {
+  navigation: NativeStackScreenProps<RootStackParamList, 'NotificationsPush'>['navigation'];
+}
+
 const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
-  const [dailyInspiration, setDailyInspiration] = useState(false);
-  const [challengeTracking, setChallengeTracking] = useState(false);
-  const [contentExploration, setContentExploration] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [notificationTime, setNotificationTime] = useState(new Date(new Date().setHours(9, 0, 0, 0)));
-  const [tempTime, setTempTime] = useState(new Date(new Date().setHours(9, 0, 0, 0)));
+  // Initialize with 9:00 AM as default time
+  const defaultTime = new Date();
+  defaultTime.setHours(9, 0, 0, 0);
+
+  const [isChallengeEnabled, setIsChallengeEnabled] = useState(false);
+  const [isDailyEnabled, setIsDailyEnabled] = useState(false);
+  const [showChallengePicker, setShowChallengePicker] = useState(false);
+  const [showDailyPicker, setShowDailyPicker] = useState(false);
+  const [challengeTime, setChallengeTime] = useState(defaultTime);
+  const [dailyTime, setDailyTime] = useState(defaultTime);
+  const [tempChallengeTime, setTempChallengeTime] = useState(defaultTime);
+  const [tempDailyTime, setTempDailyTime] = useState(defaultTime);
 
   useEffect(() => {
     loadSettings();
+    initPushNotifications();
   }, []);
 
   const loadSettings = async () => {
     try {
-      const savedSettings = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        setChallengeTracking(parsed.enabled);
-        const savedTime = new Date(parsed.notificationTime);
-        setNotificationTime(savedTime);
-        setTempTime(savedTime);
+      const settings = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+      if (settings) {
+        const { challengeEnabled, challengeTime, dailyEnabled, dailyTime } = JSON.parse(settings);
+        setIsChallengeEnabled(challengeEnabled);
+        setChallengeTime(challengeTime ? new Date(challengeTime) : defaultTime);
+        setTempChallengeTime(challengeTime ? new Date(challengeTime) : defaultTime);
+        setIsDailyEnabled(dailyEnabled);
+        setDailyTime(dailyTime ? new Date(dailyTime) : defaultTime);
+        setTempDailyTime(dailyTime ? new Date(dailyTime) : defaultTime);
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
+      // If there's an error, reset to default time
+      setChallengeTime(defaultTime);
+      setDailyTime(defaultTime);
+      setTempChallengeTime(defaultTime);
+      setTempDailyTime(defaultTime);
     }
   };
 
-  const saveSettings = async (enabled: boolean, time: Date) => {
+  const saveSettings = async (settings: Partial<NotificationSettings>) => {
     try {
-      const settings = {
-        enabled,
-        notificationTime: time.toISOString(),
+      const currentSettings = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+      const parsedSettings = currentSettings ? JSON.parse(currentSettings) : {
+        challengeEnabled: false,
+        challengeTime: defaultTime.toISOString(),
+        dailyEnabled: false,
+        dailyTime: defaultTime.toISOString(),
       };
-      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
+      
+      const newSettings = { ...parsedSettings, ...settings };
+      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(newSettings));
+      
+      // Schedule or cancel notifications based on new settings
+      if (newSettings.challengeEnabled) {
+        await checkAndScheduleChallengeNotification();
+      }
+      if (newSettings.dailyEnabled) {
+        await checkAndScheduleDailyMissionNotification();
+      }
     } catch (error) {
       console.error('Error saving notification settings:', error);
     }
   };
 
-  const handleTimeChange = (event: any, selectedDate?: Date) => {
+  const onChallengeToggle = async () => {
+    const newValue = !isChallengeEnabled;
+    setIsChallengeEnabled(newValue);
+    await saveSettings({ 
+      challengeEnabled: newValue,
+      challengeTime: challengeTime.toISOString()
+    });
+  };
+
+  const onDailyToggle = async () => {
+    const newValue = !isDailyEnabled;
+    setIsDailyEnabled(newValue);
+    await saveSettings({ 
+      dailyEnabled: newValue,
+      dailyTime: dailyTime.toISOString()
+    });
+  };
+
+  const handleChallengeTimeChange = (event: any, selectedTime: Date | undefined) => {
     if (Platform.OS === 'android') {
-      setShowTimePicker(false);
-      if (selectedDate) {
-        setNotificationTime(selectedDate);
-        setTempTime(selectedDate);
-        saveSettings(challengeTracking, selectedDate);
-      }
-    } else if (selectedDate) {
-      setTempTime(selectedDate);
+      setShowChallengePicker(false);
+    }
+    if (selectedTime) {
+      setTempChallengeTime(selectedTime);
     }
   };
 
-  const handleDone = () => {
-    setShowTimePicker(false);
-    setNotificationTime(tempTime);
-    saveSettings(challengeTracking, tempTime);
+  const handleDailyTimeChange = (event: any, selectedTime: Date | undefined) => {
+    if (Platform.OS === 'android') {
+      setShowDailyPicker(false);
+    }
+    if (selectedTime) {
+      setTempDailyTime(selectedTime);
+    }
   };
 
-  const handleCancel = () => {
-    setShowTimePicker(false);
-    setTempTime(notificationTime);
+  const handleChallengeDone = async () => {
+    setShowChallengePicker(false);
+    setChallengeTime(tempChallengeTime);
+    await saveSettings({ challengeTime: tempChallengeTime.toISOString() });
   };
 
-  const handleChallengeTrackingChange = (value: boolean) => {
-    setChallengeTracking(value);
-    saveSettings(value, notificationTime);
+  const handleDailyDone = async () => {
+    setShowDailyPicker(false);
+    setDailyTime(tempDailyTime);
+    await saveSettings({ dailyTime: tempDailyTime.toISOString() });
   };
 
-  const notifications = [
-    {
-      title: 'Daily Inspiration',
-      description: 'A daily reminder encouraging you to return and take care of your voice.',
-      value: dailyInspiration,
-      onValueChange: setDailyInspiration,
-    },
-    {
-      title: 'Challenge Tracking',
-      description: 'Stay on track with reminders so you don\'t miss any new training sessions.',
-      value: challengeTracking,
-      onValueChange: handleChallengeTrackingChange,
-      showTime: true,
-    },
-    {
-      title: 'Content Exploration',
-      description: 'Be the first to discover the latest updates, including new challenges, training sessions, tests, podcasts, videos, discussions, and conferences in the app.',
-      value: contentExploration,
-      onValueChange: setContentExploration,
-    },
-  ];
+  const handleChallengeCancel = () => {
+    setShowChallengePicker(false);
+    setTempChallengeTime(challengeTime);
+  };
+
+  const handleDailyCancel = () => {
+    setShowDailyPicker(false);
+    setTempDailyTime(dailyTime);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const NotificationItem = ({ 
+    title, 
+    description, 
+    enabled, 
+    onToggle, 
+    time, 
+    onTimePress 
+  }: { 
+    title: string;
+    description: string;
+    enabled: boolean;
+    onToggle: () => void;
+    time: Date;
+    onTimePress: () => void;
+  }) => (
+    <View style={styles.notificationItem}>
+      <View style={styles.notificationHeader}>
+        <Text style={styles.notificationTitle}>{title}</Text>
+        <Switch
+          value={enabled}
+          onValueChange={onToggle}
+          trackColor={{ false: '#2A2A2A', true: '#FFD700' }}
+          thumbColor={enabled ? '#FFFFFF' : '#FFFFFF'}
+        />
+      </View>
+      <Text style={styles.notificationDescription}>{description}</Text>
+      {enabled && (
+        <TouchableOpacity 
+          style={styles.timeSelector}
+          onPress={onTimePress}
+        >
+          <Text style={styles.timeText}>
+            Notification time: {formatTime(time)}
+          </Text>
+          <MaterialCommunityIcons name="clock-outline" size={24} color="#FFD700" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,67 +202,80 @@ const NotificationsPushScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <View style={styles.content}>
-        {notifications.map((item, index) => (
-          <View key={index} style={styles.notificationItem}>
-            <View style={styles.notificationHeader}>
-              <Text style={styles.notificationTitle}>{item.title}</Text>
-              <Switch
-                value={item.value}
-                onValueChange={item.onValueChange}
-                trackColor={{ false: '#2A2A2A', true: '#FFD700' }}
-                thumbColor={item.value ? '#FFFFFF' : '#FFFFFF'}
-              />
-            </View>
-            <Text style={styles.notificationDescription}>{item.description}</Text>
-            
-            {item.showTime && item.value && (
-              <TouchableOpacity 
-                style={styles.timeSelector}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={styles.timeText}>
-                  Notification time: {notificationTime.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: true 
-                  })}
-                </Text>
-                <MaterialCommunityIcons name="clock-outline" size={24} color="#FFD700" />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+        <NotificationItem
+          title="Challenge Tracking"
+          description="Stay on track with reminders so you don't miss any new training sessions."
+          enabled={isChallengeEnabled}
+          onToggle={onChallengeToggle}
+          time={challengeTime}
+          onTimePress={() => setShowChallengePicker(true)}
+        />
+
+        <NotificationItem
+          title="Daily Missions"
+          description="Get reminded to complete your daily missions and maintain your streak."
+          enabled={isDailyEnabled}
+          onToggle={onDailyToggle}
+          time={dailyTime}
+          onTimePress={() => setShowDailyPicker(true)}
+        />
       </View>
 
-      {showTimePicker && Platform.OS === 'ios' && (
+      {showChallengePicker && Platform.OS === 'ios' && (
         <View style={styles.timePickerContainer}>
           <View style={styles.timePickerHeader}>
-            <TouchableOpacity onPress={handleCancel}>
+            <TouchableOpacity onPress={handleChallengeCancel}>
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDone}>
+            <TouchableOpacity onPress={handleChallengeDone}>
               <Text style={styles.doneButton}>Done</Text>
             </TouchableOpacity>
           </View>
           <DateTimePicker
-            value={tempTime}
+            value={tempChallengeTime}
             mode="time"
-            is24Hour={false}
             display="spinner"
-            onChange={handleTimeChange}
-            textColor="black"
-            style={styles.timePicker}
+            onChange={handleChallengeTimeChange}
+            textColor="#000000"
+            style={{ backgroundColor: '#DADADA' }}
           />
         </View>
       )}
 
-      {showTimePicker && Platform.OS === 'android' && (
+      {showDailyPicker && Platform.OS === 'ios' && (
+        <View style={styles.timePickerContainer}>
+          <View style={styles.timePickerHeader}>
+            <TouchableOpacity onPress={handleDailyCancel}>
+              <Text style={styles.cancelButton}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDailyDone}>
+              <Text style={styles.doneButton}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <DateTimePicker
+            value={tempDailyTime}
+            mode="time"
+            display="spinner"
+            onChange={handleDailyTimeChange}
+            textColor="#000000"
+            style={{ backgroundColor: '#DADADA' }}
+          />
+        </View>
+      )}
+
+      {showChallengePicker && Platform.OS === 'android' && (
         <DateTimePicker
-          value={tempTime}
+          value={tempChallengeTime}
           mode="time"
-          is24Hour={false}
-          display="default"
-          onChange={handleTimeChange}
+          onChange={handleChallengeTimeChange}
+        />
+      )}
+
+      {showDailyPicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={tempDailyTime}
+          mode="time"
+          onChange={handleDailyTimeChange}
         />
       )}
     </SafeAreaView>
@@ -186,15 +290,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#2A2A2A',
+    position: 'relative',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginLeft: 16,
+    textAlign: 'center',
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -253,17 +360,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#CCCCCC',
   },
   cancelButton: {
-    color: '#888888',
+    color: '#007AFF',
     fontSize: 16,
   },
   doneButton: {
-    color: '#000000',
+    color: '#007AFF',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  timePicker: {
-    height: 200,
-    backgroundColor: '#DADADA',
   },
 });
 
