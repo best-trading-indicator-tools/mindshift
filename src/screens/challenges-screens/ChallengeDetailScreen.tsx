@@ -53,11 +53,14 @@ const ExerciseCard: React.FC<Exercise & {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['rgba(21, 25, 50, 0.3)', 'rgba(21, 25, 50, 0.9)']}
+              colors={['rgba(21, 25, 50, 0)', 'rgba(21, 25, 50, 0.9)']}
               style={styles.gradientOverlay}
             />
           </>
         )}
+      </View>
+      
+      <View style={styles.cardBottomSection}>
         <View style={styles.titleContainer}>
           <Text style={styles.exerciseTitle}>{title}</Text>
           {isCompleted && (
@@ -73,25 +76,25 @@ const ExerciseCard: React.FC<Exercise & {
             </View>
           )}
         </View>
-      </View>
-      
-      <View style={styles.cardBottomSection}>
-        <Text style={styles.exerciseDescription}>{description}</Text>
-        <TouchableOpacity 
-          style={[
-            styles.startButton,
-            !isUnlocked && styles.startButtonLocked
-          ]}
-          onPress={onComplete}
-          disabled={!isUnlocked}
-        >
-          <Text style={[
-            styles.startButtonText,
-            !isUnlocked && styles.startButtonTextLocked
-          ]}>
-            {isCompleted ? 'Restart Training' : isUnlocked ? 'Start Training' : 'Complete Previous Exercise'}
-          </Text>
-        </TouchableOpacity>
+
+        <View style={styles.exerciseContent}>
+          <Text style={styles.exerciseDescription}>{description}</Text>
+          <TouchableOpacity 
+            style={[
+              styles.startButton,
+              !isUnlocked && styles.startButtonLocked
+            ]}
+            onPress={onComplete}
+            disabled={!isUnlocked}
+          >
+            <Text style={[
+              styles.startButtonText,
+              !isUnlocked && styles.startButtonTextLocked
+            ]}>
+              {isCompleted ? 'Restart Training' : isUnlocked ? 'Start Training' : 'Complete Previous Exercise'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -618,16 +621,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
     position: 'relative',
-    height: 240,
+    height: 300,
   },
   cardTopSection: {
-    height: '45%',
-    position: 'relative',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
   cardBottomSection: {
-    height: '55%',
     padding: 20,
     justifyContent: 'space-between',
+    height: '100%',
+    position: 'relative',
+    zIndex: 2,
+  },
+  cardBottomSectionNoImage: {
+    height: '100%',
   },
   exerciseBackgroundImage: {
     position: 'absolute',
@@ -643,14 +655,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    zIndex: 1,
   },
   titleContainer: {
-    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'relative',
-    zIndex: 2,
+    marginBottom: 'auto',
+    backgroundColor: 'rgba(21, 25, 50, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   exerciseTitle: {
     fontSize: 24,
@@ -658,9 +673,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     flexShrink: 1,
     marginRight: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   exerciseDescription: {
     fontSize: 15,
@@ -668,6 +683,8 @@ const styles = StyleSheet.create({
     width: '100%',
     lineHeight: 22,
     fontWeight: '500',
+    marginTop: 'auto',
+    marginBottom: 32,
   },
   startButton: {
     backgroundColor: '#FCD34D',
@@ -723,6 +740,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     marginLeft: 4,
+  },
+  exerciseContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingTop: 20,
   },
 });
 
