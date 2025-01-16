@@ -221,13 +221,20 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.screenTitle}>Profile</Text>
-          <View style={styles.helpContainer}>
+          <View style={styles.headerIcons}>
             <TouchableOpacity 
-              style={styles.helpButton}
-              onPress={() => (navigation as any).navigate('Support')}
+              style={styles.iconButton}
+              onPress={() => navigation.navigate('Support')}
             >
               <MaterialCommunityIcons name="help-circle-outline" size={24} color="#fff" />
-              <Text style={styles.helpText}>Help</Text>
+              <Text style={styles.iconText}>Help</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.iconButton}
+              onPress={() => navigation.navigate('Support')}
+            >
+              <MaterialCommunityIcons name="cog" size={24} color="#fff" />
+              <Text style={styles.iconText}>Settings</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -375,17 +382,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  helpContainer: {
+  headerIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  helpButton: {
+  iconButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
     gap: 4,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
   },
-  helpText: {
+  iconText: {
     color: '#fff',
     fontSize: 16,
   },
