@@ -148,8 +148,9 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     {
       id: 'passive-incantations',
       title: 'Passive Incantations',
-      description: 'Listen to guided affirmations with background music to reprogram your subconscious mind.',
-      week: 1
+      description: 'Listen to guided affirmations to reprogram your subconscious mind.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/passive-incantations.png')
     },
     {
       id: 'golden-checklist',
