@@ -102,12 +102,14 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    marginTop: 16,
   },
   listItem: {
     backgroundColor: '#1A1A1A',
     paddingVertical: 16,
     borderBottomColor: '#2A2A2A',
     marginBottom: 20,
+    marginHorizontal: 16,
   },
   itemTitle: {
     color: '#fff',

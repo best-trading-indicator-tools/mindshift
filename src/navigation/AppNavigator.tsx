@@ -47,6 +47,7 @@ import ChallengeDetailScreen from '../screens/challenges-screens/ChallengeDetail
 import DeepBreathingCompleteScreen from '../screens/daily-missions-screens/deep-breathe/DeepBreathingCompleteScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import NotificationsPushScreen from '../screens/settings/NotificationsPushScreen';
+import LanguageScreen from '../screens/settings/LanguageScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -447,6 +448,16 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
         <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
+
+        <Stack.Screen 
+          name="Language" 
+          component={LanguageScreen}
+          options={{
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right',
+          }}
+        />
 
         <Stack.Screen 
           name="ManageActiveIncantations" 
