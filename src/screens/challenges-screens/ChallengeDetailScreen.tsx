@@ -44,21 +44,21 @@ const ExerciseCard: React.FC<Exercise & {
 }) => {
   return (
     <View style={styles.exerciseCard}>
-      {image && (
-        <>
-          <Image
-            source={image}
-            style={styles.exerciseBackgroundImage}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={['rgba(21, 25, 50, 0.3)', 'rgba(21, 25, 50, 0.6)']}
-            style={styles.gradientOverlay}
-          />
-        </>
-      )}
-      <View style={styles.exerciseContent}>
-        <View style={styles.exerciseHeader}>
+      <View style={styles.cardTopSection}>
+        {image && (
+          <>
+            <Image
+              source={image}
+              style={styles.exerciseBackgroundImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={['rgba(21, 25, 50, 0.3)', 'rgba(21, 25, 50, 0.9)']}
+              style={styles.gradientOverlay}
+            />
+          </>
+        )}
+        <View style={styles.titleContainer}>
           <Text style={styles.exerciseTitle}>{title}</Text>
           {isCompleted && (
             <View style={styles.completedBadge}>
@@ -73,6 +73,9 @@ const ExerciseCard: React.FC<Exercise & {
             </View>
           )}
         </View>
+      </View>
+      
+      <View style={styles.cardBottomSection}>
         <Text style={styles.exerciseDescription}>{description}</Text>
         <TouchableOpacity 
           style={[
@@ -617,6 +620,15 @@ const styles = StyleSheet.create({
     position: 'relative',
     height: 240,
   },
+  cardTopSection: {
+    height: '45%',
+    position: 'relative',
+  },
+  cardBottomSection: {
+    height: '55%',
+    padding: 20,
+    justifyContent: 'space-between',
+  },
   exerciseBackgroundImage: {
     position: 'absolute',
     top: 0,
@@ -631,22 +643,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1,
   },
-  exerciseContent: {
+  titleContainer: {
     padding: 20,
-    height: '100%',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    position: 'relative',
-    zIndex: 2,
-  },
-  exerciseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    width: '100%',
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 2,
   },
   exerciseTitle: {
     fontSize: 24,
@@ -654,13 +658,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     flexShrink: 1,
     marginRight: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   exerciseDescription: {
     fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 20,
+    color: '#FFFFFF',
     width: '100%',
     lineHeight: 22,
+    fontWeight: '500',
   },
   startButton: {
     backgroundColor: '#FCD34D',
