@@ -156,32 +156,37 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       id: 'golden-checklist',
       title: 'Golden Checklist',
       description: 'Create and complete your daily checklist of important tasks and habits.',
-      week: 1
+      week: 1,
+      image: require('../../assets/illustrations/challenges/golden-checklist.png')
     },
     // Week 2 Exercises
     {
       id: 'gratitude-beads',
       title: 'Gratitude Beads',
       description: 'Use meditation beads to practice mindful gratitude and positive thinking.',
-      week: 2
+      week: 2,
+      image: require('../../assets/illustrations/challenges/gratitude-beads.png')
     },
     {
       id: 'sun-breath',
       title: 'Sun Breath',
       description: 'Energize your body and mind with this powerful breathing technique.',
-      week: 2
+      week: 2,
+      image: require('../../assets/illustrations/challenges/sun-breath.png')
     },
     {
       id: 'vision-board',
       title: 'Vision Board',
       description: 'Create and visualize your goals and dreams through a digital vision board.',
-      week: 2
+      week: 2,
+      image: require('../../assets/illustrations/challenges/vision-board.png')
     },
     {
       id: 'mentor-board',
       title: 'Mentor Board',
       description: 'Create your personal board of mentors to guide and inspire your journey.',
-      week: 2
+      week: 2,
+      image: require('../../assets/illustrations/challenges/mentor-board.png')
     }
   ];
 
