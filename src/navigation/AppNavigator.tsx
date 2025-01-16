@@ -45,6 +45,7 @@ import ActiveIncantationsExerciseScreen from '../screens/daily-missions-screens/
 import ActiveIncantationsIntroScreen from '../screens/daily-missions-screens/active-incantations/ActiveIncantationsIntroScreen';
 import ChallengeDetailScreen from '../screens/challenges-screens/ChallengeDetailScreen';
 import DeepBreathingCompleteScreen from '../screens/daily-missions-screens/deep-breathe/DeepBreathingCompleteScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -58,6 +59,11 @@ export type RootStackParamList = {
   AiCoach: undefined;
   Support: undefined;
   Notifications: undefined;
+  Settings: undefined;
+  NotificationsPush: undefined;
+  NotificationsEmail: undefined;
+  Language: undefined;
+  DeleteAccount: undefined;
   DeepBreathing: {
     context: 'daily' | 'challenge';
     challengeId?: string;
@@ -314,6 +320,7 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen name="AiCoach" component={AiCoachScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen 
           name="DeepBreathing" 
           component={DeepBreathingScreen}

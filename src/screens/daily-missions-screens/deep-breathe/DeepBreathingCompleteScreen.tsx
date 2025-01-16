@@ -5,8 +5,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
-import { CommonActions } from '@react-navigation/native';
-import { StackActions } from '@react-navigation/native';
 import { markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeepBreathingComplete'>;

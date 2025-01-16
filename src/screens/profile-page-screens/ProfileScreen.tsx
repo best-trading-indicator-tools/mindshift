@@ -231,7 +231,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.iconButton}
-              onPress={() => navigation.navigate('Support')}
+              onPress={() => navigation.navigate('Settings')}
             >
               <MaterialCommunityIcons name="cog" size={24} color="#fff" />
               <Text style={styles.iconText}>Settings</Text>
@@ -319,42 +319,24 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           ))}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
-          {settings.map((setting, index) => (
-            <ListItem 
-              key={index} 
-              bottomDivider
-              containerStyle={styles.listItem}
-              onPress={setting.onPress}
-            >
-              <MaterialCommunityIcons name={setting.icon} size={24} color="#6366f1" />
-              <ListItem.Content>
-                <ListItem.Title style={styles.listItemTitle}>{setting.title}</ListItem.Title>
-              </ListItem.Content>
-              <ListItem.Chevron color="#6366f1" />
-            </ListItem>
-          ))}
-
-          <ListItem 
-            containerStyle={[styles.listItem, styles.logoutItem]}
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity 
+            style={styles.logoutButton}
             onPress={handleLogout}
           >
             <MaterialCommunityIcons name="logout" size={24} color="#FF4444" />
-            <ListItem.Content>
-              <ListItem.Title style={[styles.listItemTitle, styles.logoutText]}>Log Out</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        </View>
-
-        {__DEV__ && (
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: '#FF4444', marginHorizontal: 15, marginBottom: 20 }]}
-            onPress={handleDevLogout}
-          >
-            <Text style={styles.buttonText}>Dev Log Out</Text>
+            <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
-        )}
+
+          {__DEV__ && (
+            <TouchableOpacity 
+              style={styles.devLogoutButton}
+              onPress={handleDevLogout}
+            >
+              <Text style={styles.devLogoutText}>Dev Log Out</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -484,23 +466,35 @@ const styles = StyleSheet.create({
     color: '#A0A0A0',
     fontSize: 14,
   },
-  logoutItem: {
-    marginTop: 20,
+  logoutContainer: {
+    padding: 15,
+    marginTop: 10,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#1E1E1E',
+    padding: 15,
+    borderRadius: 10,
+    gap: 8,
   },
   logoutText: {
     color: '#FF4444',
+    fontSize: 16,
+    fontWeight: '500',
   },
-  button: {
+  devLogoutButton: {
+    backgroundColor: '#FF4444',
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 10,
+    marginTop: 10,
     alignItems: 'center',
-    marginTop: 20,
   },
-  buttonText: {
+  devLogoutText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   weekTracker: {
     flexDirection: 'row',
