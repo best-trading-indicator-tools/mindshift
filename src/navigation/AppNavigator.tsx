@@ -49,6 +49,8 @@ import SettingsScreen from '../screens/settings/SettingsScreen';
 import NotificationsPushScreen from '../screens/settings/NotificationsPushScreen';
 import LanguageScreen from '../screens/settings/LanguageScreen';
 import DeleteAccountScreen from '../screens/settings/DeleteAccountScreen';
+import SelfHypnosisIntroScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisIntroScreen';
+import SelfHypnosisExerciseScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisExerciseScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -192,6 +194,16 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
   } | undefined;
   SunBreathSettings: undefined;
+  SelfHypnosisIntro: {
+    returnTo?: keyof RootStackParamList;
+    challengeId?: string;
+  } | undefined;
+  SelfHypnosisExercise: {
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
+    onComplete?: () => void;
+  } | undefined;
   ManageActiveIncantations: {
     context?: 'daily' | 'challenge';
     challengeId?: string;
@@ -504,6 +516,23 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen 
           name="DeepBreathingComplete" 
           component={DeepBreathingCompleteScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+
+        <Stack.Screen 
+          name="SelfHypnosisIntro" 
+          component={SelfHypnosisIntroScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen 
+          name="SelfHypnosisExercise" 
+          component={SelfHypnosisExerciseScreen}
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',

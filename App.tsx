@@ -13,7 +13,12 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { ActivityIndicator, View, unstable_batchedUpdates } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { getQuestionnaireStatus } from './src/services/questionnaireService';
+import { enableScreens } from 'react-native-screens';
+import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+
+// Enable screens
+enableScreens();
 
 function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);

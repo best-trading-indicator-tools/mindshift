@@ -324,13 +324,12 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
           <DraggableFlatList
             ref={scrollRef}
             data={incantations}
-            onDragEnd={({ data, from, to }) => {
-              if (from !== to) {
-                setTimeout(() => {
-                  setIncantations(data);
-                  saveNewOrder(data);
-                }, 100);
-              }
+            onDragEnd={({ data }) => {
+              // Immediately update state to prevent flicker
+              setIncantations(data);
+              saveNewOrder(data).catch(error => 
+                console.error('Error saving new order:', error)
+              );
             }}
             keyExtractor={item => item.id}
             renderItem={renderItem}
@@ -338,12 +337,12 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
             dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
             containerStyle={{ flex: 1 }}
             animationConfig={{
-              damping: 50,
-              mass: 0.3,
-              stiffness: 200,
-              overshootClamping: true,
-              restSpeedThreshold: 0.3,
-              restDisplacementThreshold: 0.3,
+              damping: 20,
+              mass: 0.2,
+              stiffness: 100,
+              overshootClamping: false,
+              restSpeedThreshold: 0.2,
+              restDisplacementThreshold: 0.2,
             }}
             simultaneousHandlers={scrollRef}
           />

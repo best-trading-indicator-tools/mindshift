@@ -154,6 +154,13 @@ const DAILY_MISSIONS = [
     type: 'Reflection',
     icon: 'progress-clock',
   },
+  {
+    title: 'Self-Hypnosis',
+    subtitle: 'Enter a state of deep relaxation',
+    duration: '10-15 min',
+    type: 'Training',
+    icon: 'meditation',
+  },
 ];
 
 const MISSIONS_PER_DAY = 5;
@@ -338,6 +345,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           ? 'gratitude-beads'
           : mission.title === 'The Sun Breath'
           ? 'sun-breath'
+          : mission.title === 'Self-Hypnosis'
+          ? 'self-hypnosis'
           : '',
         name: mission.title
       }));
@@ -414,25 +423,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error signing out:', error);
     }
-  };
-
-  const renderPaginationDots = () => {
-    const dots = [];
-    const numberOfDots = challenges.length;
-
-    for (let i = 0; i < numberOfDots; i++) {
-      dots.push(
-        <View
-          key={i}
-          style={[
-            styles.paginationDot,
-            i === activeIndex ? styles.paginationDotActive : null,
-          ]}
-        />
-      );
-    }
-
-    return <View style={styles.paginationContainer}>{dots}</View>;
   };
 
   const handleReset = async () => {
@@ -556,6 +546,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('SunBreathTutorial');
   };
 
+  const handleSelfHypnosisNavigation = async () => {
+    navigation.navigate('SelfHypnosisIntro');
+  };
+
   const renderChallenges = () => {
     return challenges.map((challenge, index) => (
       <TouchableOpacity
@@ -632,6 +626,85 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const interval = setInterval(checkNotifications, 1000);
     return () => clearInterval(interval);
   }, [checkNotifications]);
+
+  const renderPaginationDots = () => {
+    const dots = [];
+    const numberOfDots = challenges.length;
+
+    for (let i = 0; i < numberOfDots; i++) {
+      dots.push(
+        <View
+          key={i}
+          style={[
+            styles.paginationDot,
+            i === activeIndex ? styles.paginationDotActive : null,
+          ]}
+        />
+      );
+    }
+
+    return <View style={styles.paginationContainer}>{dots}</View>;
+  };
+
+  const renderMissions = () => {
+    return dailyMissions.map((mission, index) => (
+      <MissionItem
+        key={index}
+        title={mission.title}
+        subtitle={mission.subtitle}
+        duration={mission.duration}
+        type={mission.type}
+        icon={mission.icon}
+        isCompleted={completedExercises.includes(
+          mission.title === 'Deep Breathing' 
+            ? 'deep-breathing'
+            : mission.title === 'Active Incantations'
+            ? 'active-incantations'
+            : mission.title === 'Passive Incantations'
+            ? 'passive-incantations'
+            : mission.title === 'Daily Gratitude'
+            ? 'daily-gratitude'
+            : mission.title === 'Golden Checklist'
+            ? 'golden-checklist'
+            : mission.title === 'Gratitude Beads'
+            ? 'gratitude-beads'
+            : mission.title === 'The Sun Breath'
+            ? 'sun-breath'
+            : mission.title === 'Self-Hypnosis'
+            ? 'self-hypnosis'
+            : ''
+        )}
+        onPress={() => {
+          switch (mission.title) {
+            case 'Deep Breathing':
+              handleDeepBreathingNavigation();
+              break;
+            case 'Daily Gratitude':
+              handleGratitudeNavigation();
+              break;
+            case 'Active Incantations':
+              handleActiveIncantationsNavigation();
+              break;
+            case 'Passive Incantations':
+              handlePassiveIncantationsNavigation();
+              break;
+            case 'Golden Checklist':
+              handleGoldenChecklistNavigation();
+              break;
+            case 'Gratitude Beads':
+              handleGratitudeBeadsNavigation();
+              break;
+            case 'The Sun Breath':
+              handleSunBreathNavigation();
+              break;
+            case 'Self-Hypnosis':
+              handleSelfHypnosisNavigation();
+              break;
+          }
+        }}
+      />
+    ));
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -738,62 +811,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   ? 'gratitude-beads'
                   : mission.title === 'The Sun Breath'
                   ? 'sun-breath'
+                  : mission.title === 'Self-Hypnosis'
+                  ? 'self-hypnosis'
                   : ''
               }))}
             />
             <View style={styles.missionsList}>
-              {dailyMissions.map((mission, index) => (
-                <MissionItem
-                  key={index}
-                  title={mission.title}
-                  subtitle={mission.subtitle}
-                  duration={mission.duration}
-                  type={mission.type}
-                  icon={mission.icon}
-                  isCompleted={completedExercises.includes(
-                    mission.title === 'Deep Breathing' 
-                      ? 'deep-breathing'
-                      : mission.title === 'Active Incantations'
-                      ? 'active-incantations'
-                      : mission.title === 'Passive Incantations'
-                      ? 'passive-incantations'
-                      : mission.title === 'Daily Gratitude'
-                      ? 'daily-gratitude'
-                      : mission.title === 'Golden Checklist'
-                      ? 'golden-checklist'
-                      : mission.title === 'Gratitude Beads'
-                      ? 'gratitude-beads'
-                      : mission.title === 'The Sun Breath'
-                      ? 'sun-breath'
-                      : ''
-                  )}
-                  onPress={() => {
-                    switch (mission.title) {
-                      case 'Deep Breathing':
-                        handleDeepBreathingNavigation();
-                        break;
-                      case 'Daily Gratitude':
-                        handleGratitudeNavigation();
-                        break;
-                      case 'Active Incantations':
-                        handleActiveIncantationsNavigation();
-                        break;
-                      case 'Passive Incantations':
-                        handlePassiveIncantationsNavigation();
-                        break;
-                      case 'Golden Checklist':
-                        handleGoldenChecklistNavigation();
-                        break;
-                      case 'Gratitude Beads':
-                        handleGratitudeBeadsNavigation();
-                        break;
-                      case 'The Sun Breath':
-                        handleSunBreathNavigation();
-                        break;
-                    }
-                  }}
-                />
-              ))}
+              {renderMissions()}
             </View>
           </View>
         </View>
