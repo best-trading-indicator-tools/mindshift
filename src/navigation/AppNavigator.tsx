@@ -197,6 +197,7 @@ export type RootStackParamList = {
   SelfHypnosisIntro: {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
+    onComplete?: () => void;
   } | undefined;
   SelfHypnosisExercise: {
     context?: 'daily' | 'challenge';

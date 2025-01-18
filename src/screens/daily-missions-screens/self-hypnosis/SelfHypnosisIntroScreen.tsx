@@ -37,7 +37,8 @@ const SelfHypnosisIntroScreen: React.FC<Props> = ({ navigation, route }) => {
         navigation.navigate('SelfHypnosisExercise', {
           context: route.params?.challengeId ? 'challenge' : 'daily',
           challengeId: route.params?.challengeId,
-          returnTo: route.params?.returnTo
+          returnTo: route.params?.returnTo,
+          onComplete: route.params?.onComplete
         });
       } catch (error) {
         console.error('Error saving intro state:', error);
