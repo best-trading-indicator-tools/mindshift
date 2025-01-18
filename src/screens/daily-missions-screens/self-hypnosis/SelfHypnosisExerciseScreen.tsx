@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Sound from 'react-native-sound';
+import Slider from '@react-native-community/slider';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -151,6 +152,13 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
     navigation.navigate("MainTabs");
   };
 
+  const handleSeek = (value: number, track: AudioTrack) => {
+    if (soundRef.current && selectedTrack.id === track.id) {
+      soundRef.current.setCurrentTime(value);
+      setProgress(value);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
@@ -210,15 +218,16 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
                   </TouchableOpacity>
 
                   <View style={styles.progressBar}>
-                    <View style={styles.progressTrack}>
-                      <View style={[
-                        styles.progressFill, 
-                        { 
-                          width: selectedTrack.id === track.id ? `${(progress / duration) * 100}%` : '0%',
-                          backgroundColor: selectedTrack.id === track.id ? '#FF6B6B' : 'rgba(0,0,0,0.1)'
-                        }
-                      ]} />
-                    </View>
+                    <Slider
+                      style={{width: '100%', height: 2}}
+                      minimumValue={0}
+                      maximumValue={duration}
+                      value={selectedTrack.id === track.id ? progress : 0}
+                      onSlidingComplete={(value) => handleSeek(value, track)}
+                      minimumTrackTintColor={selectedTrack.id === track.id ? "#FF6B6B" : "rgba(0,0,0,0.1)"}
+                      maximumTrackTintColor="rgba(0,0,0,0.1)"
+                      thumbTintColor={selectedTrack.id === track.id ? "#FF6B6B" : "#666"}
+                    />
                     <Text style={[
                       styles.timeText,
                       selectedTrack.id === track.id && styles.selectedText
@@ -368,6 +377,10 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     marginHorizontal: 12,
+  },
+  slider: {
+    height: 20,
+    transform: [{ scaleY: 0.6 }]
   },
   progressTrack: {
     height: 4,
