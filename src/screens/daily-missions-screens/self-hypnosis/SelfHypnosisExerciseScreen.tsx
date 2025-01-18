@@ -27,14 +27,14 @@ const SPEEDS = [
 const AUDIO_TRACKS: AudioTrack[] = [
   {
     id: '1',
-    title: 'Deep Relaxation',
+    title: 'Guided Relaxation (with music)',
     duration: 0,
     source: require('../../../assets/audio/meditation/audio-relaxation-music.mp3'),
     description: 'A guided session with soothing background music to help you achieve a deep state of relaxation.'
   },
   {
     id: '2',
-    title: 'Deep Relaxation (No Music)',
+    title: 'Guided Relaxation (without music)',
     duration: 0,
     source: require('../../../assets/audio/meditation/audio-relaxation-without-music-aurora.mp3'),
     description: 'A guided session without background music, focusing purely on voice guidance for deep relaxation.'
@@ -164,8 +164,8 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.mainContent}>
             <View style={styles.trackInfo}>
-              <Text style={styles.trackTitle}>{selectedTrack.title}</Text>
-              <Text style={styles.trackDescription}>{selectedTrack.description}</Text>
+              <Text style={styles.trackTitle}>Guided Relaxation</Text>
+              <Text style={styles.trackDescription}>Choose your preferred version to start your relaxation journey.</Text>
             </View>
 
             {AUDIO_TRACKS.map((track) => (
@@ -194,31 +194,50 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
                   </View>
                 </View>
 
-                {selectedTrack.id === track.id && (
-                  <View style={styles.playerControls}>
-                    <TouchableOpacity onPress={handlePlayPause} style={styles.controlButton}>
-                      <MaterialCommunityIcons 
-                        name={isPlaying ? "pause" : "play"} 
-                        size={24} 
-                        color="#666" 
-                      />
-                    </TouchableOpacity>
+                <View style={styles.playerControls}>
+                  <TouchableOpacity 
+                    onPress={selectedTrack.id === track.id ? handlePlayPause : () => {
+                      setSelectedTrack(track);
+                      setTimeout(handlePlayPause, 100);
+                    }} 
+                    style={styles.controlButton}
+                  >
+                    <MaterialCommunityIcons 
+                      name={isPlaying && selectedTrack.id === track.id ? "pause" : "play"} 
+                      size={24} 
+                      color={selectedTrack.id === track.id ? "#FF6B6B" : "#666"} 
+                    />
+                  </TouchableOpacity>
 
-                    <View style={styles.progressBar}>
-                      <View style={styles.progressTrack}>
-                        <View style={[styles.progressFill, { width: `${(progress / duration) * 100}%` }]} />
-                      </View>
-                      <Text style={styles.timeText}>{formatTime(progress)}</Text>
+                  <View style={styles.progressBar}>
+                    <View style={styles.progressTrack}>
+                      <View style={[
+                        styles.progressFill, 
+                        { 
+                          width: selectedTrack.id === track.id ? `${(progress / duration) * 100}%` : '0%',
+                          backgroundColor: selectedTrack.id === track.id ? '#FF6B6B' : 'rgba(0,0,0,0.1)'
+                        }
+                      ]} />
                     </View>
-
-                    <TouchableOpacity 
-                      onPress={() => setShowSpeedModal(true)} 
-                      style={styles.controlButton}
-                    >
-                      <MaterialCommunityIcons name="cog" size={24} color="#666" />
-                    </TouchableOpacity>
+                    <Text style={[
+                      styles.timeText,
+                      selectedTrack.id === track.id && styles.selectedText
+                    ]}>
+                      {selectedTrack.id === track.id ? formatTime(progress) : '0:00'}
+                    </Text>
                   </View>
-                )}
+
+                  <TouchableOpacity 
+                    onPress={() => selectedTrack.id === track.id && setShowSpeedModal(true)} 
+                    style={styles.controlButton}
+                  >
+                    <MaterialCommunityIcons 
+                      name="cog" 
+                      size={24} 
+                      color={selectedTrack.id === track.id ? "#FF6B6B" : "#666"} 
+                    />
+                  </TouchableOpacity>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -312,9 +331,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   playerCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E8E9EC',
     borderRadius: 12,
     padding: 16,
+    marginBottom: 12,
   },
   audioFileInfo: {
     flexDirection: 'row',
@@ -326,12 +346,12 @@ const styles = StyleSheet.create({
   },
   audioTitle: {
     fontSize: 15,
-    color: '#333',
+    color: '#1A1A1A',
     fontWeight: '500',
   },
   audioSize: {
     fontSize: 13,
-    color: '#666',
+    color: '#4A4A4A',
     marginTop: 2,
   },
   playerControls: {
