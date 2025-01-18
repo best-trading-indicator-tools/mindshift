@@ -11,15 +11,15 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SelfHypnosisIntro'>;
 const introContent = [
   {
     title: "Self-Hypnosis",
-    content: "Welcome to a journey of deep relaxation and mental receptivity. Self-hypnosis is a powerful technique to access and reprogram your subconscious mind, making your other exercises more effective."
+    content: "Welcome to a journey of deep relaxation and mental receptivity.\n\nSelf-hypnosis is a powerful technique to access and reprogram your subconscious mind, making your other exercises more effective."
   },
   {
     title: "How It Works",
-    content: "Through a series of calming audio sessions, you'll be guided into a state of deep relaxation. This heightened state of receptivity allows your mind to become more open to positive suggestions and transformative thoughts."
+    content: "Through a series of calming audio sessions, you'll be guided into a state of deep relaxation.\n\nThis heightened state of receptivity allows your mind to become more open to positive suggestions and transformative thoughts."
   },
   {
     title: "Benefits",
-    content: "Regular practice enhances the effectiveness of your other exercises by making your subconscious mind more receptive to change. It's like preparing fertile soil before planting seeds of transformation."
+    content: "Regular practice enhances the effectiveness of your other exercises by making your subconscious mind more receptive to change.\n\nIt's like preparing fertile soil before planting seeds of transformation."
   }
 ];
 
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 120,
     left: 24,
     right: 24,
     backgroundColor: '#E6B800',
