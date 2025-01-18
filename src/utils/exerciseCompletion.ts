@@ -57,6 +57,8 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
             ? 'gratitude-beads'
             : mission.title === 'The Sun Breath'
             ? 'sun-breath'
+            : mission.title === 'Self-Hypnosis'
+            ? 'self-hypnosis'
             : ''
         ))
       );
