@@ -42,6 +42,8 @@ const AUDIO_TRACKS: AudioTrack[] = [
   },
 ];
 
+const THUMB_DOT = { uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAACXBIWXMAAAsTAAALEwEAmpwYAAAF0WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZS5uczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS41LjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIj4KICAgIDx4bXA6Q3JlYXRvclRvb2w+QWRvYmUgUGhvdG9zaG9wPC94bXA6Q3JlYXRvclRvb2w+CiAgPC9yZGY6RGVzY3JpcHRpb24+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+Pj5IYwAAAAlwSFlzAAALEwAACxMBAJqcGAAAADNJREFUGJVjYMAEjf///2fEJsjEgAewixCrAkMQuwKYQmQFTOgK0BWBFGAoQlZE0EZCigD7lBH70G8cigAAAABJRU5ErkJggg==' };
+
 const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
   const { context = 'daily', challengeId, returnTo } = route.params || {};
   const [isPlaying, setIsPlaying] = useState(false);
@@ -219,14 +221,14 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
 
                   <View style={styles.progressBar}>
                     <Slider
-                      style={{width: '100%', height: 2}}
+                      style={{width: '100%'}}
                       minimumValue={0}
                       maximumValue={duration}
                       value={selectedTrack.id === track.id ? progress : 0}
                       onSlidingComplete={(value) => handleSeek(value, track)}
                       minimumTrackTintColor={selectedTrack.id === track.id ? "#FF6B6B" : "rgba(0,0,0,0.1)"}
                       maximumTrackTintColor="rgba(0,0,0,0.1)"
-                      thumbTintColor={selectedTrack.id === track.id ? "#FF6B6B" : "#666"}
+                      thumbImage={THUMB_DOT}
                     />
                     <Text style={[
                       styles.timeText,
@@ -377,26 +379,12 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     marginHorizontal: 12,
-  },
-  slider: {
-    height: 20,
-    transform: [{ scaleY: 0.6 }]
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FF6B6B',
-    borderRadius: 2,
+    justifyContent: 'center',
   },
   timeText: {
     fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    marginTop: 8,
   },
   doneButton: {
     marginHorizontal: 24,
