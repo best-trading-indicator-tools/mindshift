@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, StatusBar } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -143,138 +143,141 @@ const GuidedRelaxationExerciseScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={['#1A1A1A', '#000000']}
         style={styles.gradient}
       >
-        <TouchableOpacity onPress={handleExit} style={styles.exitButton}>
-          <MaterialCommunityIcons name="close" size={24} color="rgba(255,255,255,0.6)" />
-        </TouchableOpacity>
+        <SafeAreaView style={styles.safeArea}>
+          <TouchableOpacity onPress={handleExit} style={styles.exitButton}>
+            <MaterialCommunityIcons name="close" size={24} color="rgba(255,255,255,0.6)" />
+          </TouchableOpacity>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.mainContent}>
-            <View style={styles.trackInfo}>
-              <Text style={styles.trackTitle}>Sleep Well</Text>
-              <Text style={styles.trackDescription}>Choose your preferred session to help you relax and drift into peaceful sleep.</Text>
-            </View>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <View style={styles.mainContent}>
+              <View style={styles.trackInfo}>
+                <Text style={styles.trackTitle}>Sleep Well</Text>
+                <Text style={styles.trackDescription}>Choose your preferred session to help you relax and drift into peaceful sleep.</Text>
+              </View>
 
-            {AUDIO_TRACKS.map((track) => (
-              <TouchableOpacity
-                key={track.id}
-                style={[
-                  styles.playerCard,
-                  selectedTrack.id === track.id && styles.selectedCard
-                ]}
-                onPress={() => setSelectedTrack(track)}
-              >
-                <View style={styles.audioFileInfo}>
-                  <MaterialCommunityIcons 
-                    name="music-note" 
-                    size={24} 
-                    color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
-                  />
-                  <View style={styles.audioTextContainer}>
-                    <Text style={[
-                      styles.audioTitle,
-                      selectedTrack.id === track.id && styles.selectedText
-                    ]}>
-                      {track.title}
-                    </Text>
-                    <Text style={styles.audioDescription}>{track.description}</Text>
-                    <Text style={styles.audioSize}>{formatTime(duration)}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.playerControls}>
-                  <TouchableOpacity 
-                    onPress={selectedTrack.id === track.id ? handlePlayPause : () => {
-                      setSelectedTrack(track);
-                      setTimeout(handlePlayPause, 100);
-                    }} 
-                    style={styles.controlButton}
-                  >
-                    <MaterialCommunityIcons 
-                      name={isPlaying && selectedTrack.id === track.id ? "pause" : "play"} 
-                      size={24} 
-                      color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
-                    />
-                  </TouchableOpacity>
-
-                  <View style={styles.progressBar}>
-                    <Slider
-                      style={{width: '100%'}}
-                      minimumValue={0}
-                      maximumValue={duration}
-                      value={selectedTrack.id === track.id ? progress : 0}
-                      onSlidingComplete={(value) => handleSeek(value, track)}
-                      minimumTrackTintColor={selectedTrack.id === track.id ? "#4A90E2" : "rgba(255,255,255,0.1)"}
-                      maximumTrackTintColor="rgba(255,255,255,0.1)"
-                      thumbImage={THUMB_DOT}
-                    />
-                    <Text style={[
-                      styles.timeText,
-                      selectedTrack.id === track.id && styles.selectedText
-                    ]}>
-                      {selectedTrack.id === track.id ? formatTime(progress) : '0:00'}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity 
-                    onPress={() => selectedTrack.id === track.id && setShowSpeedModal(true)} 
-                    style={styles.controlButton}
-                  >
-                    <MaterialCommunityIcons 
-                      name="cog" 
-                      size={24} 
-                      color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-
-        <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
-          <Text style={styles.doneButtonText}>I'm Done</Text>
-        </TouchableOpacity>
-
-        <Modal
-          visible={showSpeedModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowSpeedModal(false)}
-        >
-          <TouchableOpacity 
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowSpeedModal(false)}
-          >
-            <View style={styles.speedModal}>
-              <Text style={styles.speedTitle}>Speed</Text>
-              {SPEEDS.map((speed) => (
+              {AUDIO_TRACKS.map((track) => (
                 <TouchableOpacity
-                  key={speed.label}
+                  key={track.id}
                   style={[
-                    styles.speedOption,
-                    currentSpeed === speed.value && styles.speedOptionSelected
+                    styles.playerCard,
+                    selectedTrack.id === track.id && styles.selectedCard
                   ]}
-                  onPress={() => handleSpeedChange(speed.value)}
+                  onPress={() => setSelectedTrack(track)}
                 >
-                  <Text style={[
-                    styles.speedText,
-                    currentSpeed === speed.value && styles.speedTextSelected
-                  ]}>
-                    {speed.label}
-                  </Text>
+                  <View style={styles.audioFileInfo}>
+                    <MaterialCommunityIcons 
+                      name="music-note" 
+                      size={24} 
+                      color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
+                    />
+                    <View style={styles.audioTextContainer}>
+                      <Text style={[
+                        styles.audioTitle,
+                        selectedTrack.id === track.id && styles.selectedText
+                      ]}>
+                        {track.title}
+                      </Text>
+                      <Text style={styles.audioDescription}>{track.description}</Text>
+                      <Text style={styles.audioSize}>{formatTime(duration)}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.playerControls}>
+                    <TouchableOpacity 
+                      onPress={selectedTrack.id === track.id ? handlePlayPause : () => {
+                        setSelectedTrack(track);
+                        setTimeout(handlePlayPause, 100);
+                      }} 
+                      style={styles.controlButton}
+                    >
+                      <MaterialCommunityIcons 
+                        name={isPlaying && selectedTrack.id === track.id ? "pause" : "play"} 
+                        size={24} 
+                        color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
+                      />
+                    </TouchableOpacity>
+
+                    <View style={styles.progressBar}>
+                      <Slider
+                        style={{width: '100%'}}
+                        minimumValue={0}
+                        maximumValue={duration}
+                        value={selectedTrack.id === track.id ? progress : 0}
+                        onSlidingComplete={(value) => handleSeek(value, track)}
+                        minimumTrackTintColor={selectedTrack.id === track.id ? "#4A90E2" : "rgba(255,255,255,0.1)"}
+                        maximumTrackTintColor="rgba(255,255,255,0.1)"
+                        thumbImage={THUMB_DOT}
+                      />
+                      <Text style={[
+                        styles.timeText,
+                        selectedTrack.id === track.id && styles.selectedText
+                      ]}>
+                        {selectedTrack.id === track.id ? formatTime(progress) : '0:00'}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity 
+                      onPress={() => selectedTrack.id === track.id && setShowSpeedModal(true)} 
+                      style={styles.controlButton}
+                    >
+                      <MaterialCommunityIcons 
+                        name="cog" 
+                        size={24} 
+                        color={selectedTrack.id === track.id ? "#4A90E2" : "#666"} 
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
+          </ScrollView>
+
+          <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
+            <Text style={styles.doneButtonText}>I'm Done</Text>
           </TouchableOpacity>
-        </Modal>
+
+          <Modal
+            visible={showSpeedModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowSpeedModal(false)}
+          >
+            <TouchableOpacity 
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setShowSpeedModal(false)}
+            >
+              <View style={styles.speedModal}>
+                <Text style={styles.speedTitle}>Speed</Text>
+                {SPEEDS.map((speed) => (
+                  <TouchableOpacity
+                    key={speed.label}
+                    style={[
+                      styles.speedOption,
+                      currentSpeed === speed.value && styles.speedOptionSelected
+                    ]}
+                    onPress={() => handleSpeedChange(speed.value)}
+                  >
+                    <Text style={[
+                      styles.speedText,
+                      currentSpeed === speed.value && styles.speedTextSelected
+                    ]}>
+                      {speed.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </SafeAreaView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -285,7 +288,9 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingTop: 16,
+  },
+  safeArea: {
+    flex: 1,
   },
   exitButton: {
     position: 'absolute',
