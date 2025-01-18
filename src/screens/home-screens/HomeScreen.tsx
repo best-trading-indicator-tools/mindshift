@@ -55,10 +55,10 @@ const challenges = [
     colors: ['#9B59B6', '#3498DB'],
   },
   {
-    title: 'Mood Tracker',
-    subtitle: 'Track your daily emotional well-being',
-    icon: 'chart-line',
-    colors: ['#1E90FF', '#4CAF50'],
+    title: 'Guided Relaxation',
+    subtitle: 'Relax and sleep better',
+    icon: 'sleep',
+    colors: ['#4A90E2', '#1A1A1A'],
   },
   {
     title: 'Meditation',
@@ -568,6 +568,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             navigation.getParent()?.navigate('MentorBoardIntro');
           } else if (challenge.title === 'Daily Gratitude') {
             handleGratitudeNavigation();
+          } else if (challenge.title === 'Guided Relaxation') {
+            navigation.navigate('GuidedRelaxationIntro');
+          } else if (challenge.title === 'Meditation') {
+            // Handle meditation navigation
           }
           // Add other navigation handlers for other challenges here
         }}

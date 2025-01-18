@@ -32,4 +32,6 @@ export type RootStackParamList = {
   VisionBoard: {
     source: 'challenges' | 'home';
   };
+  GuidedRelaxationIntro: undefined;
+  GuidedRelaxationExercise: undefined;
 }; 

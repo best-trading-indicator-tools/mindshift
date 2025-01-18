@@ -51,6 +51,8 @@ import LanguageScreen from '../screens/settings/LanguageScreen';
 import DeleteAccountScreen from '../screens/settings/DeleteAccountScreen';
 import SelfHypnosisIntroScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisIntroScreen';
 import SelfHypnosisExerciseScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisExerciseScreen';
+import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationIntroScreen';
+import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -234,6 +236,8 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
     onComplete?: () => void;
   };
+  GuidedRelaxationIntro: undefined;
+  GuidedRelaxationExercise: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -538,6 +542,17 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
             presentation: 'fullScreenModal',
             animation: 'slide_from_right',
           }}
+        />
+
+        <Stack.Screen
+          name="GuidedRelaxationIntro"
+          component={GuidedRelaxationIntroScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="GuidedRelaxationExercise"
+          component={GuidedRelaxationExerciseScreen}
+          options={{ headerShown: false }}
         />
 
       </Stack.Navigator>
