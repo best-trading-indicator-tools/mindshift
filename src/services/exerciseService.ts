@@ -156,6 +156,8 @@ export const checkDailyProgress = async () => {
         ? 'gratitude-beads'
         : mission.title === 'The Sun Breath'
         ? 'sun-breath'
+        : mission.title === 'Self-Hypnosis'
+        ? 'self-hypnosis'
         : '',
       name: mission.title
     }));
