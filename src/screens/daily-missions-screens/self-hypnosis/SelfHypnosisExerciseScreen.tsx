@@ -29,8 +29,15 @@ const AUDIO_TRACKS: AudioTrack[] = [
     id: '1',
     title: 'Deep Relaxation',
     duration: 0,
+    source: require('../../../assets/audio/meditation/audio-relaxation-music.mp3'),
+    description: 'A guided session with soothing background music to help you achieve a deep state of relaxation.'
+  },
+  {
+    id: '2',
+    title: 'Deep Relaxation (No Music)',
+    duration: 0,
     source: require('../../../assets/audio/meditation/audio-relaxation-without-music-aurora.mp3'),
-    description: 'A guided session to help you achieve a deep state of relaxation and inner peace.'
+    description: 'A guided session without background music, focusing purely on voice guidance for deep relaxation.'
   },
 ];
 
@@ -161,39 +168,59 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.trackDescription}>{selectedTrack.description}</Text>
             </View>
 
-            <View style={styles.playerCard}>
-              <View style={styles.audioFileInfo}>
-                <MaterialCommunityIcons name="music-note" size={24} color="#666" />
-                <View style={styles.audioTextContainer}>
-                  <Text style={styles.audioTitle}>Guided relaxation (without music)</Text>
-                  <Text style={styles.audioSize}>{formatTime(duration)}</Text>
-                </View>
-              </View>
-
-              <View style={styles.playerControls}>
-                <TouchableOpacity onPress={handlePlayPause} style={styles.controlButton}>
+            {AUDIO_TRACKS.map((track) => (
+              <TouchableOpacity
+                key={track.id}
+                style={[
+                  styles.playerCard,
+                  selectedTrack.id === track.id && styles.selectedCard
+                ]}
+                onPress={() => setSelectedTrack(track)}
+              >
+                <View style={styles.audioFileInfo}>
                   <MaterialCommunityIcons 
-                    name={isPlaying ? "pause" : "play"} 
+                    name="music-note" 
                     size={24} 
-                    color="#666" 
+                    color={selectedTrack.id === track.id ? "#FF6B6B" : "#666"} 
                   />
-                </TouchableOpacity>
-
-                <View style={styles.progressBar}>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${(progress / duration) * 100}%` }]} />
+                  <View style={styles.audioTextContainer}>
+                    <Text style={[
+                      styles.audioTitle,
+                      selectedTrack.id === track.id && styles.selectedText
+                    ]}>
+                      {track.title}
+                    </Text>
+                    <Text style={styles.audioSize}>{formatTime(duration)}</Text>
                   </View>
-                  <Text style={styles.timeText}>{formatTime(progress)}</Text>
                 </View>
 
-                <TouchableOpacity 
-                  onPress={() => setShowSpeedModal(true)} 
-                  style={styles.controlButton}
-                >
-                  <MaterialCommunityIcons name="cog" size={24} color="#666" />
-                </TouchableOpacity>
-              </View>
-            </View>
+                {selectedTrack.id === track.id && (
+                  <View style={styles.playerControls}>
+                    <TouchableOpacity onPress={handlePlayPause} style={styles.controlButton}>
+                      <MaterialCommunityIcons 
+                        name={isPlaying ? "pause" : "play"} 
+                        size={24} 
+                        color="#666" 
+                      />
+                    </TouchableOpacity>
+
+                    <View style={styles.progressBar}>
+                      <View style={styles.progressTrack}>
+                        <View style={[styles.progressFill, { width: `${(progress / duration) * 100}%` }]} />
+                      </View>
+                      <Text style={styles.timeText}>{formatTime(progress)}</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                      onPress={() => setShowSpeedModal(true)} 
+                      style={styles.controlButton}
+                    >
+                      <MaterialCommunityIcons name="cog" size={24} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </ScrollView>
 
@@ -395,6 +422,13 @@ const styles = StyleSheet.create({
   speedTextSelected: {
     color: '#FF6B6B',
     fontWeight: '500',
+  },
+  selectedCard: {
+    borderColor: '#FF6B6B',
+    borderWidth: 1,
+  },
+  selectedText: {
+    color: '#FF6B6B',
   },
 });
 
