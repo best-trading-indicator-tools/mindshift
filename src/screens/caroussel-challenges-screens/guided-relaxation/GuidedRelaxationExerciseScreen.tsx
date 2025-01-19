@@ -291,10 +291,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingTop: 8,
   },
   exitButton: {
     position: 'absolute',
-    top: 16,
+    top: 54,
     right: 16,
     zIndex: 1,
     width: 40,
