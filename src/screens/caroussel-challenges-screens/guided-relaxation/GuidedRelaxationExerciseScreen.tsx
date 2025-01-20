@@ -28,24 +28,31 @@ const SPEEDS = [
 const AUDIO_TRACKS: AudioTrack[] = [
   {
     id: '1',
-    title: 'Guided Sleep Journey',
-    duration: 0,
-    source: require('../../../assets/audio/sleep/guided-sleep-without-music.mp3'),
-    description: 'A guided journey into deep, restful sleep with calming voice guidance.'
-  },
-  {
-    id: '2',
-    title: 'Relaxation with Music',
+    title: 'Relaxation with Music (Woman voice)',
     duration: 0,
     source: require('../../../assets/audio/meditation/audio-relaxation-music.mp3'),
     description: 'A guided relaxation session with soothing background music.'
   },
   {
-    id: '3',
-    title: 'Relaxation (without music)',
+    id: '2',
+    title: 'Relaxation Without Music (Woman voice)',
     duration: 0,
     source: require('../../../assets/audio/meditation/audio-relaxation-without-music-aurora.mp3'),
     description: 'A gentle voice guiding you into relaxation, without background music.'
+  },
+  {
+    id: '3',
+    title: 'Relaxation without Music (Man voice)',
+    duration: 0,
+    source: require('../../../assets/audio/meditation/guided-sleep-man-without-music.mp3'),
+    description: 'A guided relaxation session with a calming male voice.'
+  },
+  {
+    id: '4',
+    title: 'Relaxation with Music (Man voice)',
+    duration: 0,
+    source: require('../../../assets/audio/meditation/guided-sleep-man-with-music.mp3'),
+    description: 'A guided relaxation session with a calming male voice and soothing background music.'
   }
 ];
 
@@ -312,6 +319,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 32,
+    paddingBottom: 100,
   },
   trackInfo: {
     marginBottom: 32,
@@ -333,7 +341,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 24,
   },
   audioFileInfo: {
     flexDirection: 'row',
@@ -381,8 +389,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   doneButton: {
-    marginHorizontal: 24,
-    marginBottom: 32,
+    position: 'absolute',
+    bottom: 32,
+    left: 24,
+    right: 24,
     height: 56,
     borderRadius: 28,
     backgroundColor: '#4A90E2',
