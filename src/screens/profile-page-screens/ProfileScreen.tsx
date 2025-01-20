@@ -379,22 +379,26 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <LinearGradient
                     colors={[
-                      'rgba(26, 26, 26, 0.9)',
-                      `${achievement.color}20`,
-                      `${achievement.color}40`
+                      'rgba(26, 26, 26, 0.95)',
+                      `${achievement.color}15`,
+                      `${achievement.color}25`
                     ]}
-                    locations={[0, 0.5, 0.8]}
+                    locations={[0.2, 0.6, 1]}
                     style={styles.achievementGradient}
                   >
                     <View style={styles.achievementContent}>
-                      <View style={styles.achievementIconWrapper}>
-                        <MaterialCommunityIcons 
-                          name="trophy"
-                          size={28} 
-                          color={achievement.color}
-                        />
+                      <View style={styles.achievementIconContainer}>
+                        <View style={[styles.achievementIconWrapper, { backgroundColor: `${achievement.color}20` }]}>
+                          <MaterialCommunityIcons 
+                            name="trophy"
+                            size={28} 
+                            color={achievement.color}
+                          />
+                        </View>
                       </View>
-                      <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                      <View style={styles.achievementTitleContainer}>
+                        <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                      </View>
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -406,14 +410,18 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                   style={styles.achievementGradient}
                 >
                   <View style={styles.achievementContent}>
-                    <View style={styles.achievementIconWrapper}>
-                      <MaterialCommunityIcons 
-                        name="trophy-outline" 
-                        size={28} 
-                        color="#666" 
-                      />
+                    <View style={styles.achievementIconContainer}>
+                      <View style={[styles.achievementIconWrapper, { backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}>
+                        <MaterialCommunityIcons 
+                          name="trophy-outline" 
+                          size={28} 
+                          color="#666" 
+                        />
+                      </View>
                     </View>
-                    <Text style={[styles.achievementTitle, styles.emptyText]}>Locked</Text>
+                    <View style={styles.achievementTitleContainer}>
+                      <Text style={[styles.achievementTitle, styles.emptyText]}>Locked</Text>
+                    </View>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -570,40 +578,51 @@ const styles = StyleSheet.create({
   achievementsContainer: {
     paddingHorizontal: 15,
     paddingVertical: 10,
-    gap: 12,
+    gap: 20,
   },
   achievementCard: {
-    width: 110,
+    width: 120,
     height: 140,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    marginRight: 12,
+    marginHorizontal: 6,
     backgroundColor: '#1A1A1A',
   },
   achievementGradient: {
     flex: 1,
-    padding: 12,
+    padding: 0,
+    justifyContent: 'space-between',
   },
   achievementContent: {
     flex: 1,
     alignItems: 'center',
   },
-  achievementIconWrapper: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  achievementIconContainer: {
+    width: '100%',
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    position: 'relative',
+    marginTop: 10,
+  },
+  achievementIconWrapper: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 24,
+  },
+  achievementTitleContainer: {
+    width: '100%',
+    padding: 12,
+    alignItems: 'center',
   },
   achievementTitle: {
-    position: 'absolute',
-    bottom: 16,
-    left: 0,
-    right: 0,
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
   },

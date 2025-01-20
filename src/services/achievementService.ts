@@ -68,6 +68,41 @@ const STREAK_ACHIEVEMENTS = [
   }
 ];
 
+const CHALLENGE_ACHIEVEMENTS = [
+  {
+    id: 'challenge_1',
+    title: 'First Challenge',
+    description: 'Completed your first challenge',
+    icon: 'trophy',
+    color: '#E91E63', // Pink
+    requiredChallenges: 1
+  },
+  {
+    id: 'challenge_5',
+    title: 'Challenge Seeker',
+    description: 'Completed 5 challenges',
+    icon: 'trophy',
+    color: '#9C27B0', // Purple
+    requiredChallenges: 5
+  },
+  {
+    id: 'challenge_10',
+    title: 'Challenge Master',
+    description: 'Completed 10 challenges',
+    icon: 'trophy',
+    color: '#FF9800', // Orange
+    requiredChallenges: 10
+  },
+  {
+    id: 'challenge_25',
+    title: 'Challenge Champion',
+    description: 'Completed 25 challenges',
+    icon: 'trophy',
+    color: '#FFD700', // Gold
+    requiredChallenges: 25
+  }
+];
+
 const POINTS = {
   DAILY_MISSION: 50,
   CHALLENGE: 100,
@@ -161,10 +196,26 @@ async function checkAndUpdateAchievements(consecutiveDays: number) {
   try {
     const unlockedAchievements = await getUnlockedAchievements();
     const newAchievements: Achievement[] = [];
+    const stats = await getUserStats();
 
+    // Check streak achievements
     for (const achievement of STREAK_ACHIEVEMENTS) {
       if (
         consecutiveDays >= achievement.requiredDays &&
+        !unlockedAchievements.some(a => a.id === achievement.id)
+      ) {
+        newAchievements.push({
+          ...achievement,
+          isUnlocked: true,
+          unlockedAt: new Date()
+        });
+      }
+    }
+
+    // Check challenge achievements
+    for (const achievement of CHALLENGE_ACHIEVEMENTS) {
+      if (
+        stats.totalChallenges >= achievement.requiredChallenges &&
         !unlockedAchievements.some(a => a.id === achievement.id)
       ) {
         newAchievements.push({
