@@ -21,8 +21,19 @@ const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
 // Initialize push notifications
 export const initPushNotifications = () => {
   PushNotification.configure({
-    onNotification: function (notification: any) {
+    onNotification: async function (notification: any) {
       console.log('NOTIFICATION:', notification);
+
+      // Add in-app notification when push notification is received
+      if (notification.data?.type === 'daily' || notification.data?.type === 'challenge') {
+        await addNotification({
+          id: `${notification.data.type}-${Date.now()}`,
+          type: 'reminder',
+          title: notification.title || 'Time for Your Daily Mission! 🎯',
+          message: notification.message || "Don't forget to complete your daily mission and maintain your streak!",
+        });
+      }
+
       // Required on iOS only
       notification.finish(PushNotificationIOS.FetchResult.NoData);
     },
@@ -89,6 +100,7 @@ const scheduleNotification = async (
         title,
         body: message,
         fireDate: scheduledTime,
+        userInfo: { type }
       });
     } else {
       PushNotification.localNotificationSchedule({
@@ -97,10 +109,11 @@ const scheduleNotification = async (
         message,
         date: scheduledTime,
         allowWhileIdle: true,
+        userInfo: { type }
       });
     }
 
-    // Add in-app notification
+    // Add in-app notification for scheduling confirmation
     await addNotification({
       id: `${type}-reminder-${Date.now()}`,
       type: 'reminder',

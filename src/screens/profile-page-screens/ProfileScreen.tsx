@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView, Alert, Image } from 'react-native';
 import { Text, Avatar, ListItem } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -8,6 +8,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, RootTabParamList } from '../../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { setQuestionnaireStatus } from '../../services/questionnaireService';
 import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
 
@@ -21,7 +23,11 @@ type Props = CompositeScreenProps<
 const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [weekCompletions, setWeekCompletions] = useState<{ [key: string]: boolean }>({});
+  const [isUploading, setIsUploading] = useState(false);
+
+  const defaultProfileImage = require('../../assets/illustrations/profile/profile-placeholder.png');
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -38,6 +44,11 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         }
         if (currentUser.email) {
           setUserEmail(currentUser.email);
+        }
+        
+        // Try to get existing profile image
+        if (currentUser.photoURL) {
+          setProfileImage(currentUser.photoURL);
         }
       }
     };
@@ -117,6 +128,49 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     const interval = setInterval(updateWeekCompletions, 60000); // Check every minute
     return () => clearInterval(interval);
   }, []);
+
+  const handleImageUpload = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+        maxWidth: 800,
+        maxHeight: 800,
+      });
+
+      if (result.didCancel || !result.assets?.[0]?.uri) {
+        return;
+      }
+
+      setIsUploading(true);
+
+      const imageUri = result.assets[0].uri;
+      const currentUser = auth().currentUser;
+
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+
+      // Upload to Firebase Storage
+      const filename = `profile_${currentUser.uid}_${Date.now()}.jpg`;
+      const reference = storage().ref(`profile_images/${filename}`);
+      
+      await reference.putFile(imageUri);
+      const downloadURL = await reference.getDownloadURL();
+
+      // Update user profile
+      await currentUser.updateProfile({
+        photoURL: downloadURL,
+      });
+
+      setProfileImage(downloadURL);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const achievements = [
     {
@@ -239,14 +293,30 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.avatarContainer}>
-          <View style={styles.avatarWrapper}>
-            <Avatar
-              size={100}
-              rounded
-              icon={{ name: 'user', type: 'font-awesome' }}
-              containerStyle={styles.avatar}
-            />
-          </View>
+          <TouchableOpacity 
+            style={styles.avatarWrapper}
+            onPress={handleImageUpload}
+            disabled={isUploading}
+          >
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.avatar}
+              />
+            ) : (
+              <Image
+                source={defaultProfileImage}
+                style={styles.avatar}
+              />
+            )}
+            <View style={styles.uploadOverlay}>
+              <MaterialCommunityIcons 
+                name="camera" 
+                size={24} 
+                color="#FFFFFF" 
+              />
+            </View>
+          </TouchableOpacity>
           <View style={styles.userInfoContainer}>
             <Text style={styles.name}>{userName}</Text>
             <Text style={styles.email}>{userEmail}</Text>
@@ -389,6 +459,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   avatarWrapper: {
+    position: 'relative',
     marginRight: 20,
   },
   userInfoContainer: {
@@ -398,8 +469,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 15,
     backgroundColor: '#2A2A2A',
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   name: {
     fontSize: 24,
