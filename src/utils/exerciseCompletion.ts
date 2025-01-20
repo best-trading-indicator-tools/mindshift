@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addNotification } from '../services/notificationService';
-import { addPoints, updateDailyStreak } from '../services/achievementService';
+import { addPoints, updateDailyStreak, checkAndUpdateAchievements } from '../services/achievementService';
 
 // Separate key prefixes for different contexts
 const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
@@ -125,7 +125,7 @@ export const markChallengeExerciseAsCompleted = async (challengeId: string, exer
       type: 'success'
     });
 
-    // If all exercises are completed, send a special notification
+    // If all exercises are completed, send a special notification and add points
     if (progress.completedCount === progress.totalExercises) {
       await addNotification({
         id: `challenge-${challengeId}-complete-${Date.now()}`,
@@ -133,6 +133,10 @@ export const markChallengeExerciseAsCompleted = async (challengeId: string, exer
         message: 'Congratulations! You\'ve completed all exercises in this challenge. Your dedication is truly inspiring!',
         type: 'success'
       });
+      
+      // Add points and check for achievements when challenge is completed
+      await addPoints('CHALLENGE');
+      await checkAndUpdateAchievements(0); // Pass 0 as we're not checking streak achievements
     }
   } catch (error) {
     console.error('Error marking challenge exercise as completed:', error);

@@ -192,7 +192,7 @@ export async function addPoints(type: 'DAILY_MISSION' | 'CHALLENGE') {
   }
 }
 
-async function checkAndUpdateAchievements(consecutiveDays: number) {
+export async function checkAndUpdateAchievements(consecutiveDays: number) {
   try {
     const unlockedAchievements = await getUnlockedAchievements();
     const newAchievements: Achievement[] = [];
