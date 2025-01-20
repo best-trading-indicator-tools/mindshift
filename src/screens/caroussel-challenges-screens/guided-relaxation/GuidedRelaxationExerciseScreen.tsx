@@ -161,7 +161,11 @@ const GuidedRelaxationExerciseScreen: React.FC<Props> = ({ navigation }) => {
             <MaterialCommunityIcons name="close" size={24} color="rgba(255,255,255,0.6)" />
           </TouchableOpacity>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.content} 
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="white"
+          >
             <View style={styles.mainContent}>
               <View style={styles.trackInfo}>
                 <Text style={styles.trackTitle}>Sleep Well</Text>
