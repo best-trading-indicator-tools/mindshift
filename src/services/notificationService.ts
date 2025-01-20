@@ -99,6 +99,15 @@ const scheduleNotification = async (
         allowWhileIdle: true,
       });
     }
+
+    // Add in-app notification
+    await addNotification({
+      id: `${type}-reminder-${Date.now()}`,
+      type: 'reminder',
+      title,
+      message: `Reminder scheduled for ${scheduledTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`,
+    });
+
   } catch (error) {
     console.error(`Error scheduling ${type} notification:`, error);
     throw error;
