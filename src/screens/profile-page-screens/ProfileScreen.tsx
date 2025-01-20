@@ -12,6 +12,8 @@ import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { setQuestionnaireStatus } from '../../services/questionnaireService';
 import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
+import { getUserStats, getUnlockedAchievements, updateDailyStreak, type Achievement, type UserStats } from '../../services/achievementService';
+import LinearGradient from 'react-native-linear-gradient';
 
 const IconComponent = MaterialCommunityIcons as any;
 
@@ -26,34 +28,45 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [weekCompletions, setWeekCompletions] = useState<{ [key: string]: boolean }>({});
   const [isUploading, setIsUploading] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats>({
+    consecutiveDays: 0,
+    totalPoints: 0,
+    totalChallenges: 0
+  });
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
 
   const defaultProfileImage = require('../../assets/illustrations/profile/profile-placeholder.png');
 
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const loadUserData = async () => {
       const currentUser = auth().currentUser;
       if (currentUser) {
         if (currentUser.displayName) {
-          // Get first name only
           const firstName = currentUser.displayName.split(' ')[0];
           setUserName(firstName);
         } else if (currentUser.email) {
-          // If no display name, use email username
           const emailName = currentUser.email.split('@')[0];
           setUserName(emailName);
         }
         if (currentUser.email) {
           setUserEmail(currentUser.email);
         }
-        
-        // Try to get existing profile image
         if (currentUser.photoURL) {
           setProfileImage(currentUser.photoURL);
         }
+
+        // Load user stats and achievements
+        const stats = await getUserStats();
+        setUserStats(stats);
+        const unlockedAchievements = await getUnlockedAchievements();
+        setAchievements(unlockedAchievements);
+
+        // Update daily streak if needed
+        await updateDailyStreak();
       }
     };
 
-    getCurrentUser();
+    loadUserData();
   }, []);
 
   // Get the day abbreviation for a given date
@@ -171,27 +184,6 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       setIsUploading(false);
     }
   };
-
-  const achievements = [
-    {
-      title: '7-Day Streak',
-      description: 'Completed challenges for 7 days in a row',
-      icon: 'fire',
-      color: '#FF4136',
-    },
-    {
-      title: 'Mindfulness Master',
-      description: 'Completed 10 meditation sessions',
-      icon: 'meditation',
-      color: '#6366f1',
-    },
-    {
-      title: 'Digital Detox',
-      description: 'Completed 24 hours without social media',
-      icon: 'cellphone-off',
-      color: '#2ECC40',
-    },
-  ];
 
   const handleLogout = async () => {
     try {
@@ -359,34 +351,74 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>18</Text>
+            <Text style={styles.statValue}>{userStats.consecutiveDays}</Text>
             <Text style={styles.statLabel}>Days Active</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>1,250</Text>
+            <Text style={styles.statValue}>{userStats.totalPoints.toLocaleString()}</Text>
             <Text style={styles.statLabel}>Points</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statValue}>{userStats.totalChallenges}</Text>
             <Text style={styles.statLabel}>Challenges</Text>
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Achievements</Text>
-          {achievements.map((achievement, index) => (
-            <ListItem 
-              key={index} 
-              bottomDivider
-              containerStyle={styles.listItem}
-              >
-              <IconComponent name={achievement.icon} size={24} color={achievement.color} />
-              <ListItem.Content>
-                <ListItem.Title style={styles.listItemTitle}>{achievement.title}</ListItem.Title>
-                <ListItem.Subtitle style={styles.listItemSubtitle}>{achievement.description}</ListItem.Subtitle>
-              </ListItem.Content>
-            </ListItem>
-          ))}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.achievementsContainer}
+          >
+            {achievements.length > 0 ? (
+              achievements.map((achievement) => (
+                <TouchableOpacity 
+                  key={achievement.id}
+                  style={styles.achievementCard}
+                >
+                  <LinearGradient
+                    colors={[
+                      'rgba(26, 26, 26, 0.9)',
+                      `${achievement.color}20`,
+                      `${achievement.color}40`
+                    ]}
+                    locations={[0, 0.5, 0.8]}
+                    style={styles.achievementGradient}
+                  >
+                    <View style={styles.achievementContent}>
+                      <View style={styles.achievementIconWrapper}>
+                        <MaterialCommunityIcons 
+                          name="trophy"
+                          size={28} 
+                          color={achievement.color}
+                        />
+                      </View>
+                      <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <TouchableOpacity style={styles.achievementCard}>
+                <LinearGradient
+                  colors={['#1A1A1A', '#2A2A2A']}
+                  style={styles.achievementGradient}
+                >
+                  <View style={styles.achievementContent}>
+                    <View style={styles.achievementIconWrapper}>
+                      <MaterialCommunityIcons 
+                        name="trophy-outline" 
+                        size={28} 
+                        color="#666" 
+                      />
+                    </View>
+                    <Text style={[styles.achievementTitle, styles.emptyText]}>Locked</Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
         </View>
 
         <View style={styles.logoutContainer}>
@@ -535,19 +567,48 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     letterSpacing: 0.5,
   },
-  listItem: {
+  achievementsContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    gap: 12,
+  },
+  achievementCard: {
+    width: 110,
+    height: 140,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginRight: 12,
     backgroundColor: '#1A1A1A',
-    marginBottom: 1,
-    borderBottomColor: '#2A2A2A',
   },
-  listItemTitle: {
+  achievementGradient: {
+    flex: 1,
+    padding: 12,
+  },
+  achievementContent: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  achievementIconWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  achievementTitle: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
   },
-  listItemSubtitle: {
-    color: '#A0A0A0',
-    fontSize: 14,
+  emptyText: {
+    color: '#666',
   },
   logoutContainer: {
     padding: 15,

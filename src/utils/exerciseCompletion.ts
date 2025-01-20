@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addNotification } from '../services/notificationService';
+import { addPoints, updateDailyStreak } from '../services/achievementService';
 
 // Separate key prefixes for different contexts
 const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
@@ -91,11 +92,12 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
 
 export const isDailyExerciseCompleted = async (exerciseId: string): Promise<boolean> => {
   try {
-    const key = `${DAILY_COMPLETION_KEY_PREFIX}${exerciseId}`;
-    const completion = await AsyncStorage.getItem(key);
-    return completion !== null;
+    const today = new Date().toISOString().split('T')[0];
+    const completionKey = `${DAILY_COMPLETION_KEY_PREFIX}${exerciseId}_completion_${today}`;
+    const isCompleted = await AsyncStorage.getItem(completionKey);
+    return isCompleted === 'true';
   } catch (error) {
-    console.error('Error checking daily exercise completion:', error);
+    console.error('Error checking exercise completion:', error);
     return false;
   }
 };
@@ -253,4 +255,37 @@ export const isChallengeExerciseUnlocked = async (challengeId: string, exerciseI
     console.error('Error checking if challenge exercise is unlocked:', error);
     return false;
   }
-}; 
+};
+
+export async function markExerciseCompleted(exerciseKey: string, isChallenge: boolean = false) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const completionKey = `${exerciseKey}_completion_${today}`;
+    
+    // Only award points if not already completed today
+    const alreadyCompleted = await isDailyExerciseCompleted(exerciseKey);
+    if (!alreadyCompleted) {
+      await AsyncStorage.setItem(completionKey, 'true');
+      
+      // Award points and update streak
+      await addPoints(isChallenge ? 'CHALLENGE' : 'DAILY_MISSION');
+      await updateDailyStreak();
+    }
+  } catch (error) {
+    console.error('Error marking exercise completion:', error);
+  }
+}
+
+export async function getAllCompletedExercises(): Promise<string[]> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const keys = await AsyncStorage.getAllKeys();
+    const completedExercises = keys
+      .filter(key => key.endsWith(`_completion_${today}`))
+      .map(key => key.split('_completion_')[0]);
+    return completedExercises;
+  } catch (error) {
+    console.error('Error getting completed exercises:', error);
+    return [];
+  }
+} 
