@@ -17,7 +17,7 @@ export interface UserStats {
   lastActiveDate?: string;
 }
 
-const STREAK_ACHIEVEMENTS = [
+export const STREAK_ACHIEVEMENTS = [
   {
     id: 'streak_1',
     title: 'First Day',
@@ -68,7 +68,7 @@ const STREAK_ACHIEVEMENTS = [
   }
 ];
 
-const CHALLENGE_ACHIEVEMENTS = [
+export const CHALLENGE_ACHIEVEMENTS = [
   {
     id: 'challenge_1',
     title: 'First Challenge',

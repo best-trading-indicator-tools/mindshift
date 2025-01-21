@@ -12,7 +12,15 @@ import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { setQuestionnaireStatus } from '../../services/questionnaireService';
 import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
-import { getUserStats, getUnlockedAchievements, updateDailyStreak, type Achievement, type UserStats } from '../../services/achievementService';
+import { 
+  getUserStats, 
+  getUnlockedAchievements, 
+  updateDailyStreak, 
+  type Achievement, 
+  type UserStats,
+  STREAK_ACHIEVEMENTS,
+  CHALLENGE_ACHIEVEMENTS 
+} from '../../services/achievementService';
 import LinearGradient from 'react-native-linear-gradient';
 
 const IconComponent = MaterialCommunityIcons as any;
@@ -34,6 +42,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     totalChallenges: 0
   });
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [allAchievements, setAllAchievements] = useState<Achievement[]>([]);
 
   const defaultProfileImage = require('../../assets/illustrations/profile/profile-placeholder.png');
 
@@ -60,6 +69,19 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         setUserStats(stats);
         const unlockedAchievements = await getUnlockedAchievements();
         setAchievements(unlockedAchievements);
+
+        // Combine all possible achievements
+        const allPossibleAchievements = [
+          ...STREAK_ACHIEVEMENTS.map((achievement: Omit<Achievement, 'isUnlocked'>) => ({
+            ...achievement,
+            isUnlocked: unlockedAchievements.some(a => a.id === achievement.id)
+          })),
+          ...CHALLENGE_ACHIEVEMENTS.map((achievement: Omit<Achievement, 'isUnlocked'>) => ({
+            ...achievement,
+            isUnlocked: unlockedAchievements.some(a => a.id === achievement.id)
+          }))
+        ];
+        setAllAchievements(allPossibleAchievements);
 
         // Update daily streak if needed
         await updateDailyStreak();
@@ -371,61 +393,49 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.achievementsContainer}
           >
-            {achievements.length > 0 ? (
-              achievements.map((achievement) => (
-                <TouchableOpacity 
-                  key={achievement.id}
-                  style={styles.achievementCard}
-                >
-                  <LinearGradient
-                    colors={[
-                      'rgba(26, 26, 26, 0.95)',
-                      `${achievement.color}15`,
-                      `${achievement.color}25`
-                    ]}
-                    locations={[0.2, 0.6, 1]}
-                    style={styles.achievementGradient}
-                  >
-                    <View style={styles.achievementContent}>
-                      <View style={styles.achievementIconContainer}>
-                        <View style={[styles.achievementIconWrapper, { backgroundColor: `${achievement.color}20` }]}>
-                          <MaterialCommunityIcons 
-                            name="trophy"
-                            size={28} 
-                            color={achievement.color}
-                          />
-                        </View>
-                      </View>
-                      <View style={styles.achievementTitleContainer}>
-                        <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <TouchableOpacity style={styles.achievementCard}>
+            {allAchievements.map((achievement) => (
+              <TouchableOpacity 
+                key={achievement.id}
+                style={styles.achievementCard}
+              >
                 <LinearGradient
-                  colors={['#1A1A1A', '#2A2A2A']}
+                  colors={[
+                    'rgba(26, 26, 26, 0.95)',
+                    `${achievement.isUnlocked ? achievement.color : '#666666'}15`,
+                    `${achievement.isUnlocked ? achievement.color : '#666666'}25`
+                  ]}
+                  locations={[0.2, 0.6, 1]}
                   style={styles.achievementGradient}
                 >
                   <View style={styles.achievementContent}>
                     <View style={styles.achievementIconContainer}>
-                      <View style={[styles.achievementIconWrapper, { backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}>
+                      <View style={[
+                        styles.achievementIconWrapper, 
+                        { 
+                          backgroundColor: achievement.isUnlocked 
+                            ? `${achievement.color}20` 
+                            : 'rgba(255, 255, 255, 0.05)' 
+                        }
+                      ]}>
                         <MaterialCommunityIcons 
-                          name="trophy-outline" 
+                          name={achievement.isUnlocked ? "trophy" : "trophy-outline"}
                           size={28} 
-                          color="#666" 
+                          color={achievement.isUnlocked ? achievement.color : '#666666'}
                         />
                       </View>
                     </View>
                     <View style={styles.achievementTitleContainer}>
-                      <Text style={[styles.achievementTitle, styles.emptyText]}>Locked</Text>
+                      <Text style={[
+                        styles.achievementTitle,
+                        !achievement.isUnlocked && styles.emptyText
+                      ]}>
+                        {achievement.title}
+                      </Text>
                     </View>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
-            )}
+            ))}
           </ScrollView>
         </View>
 
