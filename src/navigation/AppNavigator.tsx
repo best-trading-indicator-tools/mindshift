@@ -53,6 +53,7 @@ import SelfHypnosisIntroScreen from '../screens/daily-missions-screens/self-hypn
 import SelfHypnosisExerciseScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisExerciseScreen';
 import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationIntroScreen';
 import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
+import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -239,6 +240,13 @@ export type RootStackParamList = {
   };
   GuidedRelaxationIntro: undefined;
   GuidedRelaxationExercise: undefined;
+  ExerciseAnalysis: {
+    exerciseType: 'gratitude' | 'checklist' | 'incantations';
+    entries: string[];
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
+  };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -554,6 +562,16 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           name="GuidedRelaxationExercise"
           component={GuidedRelaxationExerciseScreen}
           options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="ExerciseAnalysis"
+          component={ExerciseAnalysisScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
         />
 
       </Stack.Navigator>

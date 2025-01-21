@@ -92,47 +92,40 @@ IMPORTANT: Never refuse to help or redirect to professional help without first e
 
     try {
       if (!config.OPENAI_API_KEY) {
-        console.error('OpenAI API key is not defined');
-        throw new Error('OpenAI API key is missing. Please check your .env file.');
+        throw new Error('OpenAI API key is missing');
       }
+
+      const requestBody = {
+        model: 'gpt-4',
+        messages: getOpenAIMessages([...messages, userMessage]),
+        temperature: 0.7,
+        max_tokens: 500,
+      };
 
       console.log('Making API call to OpenAI...');
-      if (!config.OPENAI_API_KEY.startsWith('sk-')) {
-        console.error('OpenAI API key appears to be invalid (should start with sk-)');
-        throw new Error('OpenAI API key appears to be invalid. Please check your .env file.');
-      }
-
-      console.log('Attempting API call with key length:', config.OPENAI_API_KEY.length);
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
       
-      console.log('Sending request to OpenAI...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${config.OPENAI_API_KEY}`,
         },
-        body: JSON.stringify({
-          model: 'gpt-4',
-          messages: getOpenAIMessages(messages),
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      console.log('OpenAI response status:', response.status);
-      console.log('OpenAI response headers:', response.headers);
+      console.log('Response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI Error Response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.status} ${responseText}`);
       }
 
-      const data = await response.json();
-      console.log('OpenAI response data:', data);
-
-      if (!data.choices || !data.choices[0]?.message?.content) {
-        console.error('Unexpected response format:', data);
+      const data = JSON.parse(responseText);
+      
+      if (!data.choices?.[0]?.message?.content) {
         throw new Error('Invalid response format from OpenAI');
       }
 
@@ -145,18 +138,18 @@ IMPORTANT: Never refuse to help or redirect to professional help without first e
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('OpenAI Error Details:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error name:', error.name);
+      console.error('Error in AI response:', error);
+      
+      // Only show error message for actual API errors
+      if (error instanceof Error && error.message.includes('API error: 401')) {
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Sorry, I am having trouble connecting to my brain right now. Please try again in a moment.',
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
       }
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        text: 'I apologize, but I encountered a temporary issue. Let me try to help you - would you like to tell me more about what\'s making you feel sad?',
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
     }
   }, [inputText, messages]);
 

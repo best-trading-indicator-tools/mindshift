@@ -59,29 +59,28 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     if (isComplete() && !isSubmitting) {
       try {
         setIsSubmitting(true);
-        if (context === 'challenge' && challengeId) {
-          const validEntries = entries.filter(isEntryComplete);
-          if (validEntries.length >= MIN_ENTRIES) {
+        const validEntries = entries.filter(isEntryComplete);
+        const entriesForAnalysis = validEntries.map(entry => `I am grateful for ${entry.what} because ${entry.why}`);
+
+        if (validEntries.length >= MIN_ENTRIES) {
+          navigation.navigate('ExerciseAnalysis', {
+            exerciseType: 'gratitude',
+            entries: entriesForAnalysis,
+            context: context,
+            challengeId: challengeId,
+            returnTo: returnTo
+          });
+
+          if (context === 'challenge' && challengeId) {
             await markChallengeExerciseAsCompleted(challengeId, 'daily-gratitude');
             if (route.params?.onComplete) {
               route.params.onComplete();
             }
-            navigation.navigate('ChallengeDetail', {
-              challenge: {
-                id: challengeId,
-                title: 'Ultimate',
-                duration: 21,
-                description: 'Your subconscious mind shapes your reality.',
-                image: require('../../../assets/illustrations/challenges/challenge-21.png')
-              }
-            });
           } else {
-            Alert.alert('Cannot Complete', 'Please add at least one gratitude entry before completing.');
+            await markDailyExerciseAsCompleted('daily-gratitude');
           }
         } else {
-          console.log("marking daily gratitude as HOME completed");
-          await markDailyExerciseAsCompleted('daily-gratitude');
-          setShowPostExercise(true);
+          Alert.alert('Cannot Complete', 'Please add at least one gratitude entry before completing.');
         }
       } catch (error) {
         console.error('Error completing gratitude exercise:', error);
