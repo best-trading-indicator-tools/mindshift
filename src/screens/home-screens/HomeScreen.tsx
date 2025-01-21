@@ -16,6 +16,7 @@ import { clearNotifications, getNotifications } from '../../services/notificatio
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ResourcePreloadService } from '../../services/resourcePreloadService';
 import { isDailyExerciseCompleted } from '../../utils/exerciseCompletion';
+import MissionsProgressBar from '../../components/MissionsProgressBar';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, 'Home'>,
@@ -795,7 +796,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
           <View style={styles.missionsContent}>
-            <ProgressBar 
+            <MissionsProgressBar 
               totalSteps={dailyMissions.length}
               completedSteps={completedExercises.length}
               completedMissions={completedExercises}

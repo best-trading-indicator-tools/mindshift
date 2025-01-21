@@ -74,7 +74,7 @@ yarn-error.log
 !.yarn/versions
 
 # Environment variables
-# .env
+.env
 src/assets/audio/*.wav
 src/assets/audio/musics/*.wav
 src/assets/audio/musics.*/mp3

@@ -12,6 +12,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { config } from '../../config/env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoadingProgressBar from '../../components/ProgressBar';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseAnalysis'>;
 
@@ -238,8 +239,10 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#FFD700" />
-        <Text style={styles.loadingText}>Analyzing your progress...</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Analyzing your progress...</Text>
+          <LoadingProgressBar width={250} height={4} />
+        </View>
       </View>
     );
   }
@@ -323,11 +326,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
   loadingText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 18,
-    textAlign: 'center',
-    marginTop: 20,
+    marginBottom: 10,
   },
   errorText: {
     color: '#FF0000',

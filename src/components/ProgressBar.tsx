@@ -1,94 +1,67 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
 
-interface ProgressBarProps {
-  totalSteps: number;
-  completedSteps: number;
-  completedMissions: string[];
-  missions: Array<{
-    title: string;
-    id: string;
-  }>;
+interface Props {
+  width?: number;
+  height?: number;
+  color?: string;
+  backgroundColor?: string;
+  duration?: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ 
-  totalSteps, 
-  completedSteps, 
-  completedMissions,
-  missions 
+const LoadingProgressBar: React.FC<Props> = ({
+  width = 200,
+  height = 4,
+  color = '#4CAF50',
+  backgroundColor = '#2A2A2A',
+  duration = 1500,
 }) => {
+  const progressAnim = new Animated.Value(0);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(progressAnim, {
+          toValue: 1,
+          duration: duration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(progressAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, [duration, progressAnim]);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.progressLine}>
-        {missions.map((mission, index) => {
-          const isCompleted = completedMissions.includes(mission.id);
-          const stepHeight = 100 / totalSteps;
-          const top = index * stepHeight;
-          const isTransitionIntoCompleted = index > 0 && 
-            !completedMissions.includes(missions[index - 1].id) && 
-            completedMissions.includes(mission.id);
-          
-          const isTransitionOutOfCompleted = index > 0 && 
-            completedMissions.includes(missions[index - 1].id) && 
-            !completedMissions.includes(mission.id);
-          
-          if (isTransitionIntoCompleted || isTransitionOutOfCompleted) {
-            return (
-              <LinearGradient
-                key={mission.id}
-                colors={isTransitionIntoCompleted ? ['#FFD700', '#10B981'] : ['#10B981', '#FFD700']}
-                style={[
-                  styles.missionLine,
-                  {
-                    top: `${top}%`,
-                    height: `${stepHeight}%`,
-                  },
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-              />
-            );
-          }
-          
-          return (
-            <View
-              key={mission.id}
-              style={[
-                styles.missionLine,
-                {
-                  top: `${top}%`,
-                  height: `${stepHeight}%`,
-                  backgroundColor: isCompleted ? '#10B981' : '#FFD700',
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
+    <View style={[styles.container, { width, height, backgroundColor }]}>
+      <Animated.View
+        style={[
+          styles.progress,
+          {
+            width: progressAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0%', '100%'],
+            }),
+            height,
+            backgroundColor: color,
+          },
+        ]}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: 40,
-    height: '100%',
-    position: 'relative',
-    marginRight: 16,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  progressLine: {
-    position: 'absolute',
-    left: '0%',
-    width: 4,
-    height: '100%',
-    backgroundColor: '#2A2E3B',
-    transform: [{ translateX: -2 }],
-  },
-  missionLine: {
-    width: '100%',
-    position: 'absolute',
+  progress: {
+    borderRadius: 2,
   },
 });
 
-export default ProgressBar;
+export default LoadingProgressBar;
