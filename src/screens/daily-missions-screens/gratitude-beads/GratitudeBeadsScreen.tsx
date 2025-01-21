@@ -392,7 +392,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
         setTimeout(() => {
           setShowCompletionModal(false);
           navigation.navigate('MainTabs');
-        }, 2000);
+        }, 100);
       }
     } catch (error) {
       console.error('Error completing exercise:', error);

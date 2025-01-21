@@ -7,6 +7,12 @@ import ProgressHeader from '../../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 
+type RouteParams = {
+  context?: 'challenge' | 'daily';
+  challengeId?: string;
+  returnTo?: keyof RootStackParamList;
+};
+
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeBeadsIntro'>;
 
 const introContent = [
@@ -53,12 +59,20 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExit = () => {
-    navigation.navigate('GratitudeBeads', {
-      context: route.params?.challengeId ? 'challenge' : 'daily',
-      challengeId: route.params?.challengeId,
-      returnTo: route.params?.returnTo
-    });
+  const handleExit = async () => {
+    if (route.params?.context === 'challenge' && route.params.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId,
+          title: 'Ultimate',
+          duration: 21,
+          description: 'Your subconscious mind shapes your reality.',
+          image: require('../../../assets/illustrations/challenges/challenge-21.png')
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
 
   const currentContent = introContent[currentStep - 1];

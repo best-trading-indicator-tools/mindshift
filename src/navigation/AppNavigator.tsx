@@ -179,6 +179,7 @@ export type RootStackParamList = {
   GratitudeBeadsIntro: {
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
+    context?: 'daily' | 'challenge';
   } | undefined;
   SunBreathTutorial: {
     returnTo?: keyof RootStackParamList;
