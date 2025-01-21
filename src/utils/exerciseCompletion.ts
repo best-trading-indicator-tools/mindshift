@@ -92,10 +92,10 @@ export const markDailyExerciseAsCompleted = async (exerciseId: string): Promise<
 
 export const isDailyExerciseCompleted = async (exerciseId: string): Promise<boolean> => {
   try {
-    // Use the same key format as markDailyExerciseAsCompleted
-    const key = `${DAILY_COMPLETION_KEY_PREFIX}${exerciseId}`;
-    const completion = await AsyncStorage.getItem(key);
-    return completion !== null;
+        // Use the same key format as markDailyExerciseAsCompleted
+      const key = `${DAILY_COMPLETION_KEY_PREFIX}${exerciseId}`;
+      const completion = await AsyncStorage.getItem(key);
+      return completion !== null;
   } catch (error) {
     console.error('Error checking exercise completion:', error);
     return false;

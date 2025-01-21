@@ -43,8 +43,6 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 1000);
-    return () => clearInterval(interval);
   }, [loadNotifications]);
 
   const handleNotificationPress = useCallback(async (notification: Notification) => {
