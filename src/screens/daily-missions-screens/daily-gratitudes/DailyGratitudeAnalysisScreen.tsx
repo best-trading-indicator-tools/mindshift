@@ -62,6 +62,15 @@ const ANALYSIS_STEPS = [
   "Creating your personalized analysis..."
 ];
 
+const STEP_ICONS = {
+  0: "notebook", // Reading entries
+  1: "heart-pulse", // Emotional patterns
+  2: "puzzle", // Recurring themes
+  3: "trending-up", // Personal growth
+  4: "account-group", // Relationship insights
+  5: "star", // Final analysis
+} as const;
+
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeAnalysis'>;
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
@@ -175,7 +184,11 @@ Analyze these entries: ${JSON.stringify(entries)}`
         <StatusBar barStyle="light-content" />
         <View style={styles.loadingContent}>
           <View style={styles.loadingIconContainer}>
-            <MaterialCommunityIcons name="heart" size={40} color="#B91C1C" />
+            <MaterialCommunityIcons 
+              name={STEP_ICONS[loadingStep as keyof typeof STEP_ICONS]} 
+              size={40} 
+              color="#B91C1C" 
+            />
           </View>
           <Text style={styles.loadingTitle}>{ANALYSIS_STEPS[loadingStep]}</Text>
           <LoadingProgressBar width={200} color="#B91C1C" />
