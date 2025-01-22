@@ -4,10 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   TouchableOpacity,
-  Dimensions,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { config } from '../../config/env';
@@ -238,95 +239,139 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Analyzing your progress...</Text>
-          <LoadingProgressBar width={250} height={4} />
-        </View>
-      </View>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient
+          colors={['#1E2132', '#2A2D3E']}
+          style={styles.gradientBackground}
+        >
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Analyzing your progress...</Text>
+            <LoadingProgressBar width={250} height={4} color="#4facfe" />
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Something went wrong</Text>
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient
+          colors={['#1E2132', '#2A2D3E']}
+          style={styles.gradientBackground}
+        >
+          <Text style={styles.errorText}>Something went wrong</Text>
+          <TouchableOpacity style={styles.button} onPress={handleContinue}>
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        {analysis && (
-          <>
-            <Text style={styles.title}>Your Progress Insights</Text>
-            
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Overall Tone</Text>
-              <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
-              <View style={styles.emotionChips}>
-                {analysis.emotionalTone.secondary.map((emotion, index) => (
-                  <Text key={index} style={styles.emotionChip}>{emotion}</Text>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={['#1E2132', '#2A2D3E']}
+        style={styles.gradientBackground}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {analysis && (
+            <>
+              <View style={styles.header}>
+                <Text style={styles.title}>Progress Insights</Text>
+              </View>
+              
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Overall Tone</Text>
+                <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
+                <View style={styles.emotionChips}>
+                  {analysis.emotionalTone.secondary.map((emotion, index) => (
+                    <LinearGradient
+                      key={index}
+                      colors={['#4facfe', '#00f2fe']}
+                      start={{x: 0, y: 0}}
+                      end={{x: 1, y: 0}}
+                      style={styles.emotionChipGradient}
+                    >
+                      <Text style={styles.emotionChip}>{emotion}</Text>
+                    </LinearGradient>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Key Themes</Text>
+                {analysis.themes.map((theme, index) => (
+                  <View key={index} style={styles.themeItem}>
+                    <Text style={styles.themeName}>{theme.name}</Text>
+                    <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
+                  </View>
                 ))}
               </View>
-            </View>
 
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Key Themes</Text>
-              {analysis.themes.map((theme, index) => (
-                <View key={index} style={styles.themeItem}>
-                  <Text style={styles.themeName}>{theme.name}</Text>
-                  <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
-                </View>
-              ))}
-            </View>
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Personal Insights</Text>
+                <Text style={styles.insightText}>{analysis.insights.main}</Text>
+                <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
+                <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
+              </View>
 
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Personal Insights</Text>
-              <Text style={styles.insightText}>{analysis.insights.main}</Text>
-              <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
-              <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
-            </View>
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Next Focus</Text>
+                <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
+              </View>
+            </>
+          )}
+        </ScrollView>
 
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Next Focus</Text>
-              <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
-            </View>
-          </>
-        )}
-      </ScrollView>
-
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
-    </View>
+        <LinearGradient
+          colors={['#4facfe', '#00f2fe']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={styles.buttonGradient}
+        >
+          <TouchableOpacity style={styles.button} onPress={handleContinue}>
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#1E2132',
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  header: {
+    paddingTop: 12,
+    paddingBottom: 24,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    padding: 10,
-    paddingTop: 0,
+    padding: 16,
     paddingBottom: 100,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 10,
-    marginBottom: 20,
+    letterSpacing: 0.5,
   },
   loadingContainer: {
     flex: 1,
@@ -346,59 +391,74 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 15,
+    fontWeight: '600',
+    color: '#4facfe',
+    marginBottom: 16,
+    letterSpacing: 0.5,
   },
   primaryEmotion: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   emotionChips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    gap: 8,
+  },
+  emotionChipGradient: {
+    borderRadius: 20,
+    padding: 1,
   },
   emotionChip: {
-    backgroundColor: '#333333',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    margin: 4,
-    color: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    color: '#000000',
+    fontWeight: '600',
   },
   themeItem: {
-    marginBottom: 10,
+    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   themeName: {
     fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 4,
   },
   themeFrequency: {
     fontSize: 14,
-    color: '#888888',
+    color: '#4facfe',
+    fontWeight: '500',
   },
   insightText: {
     fontSize: 16,
     color: '#FFFFFF',
-    marginBottom: 10,
+    marginBottom: 16,
     lineHeight: 24,
   },
   celebrationText: {
     fontSize: 16,
-    color: '#FFD700',
-    marginBottom: 10,
+    color: '#4facfe',
+    marginBottom: 16,
     lineHeight: 24,
+    fontWeight: '500',
   },
   suggestionText: {
     fontSize: 16,
@@ -410,21 +470,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 24,
   },
-  button: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginHorizontal: 20,
+  buttonGradient: {
     position: 'absolute',
     bottom: 30,
-    left: 0,
-    right: 0,
+    left: 20,
+    right: 20,
+    borderRadius: 25,
+  },
+  button: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
   buttonText: {
     color: '#000000',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

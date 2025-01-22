@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   progressLine: {
     position: 'absolute',
-    left: '50%',
+    left: '-5%',
     width: 4,
     height: '100%',
     backgroundColor: '#2A2E3B',
