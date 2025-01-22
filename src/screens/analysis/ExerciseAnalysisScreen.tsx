@@ -7,9 +7,19 @@ import {
   TouchableOpacity,
   StatusBar,
   Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withRepeat,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { config } from '../../config/env';
@@ -51,11 +61,47 @@ interface AnalysisResult {
   };
 }
 
+const AnimatedCard = Animated.createAnimatedComponent(View);
+
+const THEME_ICONS = {
+  health: "heart-pulse",
+  family: "account-group",
+  work: "briefcase",
+  personal: "account",
+  relationships: "heart",
+  nature: "leaf",
+  spirituality: "star",
+  achievements: "trophy",
+  learning: "book",
+  default: "circle-outline"
+};
+
+const EmotionDefinitions = {
+  gratitude: "A feeling of appreciation and thankfulness",
+  joy: "A feeling of great pleasure and happiness",
+  contentment: "A state of peaceful satisfaction",
+  love: "A feeling of deep affection",
+  hope: "A feeling of expectation and desire",
+  // Add more emotions and their definitions
+};
+
+const ANALYSIS_STEPS = [
+  "Reading your gratitude entries...",
+  "Identifying emotional patterns...",
+  "Discovering key themes...",
+  "Finding meaningful connections...",
+  "Generating personalized insights...",
+  "Preparing your analysis..."
+];
+
 const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const intensityPulse = useSharedValue(1);
+  const [loadingStep, setLoadingStep] = useState(0);
 
   const getAnalysisPrompt = (exerciseType: string, entries: string[]) => {
     switch (exerciseType) {
@@ -268,6 +314,53 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     analyzeEntries();
   }, [route.params]);
 
+  useEffect(() => {
+    if (analysis) {
+      intensityPulse.value = withRepeat(
+        withSequence(
+          withSpring(1.1),
+          withSpring(1)
+        ),
+        -1,
+        true
+      );
+    }
+  }, [analysis]);
+
+  useEffect(() => {
+    if (loading) {
+      const stepInterval = setInterval(() => {
+        setLoadingStep((current) => {
+          if (current >= ANALYSIS_STEPS.length - 1) {
+            clearInterval(stepInterval);
+            return current;
+          }
+          return current + 1;
+        });
+      }, 2000); // Change message every 2 seconds
+
+      return () => clearInterval(stepInterval);
+    }
+  }, [loading]);
+
+  const intensityStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: intensityPulse.value }],
+  }));
+
+  const getThemeIcon = (themeName: string): string => {
+    const key = themeName.toLowerCase() as keyof typeof THEME_ICONS;
+    return THEME_ICONS[key] || THEME_ICONS.default;
+  };
+
+  const renderCard = (index: number, children: React.ReactNode) => (
+    <AnimatedCard
+      entering={FadeInDown.delay(index * 200).springify()}
+      style={styles.card}
+    >
+      {children}
+    </AnimatedCard>
+  );
+
   console.log('Current render state:', { loading, error, hasAnalysis: !!analysis });
 
   if (loading) {
@@ -276,8 +369,24 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
         <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
         <View style={[styles.container, { backgroundColor: '#1E2132' }]}>
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Analyzing your progress...</Text>
-            <LoadingProgressBar width={250} height={4} color="#4facfe" />
+            <MaterialCommunityIcons 
+              name="brain" 
+              size={48} 
+              color="#4facfe"
+              style={styles.loadingIcon} 
+            />
+            <Text style={styles.loadingTitle}>AI Analysis in Progress</Text>
+            <Text style={styles.loadingStep}>
+              {ANALYSIS_STEPS[loadingStep]}
+            </Text>
+            <LoadingProgressBar 
+              width={250} 
+              height={4} 
+              color="#4facfe" 
+            />
+            <Text style={styles.loadingSubtext}>
+              Creating your personalized gratitude insights
+            </Text>
           </View>
         </View>
       </SafeAreaView>
@@ -321,10 +430,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
-      <LinearGradient
-        colors={['#1E2132', '#2A2D3E']}
-        style={styles.gradientBackground}
-      >
+      <LinearGradient colors={['#1E2132', '#2A2D3E']} style={styles.gradientBackground}>
         <View style={styles.container}>
           <TouchableOpacity 
             style={styles.exitButton}
@@ -340,170 +446,195 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             {analysis && (
               <>
-                <View style={styles.header}>
-                  <Text style={styles.title}>Progress Insights</Text>
-                  <Text style={styles.subtitle}>
-                    {route.params.entries.length} gratitudes analyzed
-                  </Text>
-                </View>
+                {renderCard(0,
+                  <View style={styles.header}>
+                    <Text style={styles.title}>Progress Insights</Text>
+                    <Text style={styles.subtitle}>
+                      {route.params.entries.length} gratitudes analyzed
+                    </Text>
+                  </View>
+                )}
                 
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="heart-outline" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Overall Tone</Text>
-                  </View>
-                  <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
-                  
-                  {/* Emotion Intensity Meter */}
-                  <View style={styles.intensityContainer}>
-                    <Text style={styles.intensityLabel}>Intensity</Text>
-                    <View style={styles.intensityBar}>
-                      <LinearGradient
-                        colors={['#4facfe', '#00f2fe']}
-                        style={[
-                          styles.intensityFill,
-                          { width: `${(analysis.emotionalTone.intensity / 10) * 100}%` }
-                        ]}
-                      />
+                {renderCard(1,
+                  <View>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="heart-outline" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Overall Tone</Text>
                     </View>
-                    <Text style={styles.intensityValue}>{analysis.emotionalTone.intensity}/10</Text>
-                  </View>
-
-                  {/* Grouped Emotions */}
-                  <View style={styles.emotionGroups}>
-                    {analysis.emotionalTone.secondary.map((emotion, index) => (
-                      <View key={index} style={styles.emotionGroup}>
+                    <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
+                    
+                    <Animated.View style={[styles.intensityContainer, intensityStyle]}>
+                      <Text style={styles.intensityLabel}>Intensity</Text>
+                      <View style={styles.intensityBar}>
                         <LinearGradient
                           colors={['#4facfe', '#00f2fe']}
-                          start={{x: 0, y: 0}}
-                          end={{x: 1, y: 0}}
-                          style={styles.emotionChipGradient}
-                        >
-                          <Text style={styles.emotionChip}>{emotion}</Text>
-                        </LinearGradient>
-                        {index < analysis.emotionalTone.secondary.length - 1 && (
-                          <Svg height="2" width="20">
-                            <Line
-                              x1="0"
-                              y1="1"
-                              x2="20"
-                              y2="1"
-                              stroke="#4facfe"
-                              strokeWidth="2"
-                            />
-                          </Svg>
-                        )}
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="tag-multiple-outline" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Key Themes</Text>
-                  </View>
-                  {analysis.themes.map((theme, index) => (
-                    <View key={index} style={styles.themeItem}>
-                      <View style={styles.themeHeader}>
-                        <View style={styles.themeHeaderLeft}>
-                          <Text style={styles.themeName}>{theme.name}</Text>
-                          <View style={styles.frequencyBadge}>
-                            <Text style={styles.themeFrequency}>{theme.frequency}×</Text>
-                          </View>
-                        </View>
-                        <LinearGradient
-                          colors={['#4facfe20', '#00f2fe20']}
-                          start={{x: 0, y: 0}}
-                          end={{x: 1, y: 0}}
-                          style={styles.themeHeaderGradient}
+                          style={[
+                            styles.intensityFill,
+                            { width: `${(analysis.emotionalTone.intensity / 10) * 100}%` }
+                          ]}
                         />
                       </View>
-                      
-                      <View style={styles.themeContent}>
-                        <View style={styles.themeSection}>
-                          <View style={styles.themeSectionHeader}>
-                            <MaterialCommunityIcons name="check-circle-outline" size={20} color="#4facfe" />
-                            <Text style={styles.themeSectionTitle}>Actionable Steps</Text>
-                          </View>
-                          {theme.actionableSuggestions.map((suggestion, idx) => (
-                            <View key={idx} style={styles.suggestionItem}>
-                              <View style={styles.bulletPoint} />
-                              <Text style={styles.themeDetailText}>{suggestion}</Text>
+                      <Text style={styles.intensityValue}>{analysis.emotionalTone.intensity}/10</Text>
+                    </Animated.View>
+
+                    <View style={styles.emotionGroups}>
+                      {analysis.emotionalTone.secondary.map((emotion, index) => (
+                        <Pressable
+                          key={index}
+                          style={styles.emotionGroup}
+                          onPress={() => setSelectedEmotion(emotion)}
+                        >
+                          <LinearGradient
+                            colors={['#4facfe', '#00f2fe']}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 0}}
+                            style={styles.emotionChipGradient}
+                          >
+                            <Text style={styles.emotionChip}>{emotion}</Text>
+                          </LinearGradient>
+                          {index < analysis.emotionalTone.secondary.length - 1 && (
+                            <Svg height="2" width="20">
+                              <Line
+                                x1="0"
+                                y1="1"
+                                x2="20"
+                                y2="1"
+                                stroke="#4facfe"
+                                strokeWidth="2"
+                              />
+                            </Svg>
+                          )}
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {renderCard(2,
+                  <View>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="tag-multiple-outline" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Key Themes</Text>
+                    </View>
+                    {analysis.themes.map((theme, index) => (
+                      <Animated.View
+                        key={index}
+                        entering={FadeInDown.delay(index * 200).springify()}
+                        style={styles.themeItem}
+                      >
+                        <View style={styles.themeHeader}>
+                          <View style={styles.themeHeaderLeft}>
+                            <MaterialCommunityIcons 
+                              name={getThemeIcon(theme.name)} 
+                              size={24} 
+                              color="#4facfe" 
+                            />
+                            <Text style={styles.themeName}>{theme.name}</Text>
+                            <View style={styles.frequencyBadge}>
+                              <Text style={styles.themeFrequency}>{theme.frequency}×</Text>
                             </View>
-                          ))}
+                          </View>
+                          <LinearGradient
+                            colors={['#4facfe20', '#00f2fe20']}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 0}}
+                            style={styles.themeHeaderGradient}
+                          />
                         </View>
                         
-                        <View style={[styles.themeSection, styles.topSpacing]}>
-                          <View style={styles.themeSectionHeader}>
-                            <MaterialCommunityIcons name="trending-up" size={20} color="#4facfe" />
-                            <Text style={styles.themeSectionTitle}>Growth Opportunities</Text>
-                          </View>
-                          {theme.growthOpportunities.map((opportunity, idx) => (
-                            <View key={idx} style={styles.suggestionItem}>
-                              <View style={styles.bulletPoint} />
-                              <Text style={styles.themeDetailText}>{opportunity}</Text>
+                        <View style={styles.themeContent}>
+                          <View style={styles.themeSection}>
+                            <View style={styles.themeSectionHeader}>
+                              <MaterialCommunityIcons name="check-circle-outline" size={20} color="#4facfe" />
+                              <Text style={styles.themeSectionTitle}>Actionable Steps</Text>
                             </View>
-                          ))}
+                            {theme.actionableSuggestions.map((suggestion, idx) => (
+                              <View key={idx} style={styles.suggestionItem}>
+                                <View style={styles.bulletPoint} />
+                                <Text style={styles.themeDetailText}>{suggestion}</Text>
+                              </View>
+                            ))}
+                          </View>
+                          
+                          <View style={[styles.themeSection, styles.topSpacing]}>
+                            <View style={styles.themeSectionHeader}>
+                              <MaterialCommunityIcons name="trending-up" size={20} color="#4facfe" />
+                              <Text style={styles.themeSectionTitle}>Growth Opportunities</Text>
+                            </View>
+                            {theme.growthOpportunities.map((opportunity, idx) => (
+                              <View key={idx} style={styles.suggestionItem}>
+                                <View style={styles.bulletPoint} />
+                                <Text style={styles.themeDetailText}>{opportunity}</Text>
+                              </View>
+                            ))}
+                          </View>
                         </View>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="star-outline" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Strength Spotlight</Text>
-                  </View>
-                  <Text style={styles.spotlightTitle}>{analysis.strengthSpotlight.title}</Text>
-                  <View style={styles.evidenceContainer}>
-                    {analysis.strengthSpotlight.evidence.map((quote, index) => (
-                      <Text key={index} style={styles.evidenceText}>"{quote}"</Text>
+                      </Animated.View>
                     ))}
                   </View>
-                  <Text style={styles.impactText}>{analysis.strengthSpotlight.potentialImpact}</Text>
-                </View>
+                )}
 
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Patterns & Insights</Text>
+                {renderCard(3,
+                  <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="star-outline" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Strength Spotlight</Text>
+                    </View>
+                    <Text style={styles.spotlightTitle}>{analysis.strengthSpotlight.title}</Text>
+                    <View style={styles.evidenceContainer}>
+                      {analysis.strengthSpotlight.evidence.map((quote, index) => (
+                        <Text key={index} style={styles.evidenceText}>"{quote}"</Text>
+                      ))}
+                    </View>
+                    <Text style={styles.impactText}>{analysis.strengthSpotlight.potentialImpact}</Text>
                   </View>
-                  
-                  <Text style={styles.patternSubtitle}>Recurring Patterns</Text>
-                  {analysis.patterns.recurring.map((pattern, index) => (
-                    <Text key={index} style={styles.patternText}>• {pattern}</Text>
-                  ))}
-                  
-                  <Text style={[styles.patternSubtitle, styles.topSpacing]}>Unique Expressions</Text>
-                  {analysis.patterns.unique.map((unique, index) => (
-                    <Text key={index} style={styles.patternText}>• {unique}</Text>
-                  ))}
-                  
-                  <Text style={[styles.patternSubtitle, styles.topSpacing]}>Suggested Areas</Text>
-                  {analysis.patterns.suggested.map((suggestion, index) => (
-                    <Text key={index} style={styles.patternText}>• {suggestion}</Text>
-                  ))}
-                </View>
+                )}
 
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="lightbulb-outline" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Personal Insights</Text>
+                {renderCard(4,
+                  <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Patterns & Insights</Text>
+                    </View>
+                    
+                    <Text style={styles.patternSubtitle}>Recurring Patterns</Text>
+                    {analysis.patterns.recurring.map((pattern, index) => (
+                      <Text key={index} style={styles.patternText}>• {pattern}</Text>
+                    ))}
+                    
+                    <Text style={[styles.patternSubtitle, styles.topSpacing]}>Unique Expressions</Text>
+                    {analysis.patterns.unique.map((unique, index) => (
+                      <Text key={index} style={styles.patternText}>• {unique}</Text>
+                    ))}
+                    
+                    <Text style={[styles.patternSubtitle, styles.topSpacing]}>Suggested Areas</Text>
+                    {analysis.patterns.suggested.map((suggestion, index) => (
+                      <Text key={index} style={styles.patternText}>• {suggestion}</Text>
+                    ))}
                   </View>
-                  <Text style={styles.insightText}>{analysis.insights.main}</Text>
-                  <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
-                  <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
-                </View>
+                )}
 
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="compass-outline" size={24} color="#4facfe" />
-                    <Text style={styles.cardTitle}>Next Focus</Text>
+                {renderCard(5,
+                  <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="lightbulb-outline" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Personal Insights</Text>
+                    </View>
+                    <Text style={styles.insightText}>{analysis.insights.main}</Text>
+                    <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
+                    <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
                   </View>
-                  <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
-                </View>
+                )}
+
+                {renderCard(6,
+                  <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <MaterialCommunityIcons name="compass-outline" size={24} color="#4facfe" />
+                      <Text style={styles.cardTitle}>Next Focus</Text>
+                    </View>
+                    <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
+                  </View>
+                )}
               </>
             )}
           </ScrollView>
@@ -518,6 +649,26 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </LinearGradient>
+
+      {/* Emotion Definition Modal */}
+      <Modal
+        visible={!!selectedEmotion}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedEmotion(null)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setSelectedEmotion(null)}
+        >
+          <View style={styles.emotionModalContent}>
+            <Text style={styles.emotionModalTitle}>{selectedEmotion}</Text>
+            <Text style={styles.emotionModalDefinition}>
+              {selectedEmotion ? EmotionDefinitions[selectedEmotion.toLowerCase() as keyof typeof EmotionDefinitions] : ''}
+            </Text>
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={showExitModal}
@@ -586,11 +737,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 20,
+    padding: 24,
   },
-  loadingText: {
-    color: '#fff',
+  loadingIcon: {
+    marginBottom: 16,
+  },
+  loadingTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  loadingStep: {
     fontSize: 18,
-    marginBottom: 10,
+    color: '#4facfe',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  loadingSubtext: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    marginTop: 16,
   },
   errorText: {
     color: '#FF0000',
@@ -909,6 +1078,27 @@ const styles = StyleSheet.create({
   },
   topSpacing: {
     marginTop: 16,
+  },
+  emotionModalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 20,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4facfe',
+  },
+  emotionModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4facfe',
+    marginBottom: 12,
+  },
+  emotionModalDefinition: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
 
