@@ -19,6 +19,8 @@ import Animated, {
   withRepeat,
   withSequence,
   withDelay,
+  FadeIn,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -62,6 +64,7 @@ interface AnalysisResult {
 }
 
 const AnimatedCard = Animated.createAnimatedComponent(View);
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 const THEME_ICONS = {
   health: "heart-pulse",
@@ -94,6 +97,8 @@ const ANALYSIS_STEPS = [
   "Preparing your analysis..."
 ];
 
+const MAX_CARDS = 7; // Maximum number of cards we'll render
+
 const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +107,34 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const intensityPulse = useSharedValue(1);
   const [loadingStep, setLoadingStep] = useState(0);
+  const scrollY = useSharedValue(0);
+  const cardVisibilities = Array.from({ length: MAX_CARDS }, (_, index) => useSharedValue(index < 2));
+  const cardAnimatedStyles = cardVisibilities.map(isVisible => 
+    useAnimatedStyle(() => {
+      return {
+        opacity: isVisible.value ? withSpring(1) : 0,
+        transform: [{
+          translateY: isVisible.value ? withSpring(0) : 50,
+        }],
+      };
+    })
+  );
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+      const offset = event.contentOffset.y + 600;
+      
+      cardVisibilities.forEach((isVisible, index) => {
+        if (index >= 2) { // Skip first two cards as they're already visible
+          const cardPosition = index * 300;
+          if (offset > cardPosition && !isVisible.value) {
+            isVisible.value = true;
+          }
+        }
+      });
+    },
+  });
 
   const getAnalysisPrompt = (exerciseType: string, entries: string[]) => {
     switch (exerciseType) {
@@ -357,14 +390,15 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     return THEME_ICONS[key] || THEME_ICONS.default;
   };
 
-  const renderCard = (index: number, children: React.ReactNode) => (
-    <AnimatedCard
-      entering={FadeInDown.delay(index * 200).springify()}
-      style={styles.card}
-    >
-      {children}
-    </AnimatedCard>
-  );
+  const renderCard = (index: number, children: React.ReactNode) => {
+    return (
+      <Animated.View
+        style={[styles.card, cardAnimatedStyles[index]]}
+      >
+        {children}
+      </Animated.View>
+    );
+  };
 
   console.log('Current render state:', { loading, error, hasAnalysis: !!analysis });
 
@@ -444,10 +478,12 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
             <MaterialCommunityIcons name="chevron-left" size={32} color="#4facfe" />
           </TouchableOpacity>
 
-          <ScrollView 
+          <AnimatedScrollView 
             style={styles.scrollView} 
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={false}
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
           >
             {analysis && (
               <>
@@ -639,7 +675,19 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                 )}
               </>
             )}
-          </ScrollView>
+          </AnimatedScrollView>
+
+          {/* Add scroll indicator */}
+          <Animated.View style={[styles.scrollIndicator, {
+            opacity: withSpring(scrollY.value < 100 ? 1 : 0)
+          }]}>
+            <MaterialCommunityIcons 
+              name="chevron-double-down" 
+              size={24} 
+              color="#4facfe" 
+            />
+            <Text style={styles.scrollIndicatorText}>Scroll for more insights</Text>
+          </Animated.View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
@@ -1105,6 +1153,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  scrollIndicator: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  scrollIndicatorText: {
+    color: '#4facfe',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

@@ -243,8 +243,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
-    paddingTop: 20,
+    padding: 16,
+    paddingTop: 0,
     paddingBottom: 100,
   },
   exitButton: {
@@ -254,13 +254,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 20,
+    margin: 12,
+    marginTop: 0,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#000000',
-    marginBottom: 30,
+    marginBottom: 24,
+    marginTop: 8,
     textAlign: 'center',
   },
   entryContainer: {
