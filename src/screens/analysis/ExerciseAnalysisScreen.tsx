@@ -322,20 +322,31 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
       case 'checklist':
         return `You are an expert behavioral psychologist and habit formation coach analyzing daily routines and their systemic impacts.
 
-        IMPORTANT: Base your analysis ONLY on the actual checked items provided. DO NOT make assumptions about:
-        - Specific times of day
-        - Activities not explicitly mentioned
-        - Habits or behaviors not in the data
-        - Personal preferences or patterns without evidence
+        IMPORTANT GUIDELINES:
+        1. Base your analysis on the checked items, but you can make reasonable connections between related habits
+        2. For each checked item:
+           - Consider its direct benefits and impacts
+           - Look for potential synergies with other checked items
+           - Suggest evidence-based ways to build upon this positive habit
+        3. When suggesting habit stacks or patterns:
+           - Use the checked items as anchors
+           - Suggest natural, logical connections
+           - Explain the reasoning behind each connection
+        4. For impact zones:
+           - Focus on the areas directly affected by checked items
+           - Provide specific, actionable next steps
+           - Keep scores realistic based on current habits
+        5. Avoid making assumptions about:
+           - Specific times of day unless provided
+           - Activities not mentioned
+           - Personal preferences without evidence
 
-        For each checked item:
-        1. Consider its direct impacts and benefits
-        2. Look for potential connections with other checked items
-        3. Suggest evidence-based ways to build upon this positive habit
+        Even with limited data, provide meaningful insights by:
+        - Focusing on the quality and impact of completed items
+        - Suggesting natural progressions from current habits
+        - Identifying potential areas of growth based on current strengths
 
-        If there isn't enough data to make a specific claim or insight, acknowledge the limitation instead of making assumptions.
-
-        Respond ONLY with a JSON object in this exact format, providing insights based strictly on checked items:
+        Respond ONLY with a JSON object in this exact format, providing insights based on checked items and evidence-based connections:
           {
             "patternAnalysis": {
               "optimalTimes": {
@@ -683,165 +694,137 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   console.log('Current render state:', { loading, error, hasAnalysis: !!analysis });
 
   const renderGoldenChecklistAnalysis = (analysis: GoldenChecklistAnalysis) => {
+    // Helper function to check if a section has meaningful data
+    const hasMeaningfulData = (section: any): boolean => {
+      if (!section) return false;
+      
+      // Check if it's an array and has items
+      if (Array.isArray(section)) return section.length > 0;
+      
+      // Check if it's an object with actual data (not just empty arrays or default values)
+      if (typeof section === 'object') {
+        return Object.values(section).some(value => {
+          if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === 'string') return value !== '' && !value.includes('Not enough data');
+          if (typeof value === 'number') return value > 0;
+          return false;
+        });
+      }
+      
+      return false;
+    };
+
     return (
       <>
-        {/* Pattern Analysis Card */}
-        {renderCard(0,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="chart-timeline-variant" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Pattern Analysis</Text>
-            </View>
-            <View style={styles.patternSection}>
-              <Text style={styles.sectionTitle}>Optimal Times</Text>
-              <Text style={styles.highlightText}>{analysis.patternAnalysis.optimalTimes.mostProductiveWindow}</Text>
-              {analysis.patternAnalysis.optimalTimes.keyTimeInsights.map((insight, index) => (
-                <Text key={index} style={styles.insightText}>• {insight}</Text>
-              ))}
-            </View>
-            <View style={styles.patternSection}>
-              <Text style={styles.sectionTitle}>Task Correlations</Text>
-              {analysis.patternAnalysis.taskSequences.correlations.map((correlation, index) => (
-                <View key={index} style={styles.correlationItem}>
-                  <View style={styles.correlationHeader}>
-                    <Text style={styles.correlationTrigger}>{correlation.trigger}</Text>
-                    <MaterialCommunityIcons name="arrow-right" size={20} color="#4facfe" />
-                    <Text style={styles.correlationOutcome}>{correlation.outcome}</Text>
-                  </View>
-                  <Text style={styles.probabilityText}>{(correlation.probability * 100).toFixed(0)}% probability</Text>
-                  <Text style={styles.insightText}>{correlation.insight}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Habit Stacking Card */}
-        {renderCard(1,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="layers-triple" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Habit Stacking</Text>
-            </View>
-            {analysis.habitStacking.recommendedStacks.map((stack, index) => (
-              <View key={index} style={styles.stackContainer}>
-                <View style={styles.stackTrigger}>
-                  <MaterialCommunityIcons name="flag-variant" size={20} color="#4facfe" />
-                  <Text style={styles.triggerText}>
-                    {stack.trigger.habit} ({stack.trigger.timeOfDay})
-                  </Text>
-                </View>
-                {stack.sequence.map((seq, seqIndex) => (
-                  <View key={seqIndex} style={styles.sequenceItem}>
-                    <MaterialCommunityIcons name="arrow-down" size={20} color="#4facfe" />
-                    <View style={styles.sequenceContent}>
-                      <Text style={styles.sequenceHabit}>{seq.habit}</Text>
-                      <Text style={styles.sequenceWait}>Wait: {seq.waitTime}</Text>
-                      <Text style={styles.sequenceReason}>{seq.reason}</Text>
+        {/* Pattern Analysis Card - Only show if there are meaningful patterns */}
+        {hasMeaningfulData(analysis.patternAnalysis.taskSequences.correlations) && (
+          renderCard(0,
+            <View>
+              <View style={styles.cardHeader}>
+                <MaterialCommunityIcons name="chart-timeline-variant" size={24} color="#4facfe" />
+                <Text style={styles.cardTitle}>Pattern Analysis</Text>
+              </View>
+              <View style={styles.patternSection}>
+                <Text style={styles.sectionTitle}>Task Correlations</Text>
+                {analysis.patternAnalysis.taskSequences.correlations.map((correlation, index) => (
+                  <View key={index} style={styles.correlationItem}>
+                    <View style={styles.correlationHeader}>
+                      <Text style={styles.correlationTrigger}>{correlation.trigger}</Text>
+                      <MaterialCommunityIcons name="arrow-right" size={20} color="#4facfe" />
+                      <Text style={styles.correlationOutcome}>{correlation.outcome}</Text>
                     </View>
+                    <Text style={styles.probabilityText}>{(correlation.probability * 100).toFixed(0)}% probability</Text>
+                    <Text style={styles.insightText}>{correlation.insight}</Text>
                   </View>
                 ))}
-                <View style={styles.stackFooter}>
-                  <Text style={styles.successRate}>Success Rate: {(stack.successRate * 100).toFixed(0)}%</Text>
-                  <Text style={styles.impactText}>{stack.totalImpact}</Text>
-                </View>
               </View>
-            ))}
-          </View>
+            </View>
+          )
         )}
 
-        {/* Impact Zones Card */}
-        {renderCard(2,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="target" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Impact Zones</Text>
-            </View>
-            {Object.entries(analysis.impactZones).map(([zone, data], index) => (
-              <View key={index} style={styles.impactZone}>
-                <View style={styles.zoneHeader}>
-                  <Text style={styles.zoneName}>{zone.charAt(0).toUpperCase() + zone.slice(1)}</Text>
-                  <View style={styles.scoreContainer}>
-                    <Text style={styles.currentScore}>{data.score}/10</Text>
-                    <Text style={styles.potentialScore}>Potential: {data.potential}/10</Text>
+        {/* Habit Stacking Card - Only show if there are valid stacks */}
+        {hasMeaningfulData(analysis.habitStacking.recommendedStacks) && (
+          renderCard(1,
+            <View>
+              <View style={styles.cardHeader}>
+                <MaterialCommunityIcons name="layers-triple" size={24} color="#4facfe" />
+                <Text style={styles.cardTitle}>Habit Stacking</Text>
+              </View>
+              {analysis.habitStacking.recommendedStacks.map((stack, index) => (
+                <View key={index} style={styles.stackContainer}>
+                  <View style={styles.stackTrigger}>
+                    <MaterialCommunityIcons name="flag-variant" size={20} color="#4facfe" />
+                    <Text style={styles.triggerText}>
+                      {stack.trigger.habit}
+                    </Text>
+                  </View>
+                  {stack.sequence.map((seq, seqIndex) => (
+                    <View key={seqIndex} style={styles.sequenceItem}>
+                      <MaterialCommunityIcons name="arrow-down" size={20} color="#4facfe" />
+                      <View style={styles.sequenceContent}>
+                        <Text style={styles.sequenceHabit}>{seq.habit}</Text>
+                        <Text style={styles.sequenceReason}>{seq.reason}</Text>
+                      </View>
+                    </View>
+                  ))}
+                  <View style={styles.stackFooter}>
+                    <Text style={styles.impactText}>{stack.totalImpact}</Text>
                   </View>
                 </View>
-                <View style={styles.zoneContent}>
-                  <Text style={styles.strengthsTitle}>Strengths:</Text>
-                  {data.strengths.map((strength, idx) => (
-                    <Text key={idx} style={styles.strengthText}>• {strength}</Text>
-                  ))}
-                  <Text style={styles.improvementsTitle}>Next Steps:</Text>
-                  {data.nextSteps.map((step, idx) => (
-                    <Text key={idx} style={styles.stepText}>• {step}</Text>
-                  ))}
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Momentum Builders Card */}
-        {renderCard(3,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="rocket-launch" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Momentum Builders</Text>
-            </View>
-            <View style={styles.momentumSection}>
-              <Text style={styles.sectionTitle}>Key Moments</Text>
-              {analysis.momentumBuilders.keyMoments.map((moment, index) => (
-                <View key={index} style={styles.momentItem}>
-                  <Text style={styles.momentTime}>{moment.time}</Text>
-                  <Text style={styles.momentAction}>{moment.action}</Text>
-                  <Text style={styles.momentImpact}>{moment.impact}</Text>
-                  <Text style={styles.momentWhy}>{moment.whyItMatters}</Text>
-                </View>
               ))}
             </View>
-          </View>
+          )
         )}
 
-        {/* Growth Opportunities Card */}
-        {renderCard(4,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Growth Opportunities</Text>
-            </View>
-            {analysis.growthOpportunities.challengingHabits.map((habit, index) => (
-              <View key={index} style={styles.challengeContainer}>
-                <Text style={styles.challengeHabit}>{habit.habit}</Text>
-                <Text style={styles.challengeCause}>Root Cause: {habit.rootCause}</Text>
-                <View style={styles.subtasksList}>
-                  {habit.subTasks.map((task, taskIndex) => (
-                    <Text key={taskIndex} style={styles.subtaskText}>• {task}</Text>
-                  ))}
-                </View>
-                <Text style={styles.strategyText}>{habit.progressionStrategy}</Text>
+        {/* Impact Zones Card - Only show zones with meaningful data */}
+        {Object.values(analysis.impactZones).some(zone => hasMeaningfulData(zone)) && (
+          renderCard(2,
+            <View>
+              <View style={styles.cardHeader}>
+                <MaterialCommunityIcons name="target" size={24} color="#4facfe" />
+                <Text style={styles.cardTitle}>Impact Zones</Text>
               </View>
-            ))}
-          </View>
-        )}
-
-        {/* Success Probability Card */}
-        {renderCard(5,
-          <View>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="chart-arc" size={24} color="#4facfe" />
-              <Text style={styles.cardTitle}>Success Probability</Text>
-            </View>
-            <View style={styles.overallSuccess}>
-              <Text style={styles.overallRate}>
-                Overall Success Rate: {(analysis.successProbability.overallSuccess.rate * 100).toFixed(0)}%
-              </Text>
-              <Text style={styles.keyFactorsTitle}>Key Success Factors:</Text>
-              {analysis.successProbability.overallSuccess.keyFactors.map((factor, index) => (
-                <Text key={index} style={styles.factorText}>• {factor}</Text>
+              {Object.entries(analysis.impactZones).map(([zone, data], index) => (
+                hasMeaningfulData(data) && (
+                  <View key={index} style={styles.impactZone}>
+                    <View style={styles.zoneHeader}>
+                      <Text style={styles.zoneName}>{zone.charAt(0).toUpperCase() + zone.slice(1)}</Text>
+                      {data.score > 0 && (
+                        <View style={styles.scoreContainer}>
+                          <Text style={styles.currentScore}>{data.score}/10</Text>
+                          <Text style={styles.potentialScore}>Potential: {data.potential}/10</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.zoneContent}>
+                      {data.strengths.length > 0 && (
+                        <>
+                          <Text style={styles.strengthsTitle}>Strengths:</Text>
+                          {data.strengths.map((strength, idx) => (
+                            <Text key={idx} style={styles.strengthText}>• {strength}</Text>
+                          ))}
+                        </>
+                      )}
+                      {data.nextSteps.length > 0 && (
+                        <>
+                          <Text style={styles.improvementsTitle}>Next Steps:</Text>
+                          {data.nextSteps.map((step, idx) => (
+                            <Text key={idx} style={styles.stepText}>• {step}</Text>
+                          ))}
+                        </>
+                      )}
+                    </View>
+                  </View>
+                )
               ))}
             </View>
-          </View>
+          )
         )}
+
+        {/* Only show other sections if they have meaningful data */}
+        {hasMeaningfulData(analysis.momentumBuilders.keyMoments) && renderMomentumBuildersCard(analysis, 3)}
+        {hasMeaningfulData(analysis.growthOpportunities.challengingHabits) && renderGrowthOpportunitiesCard(analysis, 4)}
+        {hasMeaningfulData(analysis.successProbability.habits) && renderSuccessProbabilityCard(analysis, 5)}
       </>
     );
   };
@@ -855,6 +838,71 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     // ... existing render logic for other exercise types ...
+  };
+
+  // Add these functions before renderGoldenChecklistAnalysis
+  const renderMomentumBuildersCard = (analysis: GoldenChecklistAnalysis, index: number) => {
+    return renderCard(index,
+      <View>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="rocket-launch" size={24} color="#4facfe" />
+          <Text style={styles.cardTitle}>Momentum Builders</Text>
+        </View>
+        <View style={styles.momentumSection}>
+          <Text style={styles.sectionTitle}>Key Moments</Text>
+          {analysis.momentumBuilders.keyMoments.map((moment, idx) => (
+            <View key={idx} style={styles.momentItem}>
+              <Text style={styles.momentAction}>{moment.action}</Text>
+              <Text style={styles.momentImpact}>{moment.impact}</Text>
+              <Text style={styles.momentWhy}>{moment.whyItMatters}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderGrowthOpportunitiesCard = (analysis: GoldenChecklistAnalysis, index: number) => {
+    return renderCard(index,
+      <View>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
+          <Text style={styles.cardTitle}>Growth Opportunities</Text>
+        </View>
+        {analysis.growthOpportunities.challengingHabits.map((habit, idx) => (
+          <View key={idx} style={styles.challengeContainer}>
+            <Text style={styles.challengeHabit}>{habit.habit}</Text>
+            <Text style={styles.challengeCause}>Root Cause: {habit.rootCause}</Text>
+            <View style={styles.subtasksList}>
+              {habit.subTasks.map((task, taskIndex) => (
+                <Text key={taskIndex} style={styles.subtaskText}>• {task}</Text>
+              ))}
+            </View>
+            <Text style={styles.strategyText}>{habit.progressionStrategy}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderSuccessProbabilityCard = (analysis: GoldenChecklistAnalysis, index: number) => {
+    return renderCard(index,
+      <View>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="chart-arc" size={24} color="#4facfe" />
+          <Text style={styles.cardTitle}>Success Probability</Text>
+        </View>
+        <View style={styles.overallSuccess}>
+          <Text style={styles.overallRate}>
+            Overall Success Rate: {(analysis.successProbability.overallSuccess.rate * 100).toFixed(0)}%
+          </Text>
+          <Text style={styles.keyFactorsTitle}>Key Success Factors:</Text>
+          {analysis.successProbability.overallSuccess.keyFactors.map((factor, idx) => (
+            <Text key={idx} style={styles.factorText}>• {factor}</Text>
+          ))}
+        </View>
+      </View>
+    );
   };
 
   if (loading) {
@@ -933,8 +981,8 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
       <LinearGradient colors={['#1E2132', '#2A2D3E']} style={styles.gradientBackground}>
         <View style={styles.container}>
           <TouchableOpacity 
-            style={styles.exitButton}
-            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            onPress={handleExitPress}
           >
             <MaterialCommunityIcons name="chevron-left" size={32} color="#4facfe" />
           </TouchableOpacity>
@@ -1049,7 +1097,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingTop: 0,
+    paddingTop: 100,
     paddingBottom: 100,
   },
   title: {
@@ -1257,14 +1305,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  exitButton: {
+  backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 20,
+    marginHorizontal: 16,
+    marginTop: 0,
+    marginBottom: 16,
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    zIndex: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -1529,11 +1583,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     marginBottom: 4,
-  },
-  sequenceWait: {
-    color: '#888',
-    fontSize: 14,
-    marginBottom: 2,
   },
   sequenceReason: {
     color: '#4facfe',
