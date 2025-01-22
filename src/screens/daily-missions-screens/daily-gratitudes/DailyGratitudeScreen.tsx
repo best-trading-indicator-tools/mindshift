@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,6 @@ import AudioRecorderPlayer, {
 } from 'react-native-audio-recorder-player';
 import { PermissionsAndroid } from 'react-native';
 import OpenAI from 'openai';
-import RNFS from 'react-native-fs';
 import Config from 'react-native-config';
 
 const openai = new OpenAI({
@@ -39,7 +38,6 @@ const MIN_ENTRIES = 1;
 interface GratitudeEntry {
   what: string;
   why: string;
-  audioUrl?: string;
 }
 
 const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -55,18 +53,35 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [showRecordingModal, setShowRecordingModal] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [audioRecorderPlayer] = useState(new AudioRecorderPlayer());
+  const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
 
   useEffect(() => {
     console.log('DailyGratitude screen mounted with route params:', route.params);
-  }, [route.params]);
+    
+    const initializeAudioRecorder = async () => {
+      try {
+        if (Platform.OS === 'ios') {
+          await audioRecorderPlayer.current.setSubscriptionDuration(0.1);
+        }
+      } catch (error) {
+        console.error('Error initializing audio recorder:', error);
+      }
+    };
+
+    initializeAudioRecorder();
+
+    return () => {
+      if (isRecording) {
+        audioRecorderPlayer.current.stopRecorder().catch(() => {});
+        audioRecorderPlayer.current.removeRecordBackListener();
+      }
+    };
+  }, []);
 
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
         const grants = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
         ]);
 
@@ -89,56 +104,42 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     try {
-      const path = Platform.select({
-        ios: `${RNFS.CachesDirectoryPath}/gratitude_${Date.now()}.m4a`,
-        android: `${RNFS.CachesDirectoryPath}/${Date.now()}.mp4`,
-      });
+      if (isRecording) {
+        await audioRecorderPlayer.current.stopRecorder();
+        audioRecorderPlayer.current.removeRecordBackListener();
+      }
 
-      const uri = await audioRecorderPlayer.startRecorder(path, {
+      setRecordingIndex(index);
+      setIsRecording(true);
+      setShowRecordingModal(true);
+
+      // Configure recording options
+      const audioSet = {
         AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
         AudioSourceAndroid: AudioSourceAndroidType.MIC,
         AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
         AVNumberOfChannelsKeyIOS: 2,
         AVFormatIDKeyIOS: AVEncodingOption.aac,
-      });
+      };
 
-      audioRecorderPlayer.addRecordBackListener((e) => {
+      // Start recording without saving to file
+      await audioRecorderPlayer.current.startRecorder(undefined, audioSet);
+
+      audioRecorderPlayer.current.addRecordBackListener((e) => {
         setRecordingDuration(e.currentPosition);
       });
 
-      setRecordingIndex(index);
-      setIsRecording(true);
-      setShowRecordingModal(true);
     } catch (error) {
       console.error('Failed to start recording:', error);
+      setIsRecording(false);
+      setShowRecordingModal(false);
+      setRecordingIndex(null);
       Alert.alert('Error', 'Failed to start recording. Please try again.');
     }
   };
 
-  const transcribeAudio = async (audioPath: string): Promise<string> => {
-    try {
-      setIsTranscribing(true);
-      const audioFile = await RNFS.readFile(audioPath, 'base64');
-      
-      const transcription = await openai.audio.transcriptions.create({
-        file: new File([Buffer.from(audioFile, 'base64')], 'audio.m4a'),
-        model: 'whisper-1',
-      });
-
-      return transcription.text;
-    } catch (error) {
-      console.error('Transcription error:', error);
-      throw error;
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-
   const parseGratitudeText = (text: string): { what: string; why: string } => {
-    // Remove common prefixes
     const cleanText = text.replace(/^(i am grateful for|i'm grateful for)/i, '').trim();
-    
-    // Split by 'because'
     const parts = cleanText.split(/\s+because\s+/i);
     
     if (parts.length >= 2) {
@@ -148,7 +149,6 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
       };
     }
     
-    // If no 'because' is found, return the whole text as 'what'
     return {
       what: cleanText,
       why: '',
@@ -156,32 +156,39 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleStopRecording = async () => {
-    if (recordingIndex === null) return;
+    if (recordingIndex === null || !isRecording) return;
 
     try {
-      const uri = await audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
+      const result = await audioRecorderPlayer.current.stopRecorder();
+      audioRecorderPlayer.current.removeRecordBackListener();
 
-      // Start transcription
-      const transcribedText = await transcribeAudio(uri);
-      const { what, why } = parseGratitudeText(transcribedText);
+      setIsTranscribing(true);
 
-      // Update the entry with transcribed text and audio URL
+      // Get the audio data directly from the recorder
+      const audioData = result; // This should be the base64 audio data
+
+      // Transcribe the audio
+      const transcription = await openai.audio.transcriptions.create({
+        file: new File([Buffer.from(audioData, 'base64')], 'audio.m4a'),
+        model: 'whisper-1',
+      });
+
+      const { what, why } = parseGratitudeText(transcription.text);
+
+      // Update the entry with transcribed text
       const newEntries = [...entries];
-      newEntries[recordingIndex] = {
-        what,
-        why,
-        audioUrl: uri,
-      };
+      newEntries[recordingIndex] = { what, why };
       setEntries(newEntries);
 
+    } catch (error) {
+      console.error('Failed to stop recording or transcribe:', error);
+      Alert.alert('Error', 'Failed to process recording. Please try again.');
+    } finally {
       setIsRecording(false);
       setShowRecordingModal(false);
       setRecordingIndex(null);
       setRecordingDuration(0);
-    } catch (error) {
-      console.error('Failed to stop recording or transcribe:', error);
-      Alert.alert('Error', 'Failed to process recording. Please try again.');
+      setIsTranscribing(false);
     }
   };
 
