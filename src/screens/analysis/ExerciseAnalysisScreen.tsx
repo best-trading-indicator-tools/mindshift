@@ -535,9 +535,6 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                               color="#4facfe" 
                             />
                             <Text style={styles.themeName}>{theme.name}</Text>
-                            <View style={styles.frequencyBadge}>
-                              <Text style={styles.themeFrequency}>{theme.frequency}×</Text>
-                            </View>
                           </View>
                           <LinearGradient
                             colors={['#4facfe20', '#00f2fe20']}
@@ -825,6 +822,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     zIndex: 1,
+    flex: 1,
   },
   themeHeaderGradient: {
     position: 'absolute',
@@ -838,17 +836,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textTransform: 'capitalize',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   frequencyBadge: {
-    backgroundColor: 'rgba(0, 242, 254, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: '#4facfe',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
+    marginLeft: 8,
   },
   themeFrequency: {
     fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '700',
   },
   themeContent: {
     padding: 16,
