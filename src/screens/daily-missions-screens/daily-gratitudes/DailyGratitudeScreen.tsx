@@ -96,10 +96,10 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleConfirmExit = () => {
     setShowExitModal(false);
-    if (returnTo) {
+    if (returnTo === 'ChallengeDetail' && challengeId) {
       navigation.navigate('ChallengeDetail', {
         challenge: {
-          id: challengeId || '1',
+          id: challengeId,
           title: 'Ultimate',
           duration: 21,
           description: 'Your subconscious mind shapes your reality.',
@@ -107,7 +107,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
         }
       });
     } else {
-      navigation.replace('MainTabs');
+      navigation.navigate('MainTabs');
     }
   };
 
