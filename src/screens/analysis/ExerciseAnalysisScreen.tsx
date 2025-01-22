@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -14,6 +15,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { config } from '../../config/env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoadingProgressBar from '../../components/ProgressBar';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseAnalysis'>;
 
@@ -40,6 +42,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const getAnalysisPrompt = (exerciseType: string, entries: string[]) => {
     switch (exerciseType) {
@@ -213,6 +216,15 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const handleExitPress = () => {
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
+    setShowExitModal(false);
+    navigation.goBack();
+  };
+
   useEffect(() => {
     console.log('ExerciseAnalysisScreen mounted with params:', route.params);
     analyzeEntries();
@@ -276,6 +288,13 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
         style={styles.gradientBackground}
       >
         <View style={styles.container}>
+          <TouchableOpacity 
+            style={styles.exitButton}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialCommunityIcons name="chevron-left" size={32} color="#4facfe" />
+          </TouchableOpacity>
+
           <ScrollView 
             style={styles.scrollView} 
             contentContainerStyle={styles.contentContainer}
@@ -340,6 +359,34 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </LinearGradient>
+
+      <Modal
+        visible={showExitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Wait! Are you sure?</Text>
+            <Text style={styles.modalText}>
+              Take a moment to reflect on your gratitude insights before leaving.
+            </Text>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => setShowExitModal(false)}
+            >
+              <Text style={styles.continueText}>Stay</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalExitButton}
+              onPress={handleConfirmExit}
+            >
+              <Text style={styles.exitText}>Exit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -490,7 +537,69 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
-  }
+  },
+  exitButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    opacity: 0.8,
+    lineHeight: 24,
+  },
+  continueButton: {
+    backgroundColor: '#4facfe',
+    paddingVertical: 16,
+    borderRadius: 30,
+    marginBottom: 12,
+    width: '100%',
+  },
+  continueText: {
+    color: '#000000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalExitButton: {
+    backgroundColor: '#B91C1C',
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+  },
+  exitText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
 export default ExerciseAnalysisScreen; 
