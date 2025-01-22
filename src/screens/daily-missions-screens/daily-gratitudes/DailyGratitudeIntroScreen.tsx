@@ -32,7 +32,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     } else {
       try {
         await AsyncStorage.setItem('daily_gratitude_intro_seen', 'true');
-        navigation.replace('DailyGratitude', {
+        navigation.navigate('DailyGratitude', {
           context: route.params?.context || 'daily',
           challengeId: route.params?.challengeId,
           returnTo: route.params?.returnTo
