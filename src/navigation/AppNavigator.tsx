@@ -55,6 +55,7 @@ import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens
 import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
 import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
 import { GoldenChecklistAnalysisScreen } from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistAnalysisScreen';
+import { DailyGratitudeAnalysisScreen } from '../screens/daily-missions-screens/daily-gratitudes/DailyGratitudeAnalysisScreen';
 import type { ChecklistEntry } from '../types/checklist';
 
 export type RootTabParamList = {
@@ -253,6 +254,12 @@ export type RootStackParamList = {
     entries: ChecklistEntry[];
     context?: 'challenge' | 'daily';
     challengeId?: string;
+  };
+  GratitudeAnalysis: {
+    entries: string[];
+    context?: 'challenge' | 'daily';
+    challengeId?: string;
+    returnTo?: keyof RootStackParamList;
   };
 };
 
@@ -584,6 +591,16 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen
           name="GoldenChecklistAnalysis"
           component={GoldenChecklistAnalysisScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+
+        <Stack.Screen
+          name="GratitudeAnalysis"
+          component={DailyGratitudeAnalysisScreen}
           options={{
             headerShown: false,
             presentation: 'fullScreenModal',

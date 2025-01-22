@@ -267,8 +267,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
         const entriesForAnalysis = validEntries.map(entry => `I am grateful for ${entry.what} because ${entry.why}`);
 
         if (validEntries.length >= MIN_ENTRIES) {
-          navigation.navigate('ExerciseAnalysis', {
-            exerciseType: 'gratitude',
+          navigation.navigate('GratitudeAnalysis', {
             entries: entriesForAnalysis,
             context: context,
             challengeId: challengeId,
