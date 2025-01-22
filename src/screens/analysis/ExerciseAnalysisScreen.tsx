@@ -30,7 +30,19 @@ interface AnalysisResult {
     name: string;
     frequency: number;
     examples: string[];
+    actionableSuggestions: string[];
+    growthOpportunities: string[];
   }[];
+  strengthSpotlight: {
+    title: string;
+    evidence: string[];
+    potentialImpact: string;
+  };
+  patterns: {
+    recurring: string[];
+    unique: string[];
+    suggested: string[];
+  };
   insights: {
     main: string;
     suggestion: string;
@@ -59,16 +71,41 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
               {
                 "name": "string with theme name",
                 "frequency": number of occurrences,
-                "examples": ["array of example quotes"]
+                "examples": ["array of example quotes"],
+                "actionableSuggestions": [
+                  "array of 2-3 specific actions to deepen gratitude in this theme"
+                ],
+                "growthOpportunities": [
+                  "array of 2-3 ways to expand or evolve this theme"
+                ]
               }
             ],
+            "strengthSpotlight": {
+              "title": "string highlighting a key strength shown in the entries",
+              "evidence": ["array of quotes showing this strength"],
+              "potentialImpact": "string describing how this strength can positively impact life"
+            },
+            "patterns": {
+              "recurring": ["array of patterns found in the gratitude expressions"],
+              "unique": ["array of unique or standout expressions"],
+              "suggested": ["array of suggested new areas for gratitude based on patterns"]
+            },
             "insights": {
-              "main": "string describing insights in second person (using 'you' not 'the user')",
-              "suggestion": "string with growth suggestion speaking directly to the person",
-              "celebration": "string with celebration message speaking directly to the person",
-              "nextFocus": "string with suggested focus speaking directly to the person"
+              "main": "string describing key insights in second person (using 'you' not 'the user')",
+              "suggestion": "string with specific, actionable growth suggestion speaking directly to the person",
+              "celebration": "string celebrating specific positive patterns speaking directly to the person",
+              "nextFocus": "string with clear, actionable next steps speaking directly to the person"
             }
           }
+
+          Guidelines for analysis:
+          1. Focus on identifying specific, actionable insights rather than general observations
+          2. Look for patterns in how gratitude is expressed and what triggers it
+          3. Suggest concrete ways to deepen and expand existing gratitude themes
+          4. Highlight unique or particularly meaningful expressions
+          5. Frame all feedback in a growth-oriented, encouraging tone
+          6. Make suggestions specific and immediately actionable
+          7. Celebrate both the content and the way gratitude is expressed
 
           Analyze these gratitude entries and provide insights speaking directly to the person:
           ${JSON.stringify(entries)}`;
@@ -370,7 +407,55 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View key={index} style={styles.themeItem}>
                       <Text style={styles.themeName}>{theme.name}</Text>
                       <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
+                      
+                      <View style={styles.themeDetails}>
+                        <Text style={styles.themeSubtitle}>Actionable Steps:</Text>
+                        {theme.actionableSuggestions.map((suggestion, idx) => (
+                          <Text key={idx} style={styles.themeDetailText}>• {suggestion}</Text>
+                        ))}
+                        
+                        <Text style={[styles.themeSubtitle, styles.topSpacing]}>Growth Opportunities:</Text>
+                        {theme.growthOpportunities.map((opportunity, idx) => (
+                          <Text key={idx} style={styles.themeDetailText}>• {opportunity}</Text>
+                        ))}
+                      </View>
                     </View>
+                  ))}
+                </View>
+
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="star-outline" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Strength Spotlight</Text>
+                  </View>
+                  <Text style={styles.spotlightTitle}>{analysis.strengthSpotlight.title}</Text>
+                  <View style={styles.evidenceContainer}>
+                    {analysis.strengthSpotlight.evidence.map((quote, index) => (
+                      <Text key={index} style={styles.evidenceText}>"{quote}"</Text>
+                    ))}
+                  </View>
+                  <Text style={styles.impactText}>{analysis.strengthSpotlight.potentialImpact}</Text>
+                </View>
+
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Patterns & Insights</Text>
+                  </View>
+                  
+                  <Text style={styles.patternSubtitle}>Recurring Patterns</Text>
+                  {analysis.patterns.recurring.map((pattern, index) => (
+                    <Text key={index} style={styles.patternText}>• {pattern}</Text>
+                  ))}
+                  
+                  <Text style={[styles.patternSubtitle, styles.topSpacing]}>Unique Expressions</Text>
+                  {analysis.patterns.unique.map((unique, index) => (
+                    <Text key={index} style={styles.patternText}>• {unique}</Text>
+                  ))}
+                  
+                  <Text style={[styles.patternSubtitle, styles.topSpacing]}>Suggested Areas</Text>
+                  {analysis.patterns.suggested.map((suggestion, index) => (
+                    <Text key={index} style={styles.patternText}>• {suggestion}</Text>
                   ))}
                 </View>
 
@@ -695,6 +780,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  themeDetails: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  themeSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4facfe',
+    marginBottom: 8,
+  },
+  themeDetailText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 4,
+    lineHeight: 20,
+    paddingLeft: 8,
+  },
+  topSpacing: {
+    marginTop: 16,
+  },
+  spotlightTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  evidenceContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  evidenceText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  impactText: {
+    fontSize: 16,
+    color: '#4facfe',
+    lineHeight: 24,
+  },
+  patternSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4facfe',
+    marginBottom: 8,
+  },
+  patternText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 4,
+    lineHeight: 20,
+    paddingLeft: 8,
   },
 });
 
