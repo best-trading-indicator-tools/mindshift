@@ -11,11 +11,26 @@ import {
   SafeAreaView,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import AudioRecorderPlayer, {
+  AVEncoderAudioQualityIOSType,
+  AVEncodingOption,
+  AudioEncoderAndroidType,
+  AudioSourceAndroidType,
+} from 'react-native-audio-recorder-player';
+import { PermissionsAndroid } from 'react-native';
+import OpenAI from 'openai';
+import RNFS from 'react-native-fs';
+import Config from 'react-native-config';
+
+const openai = new OpenAI({
+  apiKey: Config.OPENAI_API_KEY,
+});
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitude'>;
 
@@ -24,6 +39,7 @@ const MIN_ENTRIES = 1;
 interface GratitudeEntry {
   what: string;
   why: string;
+  audioUrl?: string;
 }
 
 const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -32,10 +48,142 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [entries, setEntries] = useState<GratitudeEntry[]>([{ what: '', why: '' }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingIndex, setRecordingIndex] = useState<number | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [showRecordingModal, setShowRecordingModal] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [audioRecorderPlayer] = useState(new AudioRecorderPlayer());
 
   useEffect(() => {
     console.log('DailyGratitude screen mounted with route params:', route.params);
   }, [route.params]);
+
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const grants = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        ]);
+
+        return Object.values(grants).every(
+          permission => permission === PermissionsAndroid.RESULTS.GRANTED
+        );
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleStartRecording = async (index: number) => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      Alert.alert('Permission Required', 'Please grant microphone access to record gratitudes.');
+      return;
+    }
+
+    try {
+      const path = Platform.select({
+        ios: `${RNFS.CachesDirectoryPath}/gratitude_${Date.now()}.m4a`,
+        android: `${RNFS.CachesDirectoryPath}/${Date.now()}.mp4`,
+      });
+
+      const uri = await audioRecorderPlayer.startRecorder(path, {
+        AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+        AudioSourceAndroid: AudioSourceAndroidType.MIC,
+        AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+        AVNumberOfChannelsKeyIOS: 2,
+        AVFormatIDKeyIOS: AVEncodingOption.aac,
+      });
+
+      audioRecorderPlayer.addRecordBackListener((e) => {
+        setRecordingDuration(e.currentPosition);
+      });
+
+      setRecordingIndex(index);
+      setIsRecording(true);
+      setShowRecordingModal(true);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      Alert.alert('Error', 'Failed to start recording. Please try again.');
+    }
+  };
+
+  const transcribeAudio = async (audioPath: string): Promise<string> => {
+    try {
+      setIsTranscribing(true);
+      const audioFile = await RNFS.readFile(audioPath, 'base64');
+      
+      const transcription = await openai.audio.transcriptions.create({
+        file: new File([Buffer.from(audioFile, 'base64')], 'audio.m4a'),
+        model: 'whisper-1',
+      });
+
+      return transcription.text;
+    } catch (error) {
+      console.error('Transcription error:', error);
+      throw error;
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const parseGratitudeText = (text: string): { what: string; why: string } => {
+    // Remove common prefixes
+    const cleanText = text.replace(/^(i am grateful for|i'm grateful for)/i, '').trim();
+    
+    // Split by 'because'
+    const parts = cleanText.split(/\s+because\s+/i);
+    
+    if (parts.length >= 2) {
+      return {
+        what: parts[0].trim(),
+        why: parts.slice(1).join(' because ').trim(),
+      };
+    }
+    
+    // If no 'because' is found, return the whole text as 'what'
+    return {
+      what: cleanText,
+      why: '',
+    };
+  };
+
+  const handleStopRecording = async () => {
+    if (recordingIndex === null) return;
+
+    try {
+      const uri = await audioRecorderPlayer.stopRecorder();
+      audioRecorderPlayer.removeRecordBackListener();
+
+      // Start transcription
+      const transcribedText = await transcribeAudio(uri);
+      const { what, why } = parseGratitudeText(transcribedText);
+
+      // Update the entry with transcribed text and audio URL
+      const newEntries = [...entries];
+      newEntries[recordingIndex] = {
+        what,
+        why,
+        audioUrl: uri,
+      };
+      setEntries(newEntries);
+
+      setIsRecording(false);
+      setShowRecordingModal(false);
+      setRecordingIndex(null);
+      setRecordingDuration(0);
+    } catch (error) {
+      console.error('Failed to stop recording or transcribe:', error);
+      Alert.alert('Error', 'Failed to process recording. Please try again.');
+    }
+  };
 
   const handleAddEntry = () => {
     setEntries([...entries, { what: '', why: '' }]);
@@ -111,6 +259,46 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const renderRecordingModal = () => (
+    <Modal
+      visible={showRecordingModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowRecordingModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.recordingModalContent}>
+          <Text style={styles.recordingTitle}>
+            Recording Gratitude...
+          </Text>
+          <Text style={styles.recordingInstructions}>
+            Speak your complete gratitude{'\n'}
+            Example: "I am grateful for sunny weather because it improves my mood"
+          </Text>
+          <Text style={styles.recordingTimer}>
+            {new Date(recordingDuration).toISOString().substr(14, 5)}
+          </Text>
+          <TouchableOpacity
+            style={[styles.recordButton, isRecording && styles.recordingActive]}
+            onPress={handleStopRecording}
+          >
+            <MaterialCommunityIcons
+              name="stop"
+              size={32}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
+          <Text style={styles.recordingInstructions}>
+            {isTranscribing ? 'Transcribing...' : 'Tap to stop recording'}
+          </Text>
+          {isTranscribing && (
+            <ActivityIndicator style={{ marginTop: 16 }} color="#FFFFFF" />
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (showPostExercise) {
     return (
       <SafeAreaView style={styles.container}>
@@ -147,32 +335,49 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
           <Text style={styles.title}>What are you grateful for today?</Text>
+          <Text style={styles.subtitle}>Type your gratitude or record it with your voice</Text>
           
           {entries.map((entry, index) => (
             <View key={index} style={styles.entryContainer}>
               <Text style={styles.entryNumber}>{index + 1}.</Text>
               <View style={styles.entryInputs}>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>I am grateful for...</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={entry.what}
-                    onChangeText={(text) => handleUpdateEntry(text, index, 'what')}
-                    placeholder="what are you grateful for?"
-                    placeholderTextColor="#666"
-                    multiline
-                  />
+                  <View style={styles.labelRow}>
+                    <Text style={styles.inputLabel}>I am grateful for...</Text>
+                    <TouchableOpacity
+                      style={[styles.recordButton]}
+                      onPress={() => handleStartRecording(index)}
+                    >
+                      <MaterialCommunityIcons
+                        name="microphone"
+                        size={24}
+                        color="#B91C1C"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      style={[styles.input, styles.inputWithButton]}
+                      value={entry.what}
+                      onChangeText={(text) => handleUpdateEntry(text, index, 'what')}
+                      placeholder="what are you grateful for?"
+                      placeholderTextColor="#666"
+                      multiline
+                    />
+                  </View>
                 </View>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>because...</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={entry.why}
-                    onChangeText={(text) => handleUpdateEntry(text, index, 'why')}
-                    placeholder="why are you grateful for it?"
-                    placeholderTextColor="#666"
-                    multiline
-                  />
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      style={[styles.input, styles.inputWithButton]}
+                      value={entry.why}
+                      onChangeText={(text) => handleUpdateEntry(text, index, 'why')}
+                      placeholder="why are you grateful for it?"
+                      placeholderTextColor="#666"
+                      multiline
+                    />
+                  </View>
                 </View>
               </View>
             </View>
@@ -227,6 +432,7 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
+      {renderRecordingModal()}
     </KeyboardAvoidingView>
   );
 };
@@ -265,6 +471,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
+  subtitle: {
+    fontSize: 16,
+    color: '#666666',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
   entryContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -283,10 +495,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   inputLabel: {
     fontSize: 14,
     color: '#666666',
-    marginBottom: 4,
     marginLeft: 4,
   },
   input: {
@@ -406,6 +623,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  inputWithButton: {
+    flex: 1,
+  },
+  recordButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  recordingActive: {
+    backgroundColor: '#B91C1C',
+  },
+  recordingModalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    width: '85%',
+    alignItems: 'center',
+  },
+  recordingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  recordingTimer: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 32,
+  },
+  recordingInstructions: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
+    opacity: 0.8,
   },
 });
 

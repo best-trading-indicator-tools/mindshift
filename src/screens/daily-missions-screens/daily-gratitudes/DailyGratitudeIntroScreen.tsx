@@ -17,6 +17,10 @@ const introContent = [
     content: "When expressing gratitude, adding 'because' makes it more meaningful. Instead of just saying what you're grateful for, explaining why deepens the emotional impact and helps you truly appreciate the value it brings to your life."
   },
   {
+    title: "Express Your Way",
+    content: "You can express your gratitude by typing or using voice recording. Some find it easier to speak their gratitude, while others prefer writing. Choose what feels most natural to you - both are equally powerful."
+  },
+  {
     title: "Example",
     content: "Instead of \"I'm grateful for my friend\", try \"I'm grateful for my friend because they always listen and support me without judgment.\" Notice how much more powerful and specific this feels."
   }
