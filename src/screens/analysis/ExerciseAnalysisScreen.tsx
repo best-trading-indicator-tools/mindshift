@@ -59,14 +59,14 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
               }
             ],
             "insights": {
-              "main": "string with main observation",
-              "suggestion": "string with growth suggestion",
-              "celebration": "string with celebration message",
-              "nextFocus": "string with suggested focus"
+              "main": "string describing insights in second person (using 'you' not 'the user')",
+              "suggestion": "string with growth suggestion speaking directly to the person",
+              "celebration": "string with celebration message speaking directly to the person",
+              "nextFocus": "string with suggested focus speaking directly to the person"
             }
           }
 
-          Analyze these gratitude entries:
+          Analyze these gratitude entries and provide insights speaking directly to the person:
           ${JSON.stringify(entries)}`;
 
       case 'checklist':
