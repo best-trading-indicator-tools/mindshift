@@ -535,14 +535,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   header: {
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: 0,
+    paddingBottom: 16,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
     padding: 16,
+    paddingTop: 0,
     paddingBottom: 100,
   },
   title: {
