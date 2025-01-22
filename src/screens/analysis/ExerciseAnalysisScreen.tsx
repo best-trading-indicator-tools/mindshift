@@ -400,6 +400,12 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   };
 
+  const scrollIndicatorStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withSpring(scrollY.value < 100 ? 1 : 0)
+    };
+  });
+
   console.log('Current render state:', { loading, error, hasAnalysis: !!analysis });
 
   if (loading) {
@@ -677,16 +683,21 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
             )}
           </AnimatedScrollView>
 
-          {/* Add scroll indicator */}
-          <Animated.View style={[styles.scrollIndicator, {
-            opacity: withSpring(scrollY.value < 100 ? 1 : 0)
-          }]}>
-            <MaterialCommunityIcons 
-              name="chevron-double-down" 
-              size={24} 
-              color="#4facfe" 
-            />
-            <Text style={styles.scrollIndicatorText}>Scroll for more insights</Text>
+          {/* Updated scroll indicator */}
+          <Animated.View style={[styles.scrollIndicatorContainer, scrollIndicatorStyle]}>
+            <LinearGradient
+              colors={['rgba(30, 33, 50, 0)', 'rgba(30, 33, 50, 0.95)', 'rgba(30, 33, 50, 1)']}
+              style={styles.scrollIndicatorGradient}
+            >
+              <View style={styles.scrollIndicator}>
+                <MaterialCommunityIcons 
+                  name="chevron-double-down" 
+                  size={24} 
+                  color="#4facfe" 
+                />
+                <Text style={styles.scrollIndicatorText}>Scroll for more insights</Text>
+              </View>
+            </LinearGradient>
           </Animated.View>
 
           <View style={styles.buttonContainer}>
@@ -1154,7 +1165,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  scrollIndicator: {
+  scrollIndicatorContainer: {
     position: 'absolute',
     bottom: 100,
     left: 0,
@@ -1162,6 +1173,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  scrollIndicatorGradient: {
+    borderRadius: 20,
+    padding: 2,
+  },
+  scrollIndicator: {
+    backgroundColor: 'rgba(30, 33, 50, 0.95)',
+    padding: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollIndicatorText: {
     color: '#4facfe',
