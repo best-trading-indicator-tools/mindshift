@@ -316,7 +316,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    padding: 10,
+    paddingTop: 0,
     paddingBottom: 100,
   },
   title: {
@@ -324,6 +325,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
+    marginTop: 10,
     marginBottom: 20,
   },
   loadingContainer: {
