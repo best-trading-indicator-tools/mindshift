@@ -584,8 +584,12 @@ ${JSON.stringify(entries)}`;
     if (!analysis) return null;
 
     if (route.params.exerciseType === 'checklist') {
-      // For checklist, the analysis data is directly in the root object
-      return renderGoldenChecklistAnalysis(analysis as unknown as GoldenChecklistAnalysis);
+      // For checklist, the analysis should be under goldenChecklistAnalysis
+      if (!analysis.goldenChecklistAnalysis) {
+        console.error('No checklist analysis data found in:', analysis);
+        return null;
+      }
+      return renderGoldenChecklistAnalysis(analysis.goldenChecklistAnalysis);
     }
 
     // ... existing render logic for other exercise types ...
