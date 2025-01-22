@@ -62,27 +62,11 @@ const ANALYSIS_STEPS = [
   "Creating your personalized analysis..."
 ];
 
-const STEP_ICONS = {
-  0: "notebook", // Reading entries
-  1: "heart-pulse", // Emotional patterns
-  2: "puzzle", // Recurring themes
-  3: "trending-up", // Personal growth
-  4: "account-group", // Relationship insights
-  5: "star", // Final analysis
-} as const;
-
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeAnalysis'>;
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-const LoadingWithMessage: React.FC<{ message: string }> = ({ message }) => (
-  <View style={styles.loadingWrapper}>
-    <LoadingProgressBar />
-    <Text style={styles.loadingMessage}>{message}</Text>
-  </View>
-);
-
-export const DailyGratitudeAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
+export const GratitudeAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [analysis, setAnalysis] = useState<GratitudeAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,17 +166,7 @@ Analyze these entries: ${JSON.stringify(entries)}`
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar barStyle="light-content" />
-        <View style={styles.loadingContent}>
-          <View style={styles.loadingIconContainer}>
-            <MaterialCommunityIcons 
-              name={STEP_ICONS[loadingStep as keyof typeof STEP_ICONS]} 
-              size={40} 
-              color="#B91C1C" 
-            />
-          </View>
-          <Text style={styles.loadingTitle}>{ANALYSIS_STEPS[loadingStep]}</Text>
-          <LoadingProgressBar width={200} color="#B91C1C" />
-        </View>
+        <LoadingProgressBar text={ANALYSIS_STEPS[loadingStep]} />
       </SafeAreaView>
     );
   }
@@ -236,14 +210,14 @@ Analyze these entries: ${JSON.stringify(entries)}`
           <View style={styles.content}>
             {/* Emotional Analysis Section */}
             <View style={styles.section}>
-              <View style={styles.sectionGradient}>
-                <LinearGradient
-                  colors={['#4facfe', '#00f2fe']}
-                  style={styles.sectionHeader}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                style={styles.sectionHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.sectionTitle}>Emotional Patterns</Text>
+              </LinearGradient>
               <View style={styles.sectionContent}>
                 <Text style={styles.analysisText}>{analysis.emotionalAnalysis.dominantEmotion}</Text>
                 <Text style={styles.analysisText}>{analysis.emotionalAnalysis.emotionalGrowth}</Text>
@@ -253,14 +227,14 @@ Analyze these entries: ${JSON.stringify(entries)}`
 
             {/* Thematic Analysis Section */}
             <View style={styles.section}>
-              <View style={styles.sectionGradient}>
-                <LinearGradient
-                  colors={['#fad0c4', '#ff9a9e']}
-                  style={styles.sectionHeader}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
+              <LinearGradient
+                colors={['#fad0c4', '#ff9a9e']}
+                style={styles.sectionHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.sectionTitle}>Themes & Values</Text>
+              </LinearGradient>
               <View style={styles.sectionContent}>
                 <Text style={styles.analysisText}>{analysis.thematicAnalysis.recurringThemes}</Text>
                 <Text style={styles.analysisText}>{analysis.thematicAnalysis.valueAlignment}</Text>
@@ -270,14 +244,14 @@ Analyze these entries: ${JSON.stringify(entries)}`
 
             {/* Personal Growth Section */}
             <View style={styles.section}>
-              <View style={styles.sectionGradient}>
-                <LinearGradient
-                  colors={['#84fab0', '#8fd3f4']}
-                  style={styles.sectionHeader}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
+              <LinearGradient
+                colors={['#84fab0', '#8fd3f4']}
+                style={styles.sectionHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.sectionTitle}>Personal Growth</Text>
+              </LinearGradient>
               <View style={styles.sectionContent}>
                 <Text style={styles.analysisText}>{analysis.personalGrowth.selfAwareness}</Text>
                 <Text style={styles.analysisText}>{analysis.personalGrowth.mindsetShift}</Text>
@@ -287,14 +261,14 @@ Analyze these entries: ${JSON.stringify(entries)}`
 
             {/* Relationship Insights Section */}
             <View style={styles.section}>
-              <View style={styles.sectionGradient}>
-                <LinearGradient
-                  colors={['#a18cd1', '#fbc2eb']}
-                  style={styles.sectionHeader}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
+              <LinearGradient
+                colors={['#a18cd1', '#fbc2eb']}
+                style={styles.sectionHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.sectionTitle}>Relationship Insights</Text>
+              </LinearGradient>
               <View style={styles.sectionContent}>
                 <Text style={styles.analysisText}>{analysis.relationshipInsights.connections}</Text>
                 <Text style={styles.analysisText}>{analysis.relationshipInsights.appreciation}</Text>
@@ -346,11 +320,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
     overflow: 'hidden',
   },
-  sectionGradient: {
-    height: 8,
-  },
   sectionHeader: {
-    height: '100%',
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -359,7 +330,6 @@ const styles = StyleSheet.create({
   },
   sectionContent: {
     padding: 16,
-    paddingTop: 20,
   },
   analysisText: {
     fontSize: 16,
@@ -388,33 +358,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  loadingWrapper: {
-    alignItems: 'center',
-    gap: 20,
-  },
-  loadingMessage: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  loadingContent: {
-    alignItems: 'center',
-    gap: 24,
-  },
-  loadingIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(185, 28, 28, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  loadingTitle: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 32,
   },
 }); 
