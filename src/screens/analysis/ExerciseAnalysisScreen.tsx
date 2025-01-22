@@ -320,7 +320,19 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           ${JSON.stringify(entries)}`;
 
       case 'checklist':
-        return `You are an AI coach analyzing daily habits and routines. Respond ONLY with a JSON object in this exact format:
+        return `You are an expert behavioral psychologist and habit formation coach analyzing daily routines and their systemic impacts. 
+
+        Your expertise includes:
+        - Pattern recognition in human behavior
+        - Habit stacking and behavioral psychology
+        - Impact analysis across physical, mental, emotional and social dimensions
+        - Momentum-based behavioral change
+        - Growth psychology and skill progression
+        - Probability modeling for habit success
+
+        Analyze the provided daily habits and routines. Consider their interconnections, timing patterns, and holistic impacts on wellbeing.
+
+        Respond ONLY with a JSON object in this exact format, providing deep, actionable insights:
           {
             "patternAnalysis": {
               "optimalTimes": {
@@ -834,8 +846,9 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const renderAnalysisContent = () => {
     if (!analysis) return null;
 
-    if (route.params.exerciseType === 'checklist' && analysis.goldenChecklistAnalysis) {
-      return renderGoldenChecklistAnalysis(analysis.goldenChecklistAnalysis);
+    if (route.params.exerciseType === 'checklist') {
+      // For checklist, the analysis data is directly in the root object
+      return renderGoldenChecklistAnalysis(analysis as unknown as GoldenChecklistAnalysis);
     }
 
     // ... existing render logic for other exercise types ...
