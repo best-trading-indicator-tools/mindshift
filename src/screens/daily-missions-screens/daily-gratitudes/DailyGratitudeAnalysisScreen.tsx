@@ -245,6 +245,7 @@ Analyze these entries: ${JSON.stringify(entries)}`
                 />
               </View>
               <View style={styles.sectionContent}>
+                <Text style={styles.sectionTitle}>Emotional Patterns</Text>
                 <Text style={styles.analysisText}>{analysis.emotionalAnalysis.dominantEmotion}</Text>
                 <Text style={styles.analysisText}>{analysis.emotionalAnalysis.emotionalGrowth}</Text>
                 <Text style={styles.analysisText}>{analysis.emotionalAnalysis.emotionalInsight}</Text>
@@ -262,6 +263,7 @@ Analyze these entries: ${JSON.stringify(entries)}`
                 />
               </View>
               <View style={styles.sectionContent}>
+                <Text style={styles.sectionTitle}>Themes & Values</Text>
                 <Text style={styles.analysisText}>{analysis.thematicAnalysis.recurringThemes}</Text>
                 <Text style={styles.analysisText}>{analysis.thematicAnalysis.valueAlignment}</Text>
                 <Text style={styles.analysisText}>{analysis.thematicAnalysis.lifeAreas}</Text>
@@ -279,6 +281,7 @@ Analyze these entries: ${JSON.stringify(entries)}`
                 />
               </View>
               <View style={styles.sectionContent}>
+                <Text style={styles.sectionTitle}>Personal Growth</Text>
                 <Text style={styles.analysisText}>{analysis.personalGrowth.selfAwareness}</Text>
                 <Text style={styles.analysisText}>{analysis.personalGrowth.mindsetShift}</Text>
                 <Text style={styles.analysisText}>{analysis.personalGrowth.futureOrientation}</Text>
@@ -296,6 +299,7 @@ Analyze these entries: ${JSON.stringify(entries)}`
                 />
               </View>
               <View style={styles.sectionContent}>
+                <Text style={styles.sectionTitle}>Relationship Insights</Text>
                 <Text style={styles.analysisText}>{analysis.relationshipInsights.connections}</Text>
                 <Text style={styles.analysisText}>{analysis.relationshipInsights.appreciation}</Text>
                 <Text style={styles.analysisText}>{analysis.relationshipInsights.socialImpact}</Text>
@@ -356,6 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    marginBottom: 16,
   },
   sectionContent: {
     padding: 16,
