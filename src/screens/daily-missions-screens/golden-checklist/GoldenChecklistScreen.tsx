@@ -369,24 +369,22 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
       isEqual: checkedItems.length === CHECKLIST_ITEMS.length
     });
     
-    if (checkedItems.length === CHECKLIST_ITEMS.length) {
-      console.log("context & challengeId", context, challengeId);
+    if (checkedItems.length === (CHECKLIST_ITEMS.length - hiddenItems.length)) {
       try {
+        // First navigate to analysis
+        navigation.navigate('ExerciseAnalysis', {
+          exerciseType: 'checklist',
+          entries: checkedItems,
+          context: context,
+          challengeId: challengeId
+        });
+
+        // Then mark as completed
         if (context === 'challenge' && challengeId) {
           console.log("here after golden checklist");
           await markChallengeExerciseAsCompleted(challengeId, 'golden-checklist');
-          navigation.navigate('ChallengeDetail', {
-            challenge: {
-              id: challengeId,
-              title: 'Ultimate',
-              duration: 21,
-              description: 'Your subconscious mind shapes your reality.',
-              image: require('../../../assets/illustrations/challenges/challenge-21.png')
-            }
-          });
         } else {
           await markDailyExerciseAsCompleted('golden-checklist');
-          navigation.navigate('MainTabs');
         }
       } catch (error) {
         console.error('Error completing exercise:', error);

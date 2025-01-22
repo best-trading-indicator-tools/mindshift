@@ -44,7 +44,8 @@ const GoldenChecklistIntroScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.title}>Golden Checklist</Text>
           <Text style={styles.description}>
             Review your daily achievements and habits. Check off each item you've successfully completed today.{'\n\n'}
-            Be honest with yourself - this is about personal growth and accountability.
+            Be honest with yourself - this is about personal growth and accountability.{'\n\n'}
+            Don't like some of the default items? You can easily hide them by tapping the eye icon. Add your own custom items to make this checklist truly yours.
           </Text>
         </View>
       </View>
