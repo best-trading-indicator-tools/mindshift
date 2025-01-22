@@ -138,42 +138,71 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const parseGratitudeText = (text: string): { what: string; why: string } => {
-    const cleanText = text.replace(/^(i am grateful for|i'm grateful for)/i, '').trim();
-    const parts = cleanText.split(/\s+because\s+/i);
-    
-    if (parts.length >= 2) {
-      return {
-        what: parts[0].trim(),
-        why: parts.slice(1).join(' because ').trim(),
-      };
-    }
-    
-    return {
-      what: cleanText,
-      why: '',
-    };
-  };
-
   const handleStopRecording = async () => {
     if (recordingIndex === null || !isRecording) return;
 
     try {
-      const result = await audioRecorderPlayer.current.stopRecorder();
+      const audioPath = await audioRecorderPlayer.current.stopRecorder();
       audioRecorderPlayer.current.removeRecordBackListener();
+
+      // Check if recording is too short (less than 1 second)
+      if (recordingDuration < 1000) {
+        Alert.alert('Recording Too Short', 'Please speak your gratitude clearly. Try recording again.');
+        return;
+      }
 
       setIsTranscribing(true);
 
-      // Get the audio data directly from the recorder
-      const audioData = result; // This should be the base64 audio data
+      // Create form data for the API request
+      const formData = new FormData();
+      formData.append('file', {
+        uri: audioPath,
+        type: 'audio/m4a',
+        name: 'audio.m4a'
+      } as any);
+      formData.append('model', 'whisper-1');
+      formData.append('language', 'en'); // Force English language
+      formData.append('prompt', 'The audio is a gratitude statement starting with "I am grateful for" followed by a reason starting with "because"');
 
-      // Transcribe the audio
-      const transcription = await openai.audio.transcriptions.create({
-        file: new File([Buffer.from(audioData, 'base64')], 'audio.m4a'),
-        model: 'whisper-1',
+      // Make the API request directly using fetch
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Config.OPENAI_API_KEY}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData
       });
 
-      const { what, why } = parseGratitudeText(transcription.text);
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const transcriptionResult = await response.json();
+      
+      // Check if transcription is empty or only contains whitespace
+      if (!transcriptionResult.text?.trim()) {
+        Alert.alert('No Speech Detected', 'No words were detected in your recording. Please try again and speak clearly.');
+        return;
+      }
+
+      const { what, why } = parseGratitudeText(transcriptionResult.text);
+
+      // If we don't have both parts, try to intelligently split the text
+      if (!why) {
+        const text = transcriptionResult.text.toLowerCase();
+        if (text.includes('because')) {
+          const parts = text.split(/because/i);
+          const newWhat = parts[0].replace(/^(i am grateful for|i'm grateful for)/i, '').trim();
+          const newWhy = parts[1].trim();
+          if (newWhat && newWhy) {
+            const newEntries = [...entries];
+            newEntries[recordingIndex] = { what: newWhat, why: newWhy };
+            setEntries(newEntries);
+            return;
+          }
+        }
+      }
 
       // Update the entry with transcribed text
       const newEntries = [...entries];
@@ -190,6 +219,26 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
       setRecordingDuration(0);
       setIsTranscribing(false);
     }
+  };
+
+  const parseGratitudeText = (text: string): { what: string; why: string } => {
+    // Remove any language prefixes like "Je suis reconnaissant pour"
+    const cleanText = text.replace(/^(i am grateful for|i'm grateful for|je suis reconnaissant pour|je suis reconnaissante pour)/i, '').trim();
+    
+    // Try to split by "because" or "parce que"
+    const becauseParts = cleanText.split(/\s+(?:because|parce que)\s+/i);
+    
+    if (becauseParts.length >= 2) {
+      return {
+        what: becauseParts[0].trim(),
+        why: becauseParts.slice(1).join(' because ').trim(),
+      };
+    }
+    
+    return {
+      what: cleanText,
+      why: '',
+    };
   };
 
   const handleAddEntry = () => {
