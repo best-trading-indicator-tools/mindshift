@@ -54,14 +54,8 @@ import SelfHypnosisExerciseScreen from '../screens/daily-missions-screens/self-h
 import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationIntroScreen';
 import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
 import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
-
-interface ChecklistEntry {
-  id: string;
-  title: string;
-  subtitle: string;
-  physicalBenefits?: string[];
-  mentalBenefits?: string[];
-}
+import { GoldenChecklistAnalysisScreen } from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistAnalysisScreen';
+import type { ChecklistEntry } from '../types/checklist';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -254,6 +248,11 @@ export type RootStackParamList = {
     context?: string;
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
+  };
+  GoldenChecklistAnalysis: {
+    entries: ChecklistEntry[];
+    context?: 'challenge' | 'daily';
+    challengeId?: string;
   };
 };
 
@@ -575,6 +574,16 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
         <Stack.Screen
           name="ExerciseAnalysis"
           component={ExerciseAnalysisScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
+
+        <Stack.Screen
+          name="GoldenChecklistAnalysis"
+          component={GoldenChecklistAnalysisScreen}
           options={{
             headerShown: false,
             presentation: 'fullScreenModal',

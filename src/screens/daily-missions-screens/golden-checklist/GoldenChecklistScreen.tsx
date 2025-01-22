@@ -407,12 +407,10 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
         }).filter((item): item is ChecklistEntry => item !== null);
 
         // Navigate to analysis with complete item information
-        navigation.navigate('ExerciseAnalysis', {
-          exerciseType: 'checklist',
+        navigation.navigate('GoldenChecklistAnalysis', {
           entries: checkedItemsInfo,
           context: context,
           challengeId: challengeId,
-          returnTo: returnTo
         });
 
         // Then mark as completed
