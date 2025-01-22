@@ -20,6 +20,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GoldenChecklist'>;
 // Add type for custom items
 type ChecklistItem = typeof CHECKLIST_ITEMS[0];
 
+interface ChecklistEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  physicalBenefits: string[];
+  mentalBenefits: string[];
+}
+
 const CHECKLIST_ITEMS = [
   {
     id: 'sleptWell',
@@ -371,12 +379,40 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
     
     if (checkedItems.length === (CHECKLIST_ITEMS.length - hiddenItems.length)) {
       try {
-        // First navigate to analysis
+        // Get complete information for checked items
+        const checkedItemsInfo = checkedItems.map(itemId => {
+          // Find in default items
+          const defaultItem = CHECKLIST_ITEMS.find(item => item.id === itemId);
+          if (defaultItem) {
+            return {
+              id: defaultItem.id,
+              title: defaultItem.title,
+              subtitle: defaultItem.subtitle,
+              physicalBenefits: defaultItem.physicalBenefits,
+              mentalBenefits: defaultItem.mentalBenefits
+            };
+          }
+          // Find in custom items
+          const customItem = customItems.find(item => item.id === itemId);
+          if (customItem) {
+            return {
+              id: customItem.id,
+              title: customItem.title,
+              subtitle: customItem.subtitle,
+              physicalBenefits: [],
+              mentalBenefits: []
+            };
+          }
+          return null;
+        }).filter((item): item is ChecklistEntry => item !== null);
+
+        // Navigate to analysis with complete item information
         navigation.navigate('ExerciseAnalysis', {
           exerciseType: 'checklist',
-          entries: checkedItems,
+          entries: checkedItemsInfo,
           context: context,
-          challengeId: challengeId
+          challengeId: challengeId,
+          returnTo: returnTo
         });
 
         // Then mark as completed

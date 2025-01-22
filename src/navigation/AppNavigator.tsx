@@ -55,6 +55,14 @@ import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens
 import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
 import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
 
+interface ChecklistEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  physicalBenefits?: string[];
+  mentalBenefits?: string[];
+}
+
 export type RootTabParamList = {
   Home: undefined;
   Challenges: undefined;
@@ -241,9 +249,9 @@ export type RootStackParamList = {
   GuidedRelaxationIntro: undefined;
   GuidedRelaxationExercise: undefined;
   ExerciseAnalysis: {
-    exerciseType: 'gratitude' | 'checklist' | 'incantations';
-    entries: string[];
-    context?: 'daily' | 'challenge';
+    exerciseType: string;
+    entries: string[] | ChecklistEntry[];
+    context?: string;
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
   };

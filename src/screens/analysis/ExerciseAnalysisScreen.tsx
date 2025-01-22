@@ -30,119 +30,37 @@ import LoadingProgressBar from '../../components/ProgressBar';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Svg, Line } from 'react-native-svg';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseAnalysis'>;
-
 // New types for checklist analysis
 interface GoldenChecklistPatternAnalysis {
-  optimalTimes: {
-    mostProductiveWindow: string;
-    keyTimeInsights: string[];
-    timeBasedRecommendations: string[];
-  };
-  taskSequences: {
-    mostEffective: string[];
-    correlations: {
-      trigger: string;
-      outcome: string;
-      probability: number;
-      insight: string;
-    }[];
-  };
+  routineInsight: string;
+  habitConnections: string;
+  hiddenPatterns: string;
 }
 
-interface GoldenChecklistHabitStack {
-  trigger: {
-    habit: string;
-    timeOfDay: string;
-    context: string;
-  };
-  sequence: {
-    habit: string;
-    waitTime: string;
-    reason: string;
-  }[];
-  totalImpact: string;
-  successRate: number;
+interface GoldenChecklistHabitStacking {
+  naturalSequences: string;
+  synergies: string;
+  implementation: string;
 }
 
-interface GoldenChecklistKeystoneHabit {
-  habit: string;
-  cascadingEffects: string[];
-  implementationTips: string[];
+interface GoldenChecklistImpactAnalysis {
+  physical: string;
+  mental: string;
+  emotional: string;
+  social: string;
 }
 
-interface GoldenChecklistImpactZone {
-  score: number;
-  potential: number;
-  strengths: string[];
-  improvements: string[];
-  nextSteps: string[];
-}
-
-interface GoldenChecklistMomentumBuilders {
-  keyMoments: {
-    time: string;
-    action: string;
-    impact: string;
-    whyItMatters: string;
-  }[];
-  tippingPoints: {
-    scenario: string;
-    successPath: string;
-    failurePath: string;
-    preventiveAction: string;
-  }[];
-  microWins: {
-    action: string;
-    timeToComplete: string;
-    benefitGained: string;
-  }[];
-}
-
-interface GoldenChecklistGrowthOpportunities {
-  challengingHabits: {
-    habit: string;
-    rootCause: string;
-    subTasks: string[];
-    progressionStrategy: string;
-  }[];
-  nextLevelHabits: {
-    currentHabit: string;
-    evolution: string;
-    benefits: string[];
-    implementationSteps: string[];
-  }[];
-}
-
-interface GoldenChecklistSuccessProbability {
-  habits: {
-    name: string;
-    probability: number;
-    riskFactors: string[];
-    preventiveStrategies: string[];
-  }[];
-  overallSuccess: {
-    rate: number;
-    keyFactors: string[];
-    improvementAreas: string[];
-  };
+interface GoldenChecklistGrowthStrategy {
+  currentStrengths: string;
+  nextLevel: string;
+  longTermVision: string;
 }
 
 interface GoldenChecklistAnalysis {
   patternAnalysis: GoldenChecklistPatternAnalysis;
-  habitStacking: {
-    recommendedStacks: GoldenChecklistHabitStack[];
-    keystoneHabits: GoldenChecklistKeystoneHabit[];
-  };
-  impactZones: {
-    physical: GoldenChecklistImpactZone;
-    mental: GoldenChecklistImpactZone;
-    emotional: GoldenChecklistImpactZone;
-    social: GoldenChecklistImpactZone;
-  };
-  momentumBuilders: GoldenChecklistMomentumBuilders;
-  growthOpportunities: GoldenChecklistGrowthOpportunities;
-  successProbability: GoldenChecklistSuccessProbability;
+  habitStacking: GoldenChecklistHabitStacking;
+  impactAnalysis: GoldenChecklistImpactAnalysis;
+  growthStrategy: GoldenChecklistGrowthStrategy;
 }
 
 interface AnalysisResult {
@@ -174,9 +92,19 @@ interface AnalysisResult {
     celebration: string;
     nextFocus: string;
   };
-  // Rename to be more specific
   goldenChecklistAnalysis?: GoldenChecklistAnalysis;
 }
+
+// Add this type definition before the Props type
+interface ChecklistEntry {
+  id: string;
+  title: string;
+  subtitle: string;
+  physicalBenefits?: string[];
+  mentalBenefits?: string[];
+}
+
+type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseAnalysis'>;
 
 const AnimatedCard = Animated.createAnimatedComponent(View);
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
@@ -261,7 +189,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     },
   });
 
-  const getAnalysisPrompt = (exerciseType: string, entries: string[]) => {
+  const getAnalysisPrompt = (exerciseType: string, entries: string[] | ChecklistEntry[]) => {
     switch (exerciseType) {
       case 'gratitude':
         return `You are an AI coach analyzing gratitude entries. Respond ONLY with a JSON object in this exact format:
@@ -320,186 +248,74 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           ${JSON.stringify(entries)}`;
 
       case 'checklist':
-        return `You are an expert behavioral psychologist and habit formation coach analyzing daily routines and their systemic impacts.
+        return `You are James Clear, the author of Atomic Habits, analyzing daily routines to find powerful habit-building opportunities.
 
-        IMPORTANT GUIDELINES:
-        1. Base your analysis on the checked items, but you can make reasonable connections between related habits
-        2. For each checked item:
-           - Consider its direct benefits and impacts
-           - Look for potential synergies with other checked items
-           - Suggest evidence-based ways to build upon this positive habit
-        3. When suggesting habit stacks or patterns:
-           - Use the checked items as anchors
-           - Suggest natural, logical connections
-           - Explain the reasoning behind each connection
-        4. For impact zones:
-           - Focus on the areas directly affected by checked items
-           - Provide specific, actionable next steps
-           - Keep scores realistic based on current habits
-        5. Avoid making assumptions about:
-           - Specific times of day unless provided
-           - Activities not mentioned
-           - Personal preferences without evidence
+Here are the habits the user has completed today:
+${JSON.stringify(entries, null, 2)}
 
-        Even with limited data, provide meaningful insights by:
-        - Focusing on the quality and impact of completed items
-        - Suggesting natural progressions from current habits
-        - Identifying potential areas of growth based on current strengths
+FOCUS ON:
+1. Pattern Analysis:
+  - Identify deep connections between habits
+  - Explain how habits influence each other
+  - Reveal non-obvious patterns in their routine
 
-        Respond ONLY with a JSON object in this exact format, providing insights based on checked items and evidence-based connections:
-          {
-            "patternAnalysis": {
-              "optimalTimes": {
-                "mostProductiveWindow": string,
-                "keyTimeInsights": string[],
-                "timeBasedRecommendations": string[]
-              },
-              "taskSequences": {
-                "mostEffective": string[],
-                "correlations": [
-                  {
-                    "trigger": string,
-                    "outcome": string,
-                    "probability": number,
-                    "insight": string
-                  }
-                ]
-              }
-            },
-            "habitStacking": {
-              "recommendedStacks": [
-                {
-                  "trigger": {
-                    "habit": string,
-                    "timeOfDay": string,
-                    "context": string
-                  },
-                  "sequence": [
-                    {
-                      "habit": string,
-                      "waitTime": string,
-                      "reason": string
-                    }
-                  ],
-                  "totalImpact": string,
-                  "successRate": number
-                }
-              ],
-              "keystoneHabits": [
-                {
-                  "habit": string,
-                  "cascadingEffects": string[],
-                  "implementationTips": string[]
-                }
-              ]
-            },
-            "impactZones": {
-              "physical": {
-                "score": number,
-                "potential": number,
-                "strengths": string[],
-                "improvements": string[],
-                "nextSteps": string[]
-              },
-              "mental": {
-                "score": number,
-                "potential": number,
-                "strengths": string[],
-                "improvements": string[],
-                "nextSteps": string[]
-              },
-              "emotional": {
-                "score": number,
-                "potential": number,
-                "strengths": string[],
-                "improvements": string[],
-                "nextSteps": string[]
-              },
-              "social": {
-                "score": number,
-                "potential": number,
-                "strengths": string[],
-                "improvements": string[],
-                "nextSteps": string[]
-              }
-            },
-            "momentumBuilders": {
-              "keyMoments": [
-                {
-                  "time": string,
-                  "action": string,
-                  "impact": string,
-                  "whyItMatters": string
-                }
-              ],
-              "tippingPoints": [
-                {
-                  "scenario": string,
-                  "successPath": string,
-                  "failurePath": string,
-                  "preventiveAction": string
-                }
-              ],
-              "microWins": [
-                {
-                  "action": string,
-                  "timeToComplete": string,
-                  "benefitGained": string
-                }
-              ]
-            },
-            "growthOpportunities": {
-              "challengingHabits": [
-                {
-                  "habit": string,
-                  "rootCause": string,
-                  "subTasks": string[],
-                  "progressionStrategy": string
-                }
-              ],
-              "nextLevelHabits": [
-                {
-                  "currentHabit": string,
-                  "evolution": string,
-                  "benefits": string[],
-                  "implementationSteps": string[]
-                }
-              ]
-            },
-            "successProbability": {
-              "habits": [
-                {
-                  "name": string,
-                  "probability": number,
-                  "riskFactors": string[],
-                  "preventiveStrategies": string[]
-                }
-              ],
-              "overallSuccess": {
-                "rate": number,
-                "keyFactors": string[],
-                "improvementAreas": string[]
-              }
-            }
-          }
+2. Habit Stacking Opportunities:
+  - Suggest natural sequences based on their current habits
+  - Explain why certain habits work well together
+  - Show how to create powerful habit chains
 
-          Guidelines for analysis:
-          1. Focus on discovering non-obvious patterns and correlations
-          2. Emphasize the compound effects of habits working together
-          3. Provide specific, actionable insights rather than general advice
-          4. Consider the holistic impact across all life areas
-          5. Base recommendations on behavioral science and habit formation research
-          6. Identify potential domino effects and leverage points
-          7. Suggest concrete next steps for improvement
+3. Impact Analysis:
+  - Analyze the holistic impact on their life
+  - Show compound effects over time
+  - Reveal hidden benefits they might not see
 
-          Additional context:
-          - Look for habits that could be combined for synergistic effects
-          - Identify potential conflicts between habits and suggest resolutions
-          - Consider the user's current success rate and suggest realistic progressions
-          - Focus on sustainable, long-term habit building rather than quick fixes
+4. Growth Strategy:
+  - Provide personalized evolution path
+  - Suggest how to deepen existing habits
+  - Show next level opportunities
 
-          Analyze these checklist completions and provide deep, meaningful insights:
-          ${JSON.stringify(entries)}`;
+Respond ONLY with a JSON object in this exact format, focusing on detailed, personalized analysis:
+{
+  "patternAnalysis": {
+    "routineInsight": "A detailed paragraph analyzing their routine patterns...",
+    "habitConnections": "A paragraph explaining how their habits connect and influence each other...",
+    "hiddenPatterns": "A paragraph revealing non-obvious patterns in their routine..."
+  },
+  "habitStacking": {
+    "naturalSequences": "A paragraph suggesting natural habit sequences based on their current habits...",
+    "synergies": "A paragraph explaining which habits naturally complement each other and why...",
+    "implementation": "A detailed paragraph on how to implement these habit stacks..."
+  },
+  "impactAnalysis": {
+    "physical": "A paragraph analyzing physical health impacts...",
+    "mental": "A paragraph analyzing mental and cognitive impacts...",
+    "emotional": "A paragraph analyzing emotional well-being impacts...",
+    "social": "A paragraph analyzing social life impacts..."
+  },
+  "growthStrategy": {
+    "currentStrengths": "A paragraph highlighting what they're doing well...",
+    "nextLevel": "A paragraph suggesting how to evolve their habits...",
+    "longTermVision": "A paragraph painting a picture of their potential future..."
+  }
+}
+
+Guidelines for analysis:
+1. Write in a personal, conversational tone
+2. Use "you" and "your" to make it feel direct and personal
+3. Provide specific, actionable insights
+4. Connect different aspects of their routine
+5. Show both immediate and long-term impacts
+6. Focus on positive reinforcement
+7. Make it feel like a personal coaching session
+
+Additional context:
+- Focus on the synergistic effects between habits
+- Show how small changes compound over time
+- Help them see the bigger picture of their routine
+- Provide concrete next steps while acknowledging current progress
+
+Analyze their checklist completions and provide deep, meaningful insights in a personal coaching style:
+${JSON.stringify(entries)}`;
 
       case 'incantations':
         return `You are an AI coach analyzing affirmations. Respond ONLY with a JSON object in this exact format:
@@ -717,7 +533,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
       <>
         {/* Pattern Analysis Card - Only show if there are meaningful patterns */}
-        {hasMeaningfulData(analysis.patternAnalysis.taskSequences.correlations) && (
+        {hasMeaningfulData(analysis.patternAnalysis.habitConnections) && (
           renderCard(0,
             <View>
               <View style={styles.cardHeader}>
@@ -725,106 +541,41 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Text style={styles.cardTitle}>Pattern Analysis</Text>
               </View>
               <View style={styles.patternSection}>
-                <Text style={styles.sectionTitle}>Task Correlations</Text>
-                {analysis.patternAnalysis.taskSequences.correlations.map((correlation, index) => (
-                  <View key={index} style={styles.correlationItem}>
-                    <View style={styles.correlationHeader}>
-                      <Text style={styles.correlationTrigger}>{correlation.trigger}</Text>
-                      <MaterialCommunityIcons name="arrow-right" size={20} color="#4facfe" />
-                      <Text style={styles.correlationOutcome}>{correlation.outcome}</Text>
-                    </View>
-                    <Text style={styles.probabilityText}>{(correlation.probability * 100).toFixed(0)}% probability</Text>
-                    <Text style={styles.insightText}>{correlation.insight}</Text>
-                  </View>
-                ))}
+                <Text style={styles.sectionTitle}>Habit Connections</Text>
+                <Text style={styles.highlightText}>{analysis.patternAnalysis.habitConnections}</Text>
               </View>
             </View>
           )
         )}
 
         {/* Habit Stacking Card - Only show if there are valid stacks */}
-        {hasMeaningfulData(analysis.habitStacking.recommendedStacks) && (
+        {hasMeaningfulData(analysis.habitStacking.naturalSequences) && (
           renderCard(1,
             <View>
               <View style={styles.cardHeader}>
                 <MaterialCommunityIcons name="layers-triple" size={24} color="#4facfe" />
                 <Text style={styles.cardTitle}>Habit Stacking</Text>
               </View>
-              {analysis.habitStacking.recommendedStacks.map((stack, index) => (
-                <View key={index} style={styles.stackContainer}>
-                  <View style={styles.stackTrigger}>
-                    <MaterialCommunityIcons name="flag-variant" size={20} color="#4facfe" />
-                    <Text style={styles.triggerText}>
-                      {stack.trigger.habit}
-                    </Text>
-                  </View>
-                  {stack.sequence.map((seq, seqIndex) => (
-                    <View key={seqIndex} style={styles.sequenceItem}>
-                      <MaterialCommunityIcons name="arrow-down" size={20} color="#4facfe" />
-                      <View style={styles.sequenceContent}>
-                        <Text style={styles.sequenceHabit}>{seq.habit}</Text>
-                        <Text style={styles.sequenceReason}>{seq.reason}</Text>
-                      </View>
-                    </View>
-                  ))}
-                  <View style={styles.stackFooter}>
-                    <Text style={styles.impactText}>{stack.totalImpact}</Text>
-                  </View>
-                </View>
-              ))}
+              <Text style={styles.highlightText}>{analysis.habitStacking.naturalSequences}</Text>
             </View>
           )
         )}
 
         {/* Impact Zones Card - Only show zones with meaningful data */}
-        {Object.values(analysis.impactZones).some(zone => hasMeaningfulData(zone)) && (
+        {hasMeaningfulData(analysis.impactAnalysis.physical) && (
           renderCard(2,
             <View>
               <View style={styles.cardHeader}>
                 <MaterialCommunityIcons name="target" size={24} color="#4facfe" />
-                <Text style={styles.cardTitle}>Impact Zones</Text>
+                <Text style={styles.cardTitle}>Physical Impact</Text>
               </View>
-              {Object.entries(analysis.impactZones).map(([zone, data], index) => (
-                hasMeaningfulData(data) && (
-                  <View key={index} style={styles.impactZone}>
-                    <View style={styles.zoneHeader}>
-                      <Text style={styles.zoneName}>{zone.charAt(0).toUpperCase() + zone.slice(1)}</Text>
-                      {data.score > 0 && (
-                        <View style={styles.scoreContainer}>
-                          <Text style={styles.currentScore}>{data.score}/10</Text>
-                          <Text style={styles.potentialScore}>Potential: {data.potential}/10</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.zoneContent}>
-                      {data.strengths.length > 0 && (
-                        <>
-                          <Text style={styles.strengthsTitle}>Strengths:</Text>
-                          {data.strengths.map((strength, idx) => (
-                            <Text key={idx} style={styles.strengthText}>• {strength}</Text>
-                          ))}
-                        </>
-                      )}
-                      {data.nextSteps.length > 0 && (
-                        <>
-                          <Text style={styles.improvementsTitle}>Next Steps:</Text>
-                          {data.nextSteps.map((step, idx) => (
-                            <Text key={idx} style={styles.stepText}>• {step}</Text>
-                          ))}
-                        </>
-                      )}
-                    </View>
-                  </View>
-                )
-              ))}
+              <Text style={styles.highlightText}>{analysis.impactAnalysis.physical}</Text>
             </View>
           )
         )}
 
         {/* Only show other sections if they have meaningful data */}
-        {hasMeaningfulData(analysis.momentumBuilders.keyMoments) && renderMomentumBuildersCard(analysis, 3)}
-        {hasMeaningfulData(analysis.growthOpportunities.challengingHabits) && renderGrowthOpportunitiesCard(analysis, 4)}
-        {hasMeaningfulData(analysis.successProbability.habits) && renderSuccessProbabilityCard(analysis, 5)}
+        {hasMeaningfulData(analysis.growthStrategy.currentStrengths) && renderGrowthOpportunitiesCard(analysis, 3)}
       </>
     );
   };
@@ -841,27 +592,6 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   // Add these functions before renderGoldenChecklistAnalysis
-  const renderMomentumBuildersCard = (analysis: GoldenChecklistAnalysis, index: number) => {
-    return renderCard(index,
-      <View>
-        <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="rocket-launch" size={24} color="#4facfe" />
-          <Text style={styles.cardTitle}>Momentum Builders</Text>
-        </View>
-        <View style={styles.momentumSection}>
-          <Text style={styles.sectionTitle}>Key Moments</Text>
-          {analysis.momentumBuilders.keyMoments.map((moment, idx) => (
-            <View key={idx} style={styles.momentItem}>
-              <Text style={styles.momentAction}>{moment.action}</Text>
-              <Text style={styles.momentImpact}>{moment.impact}</Text>
-              <Text style={styles.momentWhy}>{moment.whyItMatters}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   const renderGrowthOpportunitiesCard = (analysis: GoldenChecklistAnalysis, index: number) => {
     return renderCard(index,
       <View>
@@ -869,38 +599,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           <MaterialCommunityIcons name="trending-up" size={24} color="#4facfe" />
           <Text style={styles.cardTitle}>Growth Opportunities</Text>
         </View>
-        {analysis.growthOpportunities.challengingHabits.map((habit, idx) => (
-          <View key={idx} style={styles.challengeContainer}>
-            <Text style={styles.challengeHabit}>{habit.habit}</Text>
-            <Text style={styles.challengeCause}>Root Cause: {habit.rootCause}</Text>
-            <View style={styles.subtasksList}>
-              {habit.subTasks.map((task, taskIndex) => (
-                <Text key={taskIndex} style={styles.subtaskText}>• {task}</Text>
-              ))}
-            </View>
-            <Text style={styles.strategyText}>{habit.progressionStrategy}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderSuccessProbabilityCard = (analysis: GoldenChecklistAnalysis, index: number) => {
-    return renderCard(index,
-      <View>
-        <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="chart-arc" size={24} color="#4facfe" />
-          <Text style={styles.cardTitle}>Success Probability</Text>
-        </View>
-        <View style={styles.overallSuccess}>
-          <Text style={styles.overallRate}>
-            Overall Success Rate: {(analysis.successProbability.overallSuccess.rate * 100).toFixed(0)}%
-          </Text>
-          <Text style={styles.keyFactorsTitle}>Key Success Factors:</Text>
-          {analysis.successProbability.overallSuccess.keyFactors.map((factor, idx) => (
-            <Text key={idx} style={styles.factorText}>• {factor}</Text>
-          ))}
-        </View>
+        <Text style={styles.highlightText}>{analysis.growthStrategy.currentStrengths}</Text>
       </View>
     );
   };
