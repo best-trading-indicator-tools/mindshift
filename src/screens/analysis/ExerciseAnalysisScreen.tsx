@@ -127,9 +127,10 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const analyzeEntries = async () => {
+    console.log('Starting analyzeEntries...');
     try {
       const { exerciseType, entries } = route.params;
-      console.log('Starting analysis for:', { exerciseType, entries });
+      console.log('Analyzing entries:', { exerciseType, entries });
       
       if (!config.OPENAI_API_KEY) {
         throw new Error('OpenAI API key is missing');
@@ -153,7 +154,7 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
         temperature: 0.7,
       };
 
-      console.log('Making OpenAI request:', JSON.stringify(requestBody, null, 2));
+      console.log('Making OpenAI request...');
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -182,45 +183,20 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
       console.log('Content to parse:', content);
 
       const analysisResult = JSON.parse(content.trim());
-      console.log('Parsed analysis result:', analysisResult);
-
-      if (!analysisResult.emotionalTone || !analysisResult.themes || !analysisResult.insights) {
-        console.error('Invalid analysis format:', analysisResult);
-        throw new Error('Invalid analysis format: missing required fields');
-      }
+      console.log('Setting analysis result:', analysisResult);
 
       setAnalysis(analysisResult);
-
-      // Store analysis for progress tracking
-      const storageKey = `${exerciseType}_analysis_history`;
-      const historyString = await AsyncStorage.getItem(storageKey);
-      const history = historyString ? JSON.parse(historyString) : [];
-      history.push({
-        date: new Date().toISOString(),
-        analysis: analysisResult,
-      });
-      await AsyncStorage.setItem(storageKey, JSON.stringify(history.slice(-10)));
+      setLoading(false);
 
     } catch (err) {
       console.error('Analysis error:', err);
-      if (err instanceof Error) {
-        console.error('Error details:', {
-          message: err.message,
-          stack: err.stack,
-        });
-      }
       setError(err instanceof Error ? err.message : 'Failed to analyze entries');
-    } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    analyzeEntries();
-  }, [route.params]);
-
   const handleContinue = () => {
-    const { context, challengeId, returnTo } = route.params;
+    const { context, challengeId } = route.params;
     
     if (context === 'challenge' && challengeId) {
       navigation.navigate('ChallengeDetail', {
@@ -237,123 +213,148 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  useEffect(() => {
+    console.log('ExerciseAnalysisScreen mounted with params:', route.params);
+    analyzeEntries();
+  }, [route.params]);
+
+  console.log('Current render state:', { loading, error, hasAnalysis: !!analysis });
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        <StatusBar barStyle="light-content" />
-        <LinearGradient
-          colors={['#1E2132', '#2A2D3E']}
-          style={styles.gradientBackground}
-        >
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: '#1E2132' }]}>
+        <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
+        <View style={[styles.container, { backgroundColor: '#1E2132' }]}>
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Analyzing your progress...</Text>
             <LoadingProgressBar width={250} height={4} color="#4facfe" />
           </View>
-        </LinearGradient>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        <StatusBar barStyle="light-content" />
-        <LinearGradient
-          colors={['#1E2132', '#2A2D3E']}
-          style={styles.gradientBackground}
-        >
-          <Text style={styles.errorText}>Something went wrong</Text>
-          <TouchableOpacity style={styles.button} onPress={handleContinue}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: '#1E2132' }]}>
+        <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
+        <View style={[styles.container, { backgroundColor: '#1E2132' }]}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={[styles.button, { marginTop: 20 }]} 
+            onPress={handleContinue}
+          >
             <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
-        </LinearGradient>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: '#1E2132' }]}>
+        <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
+        <View style={[styles.container, { backgroundColor: '#1E2132' }]}>
+          <Text style={styles.errorText}>No analysis data available</Text>
+          <TouchableOpacity 
+            style={[styles.button, { marginTop: 20 }]} 
+            onPress={handleContinue}
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar backgroundColor="#1E2132" barStyle="light-content" />
       <LinearGradient
         colors={['#1E2132', '#2A2D3E']}
         style={styles.gradientBackground}
       >
-        <ScrollView 
-          style={styles.scrollView} 
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {analysis && (
-            <>
-              <View style={styles.header}>
-                <Text style={styles.title}>Progress Insights</Text>
-              </View>
-              
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Overall Tone</Text>
-                <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
-                <View style={styles.emotionChips}>
-                  {analysis.emotionalTone.secondary.map((emotion, index) => (
-                    <LinearGradient
-                      key={index}
-                      colors={['#4facfe', '#00f2fe']}
-                      start={{x: 0, y: 0}}
-                      end={{x: 1, y: 0}}
-                      style={styles.emotionChipGradient}
-                    >
-                      <Text style={styles.emotionChip}>{emotion}</Text>
-                    </LinearGradient>
+        <View style={styles.container}>
+          <ScrollView 
+            style={styles.scrollView} 
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {analysis && (
+              <>
+                <View style={styles.header}>
+                  <Text style={styles.title}>Progress Insights</Text>
+                </View>
+                
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Overall Tone</Text>
+                  <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
+                  <View style={styles.emotionChips}>
+                    {analysis.emotionalTone.secondary.map((emotion, index) => (
+                      <LinearGradient
+                        key={index}
+                        colors={['#4facfe', '#00f2fe']}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 0}}
+                        style={styles.emotionChipGradient}
+                      >
+                        <Text style={styles.emotionChip}>{emotion}</Text>
+                      </LinearGradient>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Key Themes</Text>
+                  {analysis.themes.map((theme, index) => (
+                    <View key={index} style={styles.themeItem}>
+                      <Text style={styles.themeName}>{theme.name}</Text>
+                      <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
+                    </View>
                   ))}
                 </View>
-              </View>
 
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Key Themes</Text>
-                {analysis.themes.map((theme, index) => (
-                  <View key={index} style={styles.themeItem}>
-                    <Text style={styles.themeName}>{theme.name}</Text>
-                    <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
-                  </View>
-                ))}
-              </View>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Personal Insights</Text>
+                  <Text style={styles.insightText}>{analysis.insights.main}</Text>
+                  <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
+                  <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
+                </View>
 
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Personal Insights</Text>
-                <Text style={styles.insightText}>{analysis.insights.main}</Text>
-                <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
-                <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
-              </View>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Next Focus</Text>
+                  <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
+                </View>
+              </>
+            )}
+          </ScrollView>
 
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Next Focus</Text>
-                <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
-              </View>
-            </>
-          )}
-        </ScrollView>
-
-        <LinearGradient
-          colors={['#4facfe', '#00f2fe']}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-          style={styles.buttonGradient}
-        >
-          <TouchableOpacity style={styles.button} onPress={handleContinue}>
-            <Text style={styles.buttonText}>Continue</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleContinue}
+            >
+              <Text style={styles.buttonText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </LinearGradient>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#1E2132',
   },
   gradientBackground: {
     flex: 1,
+  },
+  container: {
+    flex: 1,
+    position: 'relative',
   },
   header: {
     paddingTop: 12,
@@ -470,22 +471,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 24,
   },
-  buttonGradient: {
+  buttonContainer: {
     position: 'absolute',
     bottom: 30,
-    left: 20,
-    right: 20,
-    borderRadius: 25,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   button: {
+    backgroundColor: '#4facfe',
+    paddingHorizontal: 50,
     paddingVertical: 16,
+    borderRadius: 30,
+    minWidth: 200,
     alignItems: 'center',
   },
   buttonText: {
     color: '#000000',
     fontSize: 18,
     fontWeight: '600',
-  },
+  }
 });
 
 export default ExerciseAnalysisScreen; 
