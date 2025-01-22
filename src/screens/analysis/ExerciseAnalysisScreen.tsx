@@ -405,19 +405,47 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                   </View>
                   {analysis.themes.map((theme, index) => (
                     <View key={index} style={styles.themeItem}>
-                      <Text style={styles.themeName}>{theme.name}</Text>
-                      <Text style={styles.themeFrequency}>Mentioned {theme.frequency} times</Text>
+                      <View style={styles.themeHeader}>
+                        <View style={styles.themeHeaderLeft}>
+                          <Text style={styles.themeName}>{theme.name}</Text>
+                          <View style={styles.frequencyBadge}>
+                            <Text style={styles.themeFrequency}>{theme.frequency}×</Text>
+                          </View>
+                        </View>
+                        <LinearGradient
+                          colors={['#4facfe20', '#00f2fe20']}
+                          start={{x: 0, y: 0}}
+                          end={{x: 1, y: 0}}
+                          style={styles.themeHeaderGradient}
+                        />
+                      </View>
                       
-                      <View style={styles.themeDetails}>
-                        <Text style={styles.themeSubtitle}>Actionable Steps:</Text>
-                        {theme.actionableSuggestions.map((suggestion, idx) => (
-                          <Text key={idx} style={styles.themeDetailText}>• {suggestion}</Text>
-                        ))}
+                      <View style={styles.themeContent}>
+                        <View style={styles.themeSection}>
+                          <View style={styles.themeSectionHeader}>
+                            <MaterialCommunityIcons name="check-circle-outline" size={20} color="#4facfe" />
+                            <Text style={styles.themeSectionTitle}>Actionable Steps</Text>
+                          </View>
+                          {theme.actionableSuggestions.map((suggestion, idx) => (
+                            <View key={idx} style={styles.suggestionItem}>
+                              <View style={styles.bulletPoint} />
+                              <Text style={styles.themeDetailText}>{suggestion}</Text>
+                            </View>
+                          ))}
+                        </View>
                         
-                        <Text style={[styles.themeSubtitle, styles.topSpacing]}>Growth Opportunities:</Text>
-                        {theme.growthOpportunities.map((opportunity, idx) => (
-                          <Text key={idx} style={styles.themeDetailText}>• {opportunity}</Text>
-                        ))}
+                        <View style={[styles.themeSection, styles.topSpacing]}>
+                          <View style={styles.themeSectionHeader}>
+                            <MaterialCommunityIcons name="trending-up" size={20} color="#4facfe" />
+                            <Text style={styles.themeSectionTitle}>Growth Opportunities</Text>
+                          </View>
+                          {theme.growthOpportunities.map((opportunity, idx) => (
+                            <View key={idx} style={styles.suggestionItem}>
+                              <View style={styles.bulletPoint} />
+                              <Text style={styles.themeDetailText}>{opportunity}</Text>
+                            </View>
+                          ))}
+                        </View>
                       </View>
                     </View>
                   ))}
@@ -611,21 +639,80 @@ const styles = StyleSheet.create({
   themeItem: {
     marginBottom: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  themeHeader: {
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    position: 'relative',
+  },
+  themeHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    zIndex: 1,
+  },
+  themeHeaderGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   themeName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 4,
+    textTransform: 'capitalize',
+  },
+  frequencyBadge: {
+    backgroundColor: 'rgba(79, 172, 254, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   themeFrequency: {
     fontSize: 14,
     color: '#4facfe',
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  themeContent: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  themeSection: {
+    marginBottom: 16,
+  },
+  themeSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  themeSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4facfe',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    paddingLeft: 8,
+  },
+  bulletPoint: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4facfe',
+    marginTop: 8,
+    marginRight: 12,
+  },
+  themeDetailText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    lineHeight: 22,
   },
   insightText: {
     fontSize: 16,
@@ -782,28 +869,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  themeDetails: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  themeSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4facfe',
-    marginBottom: 8,
-  },
-  themeDetailText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    marginBottom: 4,
-    lineHeight: 20,
-    paddingLeft: 8,
-  },
-  topSpacing: {
-    marginTop: 16,
-  },
   spotlightTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -841,6 +906,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 20,
     paddingLeft: 8,
+  },
+  topSpacing: {
+    marginTop: 16,
   },
 });
 
