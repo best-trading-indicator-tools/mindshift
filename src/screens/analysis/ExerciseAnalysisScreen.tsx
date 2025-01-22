@@ -147,11 +147,16 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           Guidelines for analysis:
           1. Focus on identifying specific, actionable insights rather than general observations
           2. Look for patterns in how gratitude is expressed and what triggers it
-          3. Suggest concrete ways to deepen and expand existing gratitude themes
-          4. Highlight unique or particularly meaningful expressions
-          5. Frame all feedback in a growth-oriented, encouraging tone
-          6. Make suggestions specific and immediately actionable
-          7. Celebrate both the content and the way gratitude is expressed
+          3. Recognize and celebrate when users show advanced gratitude perspectives (like finding joy in typically "negative" things)
+          4. Suggest ways to build upon existing positive patterns rather than "fixing" them
+          5. Frame all feedback in a growth-oriented, encouraging tone that acknowledges current strengths
+          6. Make suggestions that amplify and expand current positive practices
+          7. When users show mature gratitude perspectives, focus growth opportunities on sharing or exploring deeper rather than changing perspective
+
+          Additional context for analysis:
+          - If someone expresses gratitude for typically "negative" things (like rain, challenges, or difficulties), recognize this as an advanced perspective
+          - When suggesting growth opportunities, build upon the wisdom already shown rather than suggesting basic perspective shifts
+          - Celebrate unique or counterintuitive gratitude expressions as signs of emotional maturity
 
           Analyze these gratitude entries and provide insights speaking directly to the person:
           ${JSON.stringify(entries)}`;
@@ -751,7 +756,7 @@ const styles = StyleSheet.create({
   },
   loadingStep: {
     fontSize: 18,
-    color: '#4facfe',
+    color: '#00f2fe',
     marginBottom: 24,
     textAlign: 'center',
   },
@@ -778,7 +783,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#4facfe',
+    color: '#00f2fe',
     marginBottom: 16,
     letterSpacing: 0.5,
   },
@@ -835,14 +840,14 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   frequencyBadge: {
-    backgroundColor: 'rgba(79, 172, 254, 0.15)',
+    backgroundColor: 'rgba(0, 242, 254, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   themeFrequency: {
     fontSize: 14,
-    color: '#4facfe',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   themeContent: {
@@ -861,7 +866,7 @@ const styles = StyleSheet.create({
   themeSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4facfe',
+    color: '#00f2fe',
   },
   suggestionItem: {
     flexDirection: 'row',
@@ -891,7 +896,7 @@ const styles = StyleSheet.create({
   },
   celebrationText: {
     fontSize: 16,
-    color: '#4facfe',
+    color: '#00f2fe',
     marginBottom: 16,
     lineHeight: 24,
     fontWeight: '500',
@@ -990,7 +995,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#4facfe',
+    color: '#00f2fe',
     textAlign: 'center',
     marginTop: 8,
   },
@@ -1060,13 +1065,13 @@ const styles = StyleSheet.create({
   },
   impactText: {
     fontSize: 16,
-    color: '#4facfe',
+    color: '#00f2fe',
     lineHeight: 24,
   },
   patternSubtitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4facfe',
+    color: '#00f2fe',
     marginBottom: 8,
   },
   patternText: {
