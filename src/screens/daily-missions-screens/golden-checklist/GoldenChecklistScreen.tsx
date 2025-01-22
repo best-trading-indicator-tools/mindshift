@@ -294,6 +294,8 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [customItems, setCustomItems] = useState<CustomChecklistItem[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+  const [showHiddenItems, setShowHiddenItems] = useState(false);
   const { context = 'daily', challengeId, returnTo } = route.params || {};
   const [newItem, setNewItem] = useState<{
     title: string;
@@ -303,10 +305,11 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
     subtitle: '',
   });
 
-  // Load both checked items and custom items when screen opens
+  // Load checked items, custom items, and hidden items when screen opens
   useEffect(() => {
     loadCheckedItems();
     loadCustomItems();
+    loadHiddenItems();
   }, []);
 
   const handleExit = () => {
@@ -443,6 +446,44 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const loadHiddenItems = async () => {
+    try {
+      const storedHiddenItems = await AsyncStorage.getItem('hidden_checklist_items');
+      if (storedHiddenItems) {
+        setHiddenItems(JSON.parse(storedHiddenItems));
+      }
+    } catch (error) {
+      console.error('Error loading hidden items:', error);
+    }
+  };
+
+  const saveHiddenItems = async (items: string[]) => {
+    try {
+      await AsyncStorage.setItem('hidden_checklist_items', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving hidden items:', error);
+    }
+  };
+
+  const handleHideItem = async (itemId: string) => {
+    const newHiddenItems = [...hiddenItems, itemId];
+    setHiddenItems(newHiddenItems);
+    await saveHiddenItems(newHiddenItems);
+    
+    // Remove from checked items if it was checked
+    if (checkedItems.includes(itemId)) {
+      const newCheckedItems = checkedItems.filter(id => id !== itemId);
+      setCheckedItems(newCheckedItems);
+      await saveCheckedItems(newCheckedItems);
+    }
+  };
+
+  const handleUnhideItem = async (itemId: string) => {
+    const newHiddenItems = hiddenItems.filter(id => id !== itemId);
+    setHiddenItems(newHiddenItems);
+    await saveHiddenItems(newHiddenItems);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -460,13 +501,31 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.subtitle}>End of day review</Text>
         <Text style={styles.instruction}>Tap on any item to learn about its benefits for your physical and mental health</Text>
 
-        <TouchableOpacity
-          style={styles.addItemButton}
-          onPress={() => setShowAddItemModal(true)}
-        >
-          <MaterialCommunityIcons name="plus-circle" size={24} color="#FFD700" />
-          <Text style={styles.addItemButtonText}>Add Custom Item</Text>
-        </TouchableOpacity>
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={styles.addItemButton}
+            onPress={() => setShowAddItemModal(true)}
+          >
+            <MaterialCommunityIcons name="plus-circle" size={24} color="#FFD700" />
+            <Text style={styles.addItemButtonText}>Add Custom Item</Text>
+          </TouchableOpacity>
+
+          {hiddenItems.length > 0 && (
+            <TouchableOpacity
+              style={styles.showHiddenButton}
+              onPress={() => setShowHiddenItems(!showHiddenItems)}
+            >
+              <MaterialCommunityIcons 
+                name={showHiddenItems ? "eye-off" : "eye"} 
+                size={24} 
+                color="#FFD700" 
+              />
+              <Text style={styles.showHiddenButtonText}>
+                {showHiddenItems ? "Hide Removed Items" : "Show Removed Items"}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.checklistContainer}>
           {/* Custom Items */}
@@ -504,35 +563,59 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
           ))}
 
           {/* Default Items */}
-          {CHECKLIST_ITEMS.map((item) => (
-            <View key={item.id} style={styles.checklistItem}>
-              <TouchableOpacity
-                style={styles.checkbox}
-                onPress={() => handleCheckboxPress(item.id)}
-              >
-                <MaterialCommunityIcons
-                  name={checkedItems.includes(item.id) ? "checkbox-marked" : "checkbox-blank-outline"}
-                  size={24}
-                  color={checkedItems.includes(item.id) ? "#FFD700" : "#666"}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.itemTextContainer}
-                onPress={() => handleItemPress(item)}
-              >
-                <View style={styles.itemText}>
-                  <Text style={[
-                    styles.itemTitle,
-                    checkedItems.includes(item.id) && styles.checkedItemTitle
-                  ]}>{item.title}</Text>
-                  <Text style={[
-                    styles.itemSubtitle,
-                    checkedItems.includes(item.id) && styles.checkedItemSubtitle
-                  ]}>{item.subtitle}</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))}
+          {CHECKLIST_ITEMS.map((item) => {
+            if (hiddenItems.includes(item.id) && !showHiddenItems) {
+              return null;
+            }
+
+            return (
+              <View key={item.id} style={[
+                styles.checklistItem,
+                hiddenItems.includes(item.id) && styles.hiddenItem
+              ]}>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => handleCheckboxPress(item.id)}
+                >
+                  <MaterialCommunityIcons
+                    name={checkedItems.includes(item.id) ? "checkbox-marked" : "checkbox-blank-outline"}
+                    size={24}
+                    color={checkedItems.includes(item.id) ? "#FFD700" : "#666"}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.itemTextContainer}
+                  onPress={() => handleItemPress(item)}
+                >
+                  <View style={styles.itemText}>
+                    <Text style={[
+                      styles.itemTitle,
+                      checkedItems.includes(item.id) && styles.checkedItemTitle,
+                      hiddenItems.includes(item.id) && styles.hiddenItemText
+                    ]}>{item.title}</Text>
+                    <Text style={[
+                      styles.itemSubtitle,
+                      checkedItems.includes(item.id) && styles.checkedItemSubtitle,
+                      hiddenItems.includes(item.id) && styles.hiddenItemText
+                    ]}>{item.subtitle}</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.hideButton}
+                  onPress={() => hiddenItems.includes(item.id) 
+                    ? handleUnhideItem(item.id) 
+                    : handleHideItem(item.id)
+                  }
+                >
+                  <MaterialCommunityIcons 
+                    name={hiddenItems.includes(item.id) ? "eye" : "eye-off"} 
+                    size={24} 
+                    color="#666" 
+                  />
+                </TouchableOpacity>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -619,15 +702,15 @@ const GoldenChecklistScreen: React.FC<Props> = ({ navigation, route }) => {
       <TouchableOpacity
         style={[
           styles.completeButton,
-          checkedItems.length !== CHECKLIST_ITEMS.length && styles.completeButtonDisabled
+          checkedItems.length !== (CHECKLIST_ITEMS.length - hiddenItems.length) && styles.completeButtonDisabled
         ]}
         onPress={handleComplete}
-        disabled={checkedItems.length !== CHECKLIST_ITEMS.length}
+        disabled={checkedItems.length !== (CHECKLIST_ITEMS.length - hiddenItems.length)}
       >
         <Text style={styles.completeButtonText}>
-          {checkedItems.length === CHECKLIST_ITEMS.length
+          {checkedItems.length === (CHECKLIST_ITEMS.length - hiddenItems.length)
             ? "Complete Review"
-            : `${CHECKLIST_ITEMS.length - checkedItems.length} items remaining`}
+            : `${(CHECKLIST_ITEMS.length - hiddenItems.length) - checkedItems.length} items remaining`}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -846,6 +929,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  filterContainer: {
+    flexDirection: 'column',
+    gap: 12,
+    marginBottom: 16,
+  },
+  showHiddenButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#151932',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    borderStyle: 'dashed',
+  },
+  showHiddenButtonText: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  hiddenItem: {
+    opacity: 0.5,
+    backgroundColor: '#101525',
+  },
+  hiddenItemText: {
+    color: '#666',
+  },
+  hideButton: {
     padding: 8,
     marginLeft: 8,
   },
