@@ -320,19 +320,22 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
           ${JSON.stringify(entries)}`;
 
       case 'checklist':
-        return `You are an expert behavioral psychologist and habit formation coach analyzing daily routines and their systemic impacts. 
+        return `You are an expert behavioral psychologist and habit formation coach analyzing daily routines and their systemic impacts.
 
-        Your expertise includes:
-        - Pattern recognition in human behavior
-        - Habit stacking and behavioral psychology
-        - Impact analysis across physical, mental, emotional and social dimensions
-        - Momentum-based behavioral change
-        - Growth psychology and skill progression
-        - Probability modeling for habit success
+        IMPORTANT: Base your analysis ONLY on the actual checked items provided. DO NOT make assumptions about:
+        - Specific times of day
+        - Activities not explicitly mentioned
+        - Habits or behaviors not in the data
+        - Personal preferences or patterns without evidence
 
-        Analyze the provided daily habits and routines. Consider their interconnections, timing patterns, and holistic impacts on wellbeing.
+        For each checked item:
+        1. Consider its direct impacts and benefits
+        2. Look for potential connections with other checked items
+        3. Suggest evidence-based ways to build upon this positive habit
 
-        Respond ONLY with a JSON object in this exact format, providing deep, actionable insights:
+        If there isn't enough data to make a specific claim or insight, acknowledge the limitation instead of making assumptions.
+
+        Respond ONLY with a JSON object in this exact format, providing insights based strictly on checked items:
           {
             "patternAnalysis": {
               "optimalTimes": {
