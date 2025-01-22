@@ -173,7 +173,13 @@ Analyze these entries: ${JSON.stringify(entries)}`
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <StatusBar barStyle="light-content" />
-        <LoadingWithMessage message={ANALYSIS_STEPS[loadingStep]} />
+        <View style={styles.loadingContent}>
+          <View style={styles.loadingIconContainer}>
+            <MaterialCommunityIcons name="heart" size={40} color="#B91C1C" />
+          </View>
+          <Text style={styles.loadingTitle}>{ANALYSIS_STEPS[loadingStep]}</Text>
+          <LoadingProgressBar width={200} color="#B91C1C" />
+        </View>
       </SafeAreaView>
     );
   }
@@ -374,5 +380,24 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     textAlign: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    gap: 24,
+  },
+  loadingIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(185, 28, 28, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  loadingTitle: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 32,
   },
 }); 
