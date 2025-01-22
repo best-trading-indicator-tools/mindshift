@@ -16,6 +16,7 @@ import { config } from '../../config/env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoadingProgressBar from '../../components/ProgressBar';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Svg, Line } from 'react-native-svg';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseAnalysis'>;
 
@@ -304,28 +305,67 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
               <>
                 <View style={styles.header}>
                   <Text style={styles.title}>Progress Insights</Text>
+                  <Text style={styles.subtitle}>
+                    {route.params.entries.length} gratitudes analyzed
+                  </Text>
                 </View>
                 
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Overall Tone</Text>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="heart-outline" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Overall Tone</Text>
+                  </View>
                   <Text style={styles.primaryEmotion}>{analysis.emotionalTone.primary}</Text>
-                  <View style={styles.emotionChips}>
-                    {analysis.emotionalTone.secondary.map((emotion, index) => (
+                  
+                  {/* Emotion Intensity Meter */}
+                  <View style={styles.intensityContainer}>
+                    <Text style={styles.intensityLabel}>Intensity</Text>
+                    <View style={styles.intensityBar}>
                       <LinearGradient
-                        key={index}
                         colors={['#4facfe', '#00f2fe']}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 0}}
-                        style={styles.emotionChipGradient}
-                      >
-                        <Text style={styles.emotionChip}>{emotion}</Text>
-                      </LinearGradient>
+                        style={[
+                          styles.intensityFill,
+                          { width: `${(analysis.emotionalTone.intensity / 10) * 100}%` }
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.intensityValue}>{analysis.emotionalTone.intensity}/10</Text>
+                  </View>
+
+                  {/* Grouped Emotions */}
+                  <View style={styles.emotionGroups}>
+                    {analysis.emotionalTone.secondary.map((emotion, index) => (
+                      <View key={index} style={styles.emotionGroup}>
+                        <LinearGradient
+                          colors={['#4facfe', '#00f2fe']}
+                          start={{x: 0, y: 0}}
+                          end={{x: 1, y: 0}}
+                          style={styles.emotionChipGradient}
+                        >
+                          <Text style={styles.emotionChip}>{emotion}</Text>
+                        </LinearGradient>
+                        {index < analysis.emotionalTone.secondary.length - 1 && (
+                          <Svg height="2" width="20">
+                            <Line
+                              x1="0"
+                              y1="1"
+                              x2="20"
+                              y2="1"
+                              stroke="#4facfe"
+                              strokeWidth="2"
+                            />
+                          </Svg>
+                        )}
+                      </View>
                     ))}
                   </View>
                 </View>
 
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Key Themes</Text>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="tag-multiple-outline" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Key Themes</Text>
+                  </View>
                   {analysis.themes.map((theme, index) => (
                     <View key={index} style={styles.themeItem}>
                       <Text style={styles.themeName}>{theme.name}</Text>
@@ -335,14 +375,20 @@ const ExerciseAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
                 </View>
 
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Personal Insights</Text>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="lightbulb-outline" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Personal Insights</Text>
+                  </View>
                   <Text style={styles.insightText}>{analysis.insights.main}</Text>
                   <Text style={styles.celebrationText}>{analysis.insights.celebration}</Text>
                   <Text style={styles.suggestionText}>{analysis.insights.suggestion}</Text>
                 </View>
 
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Next Focus</Text>
+                  <View style={styles.cardHeader}>
+                    <MaterialCommunityIcons name="compass-outline" size={24} color="#4facfe" />
+                    <Text style={styles.cardTitle}>Next Focus</Text>
+                  </View>
                   <Text style={styles.nextFocusText}>{analysis.insights.nextFocus}</Text>
                 </View>
               </>
@@ -599,6 +645,56 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#4facfe',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  intensityContainer: {
+    marginVertical: 16,
+    alignItems: 'center',
+  },
+  intensityLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  intensityBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  intensityFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  intensityValue: {
+    color: '#4facfe',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  emotionGroups: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 16,
+  },
+  emotionGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });
 
