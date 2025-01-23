@@ -549,7 +549,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <Text style={styles.instructions}>
-            Touch and hold each highlighted bead while expressing your gratitude
+            Press each highlighted bead to record your gratitude
           </Text>
 
           <View style={styles.beadsContainer}>
