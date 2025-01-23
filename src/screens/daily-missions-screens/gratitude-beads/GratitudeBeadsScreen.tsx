@@ -400,7 +400,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleExit = () => {
-    navigation.push('MainTabs');
+    navigation.navigate('MainTabs');
   };
 
   const handleUndo = () => {

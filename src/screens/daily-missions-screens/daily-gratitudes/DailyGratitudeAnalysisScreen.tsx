@@ -308,14 +308,16 @@ Analyze these entries: ${JSON.stringify(entries)}`
         <TouchableOpacity 
           style={styles.completeButton}
           onPress={() => {
-            if (route.params?.context === 'challenge' && route.params?.challengeId) {
-              navigation.navigate('ChallengeDetail', { 
+            const { context, challengeId } = route.params;
+            
+            if (context === 'challenge' && challengeId) {
+              navigation.navigate('ChallengeDetail', {
                 challenge: {
-                  id: route.params.challengeId,
-                  title: 'Daily Gratitude',
+                  id: challengeId,
+                  title: 'Ultimate',
                   duration: 21,
-                  description: 'Practice daily gratitude',
-                  image: null
+                  description: 'Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
+                  image: require('../../../assets/illustrations/challenges/challenge-21.png')
                 }
               });
             } else {
