@@ -28,6 +28,44 @@ interface Analysis {
   recommendations: string[];
 }
 
+const ANALYSIS_STEPS = [
+  {
+    text: "Transcribing your gratitude expressions...",
+    icon: "text-to-speech",
+    color: "#EC4899" // Pink
+  },
+  {
+    text: "Identifying gratitude patterns...",
+    icon: "pattern",
+    color: "#8B5CF6" // Purple
+  },
+  {
+    text: "Analyzing emotional depth...",
+    icon: "heart-pulse",
+    color: "#EF4444" // Red
+  },
+  {
+    text: "Discovering recurring themes...",
+    icon: "telescope",
+    color: "#F59E0B" // Amber
+  },
+  {
+    text: "Mapping relationship connections...",
+    icon: "account-group",
+    color: "#10B981" // Emerald
+  },
+  {
+    text: "Measuring mindfulness levels...",
+    icon: "meditation",
+    color: "#3B82F6" // Blue
+  },
+  {
+    text: "Generating personalized insights...",
+    icon: "lightbulb-on",
+    color: "#6366F1" // Indigo
+  }
+];
+
 const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<'transcribing' | 'analyzing' | 'complete'>('transcribing');
@@ -40,49 +78,74 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
     try {
       // Create form data
       const formData = new FormData();
+      
+      // Create file object from local path
       formData.append('file', {
-        uri: audioPath,
-        type: 'audio/wav',
-        name: 'audio.wav'
-      } as any); // Type assertion to bypass TypeScript checking for RN
+        uri: `file://${audioPath}`,
+        type: 'audio/m4a',
+        name: 'recording.m4a'
+      } as any);
+      
       formData.append('model', 'whisper-1');
-      formData.append('language', 'en');
+      formData.append('response_format', 'json');
+      // Let Whisper auto-detect the language
+      
+      console.log('Sending file to Whisper:', audioPath);
+      console.log('FormData:', JSON.stringify(formData));
 
       // Call Whisper API
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${Config.OPENAI_API_KEY}`,
+          'Accept': 'application/json',
         },
         body: formData
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
       if (!response.ok) {
-        throw new Error(`Whisper API error: ${response.status}`);
+        console.error('Whisper API error details:', responseText);
+        throw new Error(`Whisper API error: ${response.status} - ${responseText}`);
       }
 
-      const data = await response.json();
-      return data.text;
+      try {
+        const data = JSON.parse(responseText);
+        if (!data.text) {
+          throw new Error('No transcription text in response');
+        }
+        return data.text;
+      } catch (parseError: Error | unknown) {
+        console.error('JSON Parse error:', parseError);
+        console.error('Response that failed to parse:', responseText);
+        const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown error';
+        throw new Error(`Failed to parse API response: ${errorMessage}`);
+      }
 
-    } catch (error) {
+    } catch (error: Error | unknown) {
       console.error('Transcription error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Failed to transcribe audio: ${errorMessage}`);
       throw error;
     }
   };
 
   const analyzeGratitudes = async (transcriptions: Transcription[]): Promise<Analysis> => {
     try {
-      const prompt = `Analyze these ${transcriptions.length} gratitude expressions:
+      const prompt = `Analyze these ${transcriptions.length} gratitude expressions (provide analysis in English regardless of the input language):
       ${transcriptions.map(t => `${t.beadIndex + 1}. "${t.text}"`).join('\n')}
 
-      Please provide:
+      Please provide in English:
       1. A brief summary of their overall gratitude practice
       2. Key insights about what they value and appreciate
       3. Personalized recommendations for deepening their gratitude practice
 
       Format the response as JSON with these keys:
       {
-        "summary": "overall summary",
+        "summary": "overall summary in English",
         "insights": ["insight 1", "insight 2", ...],
         "recommendations": ["recommendation 1", "recommendation 2", ...]
       }`;
@@ -168,16 +231,28 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
     }
   };
 
-  const renderLoadingState = () => (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#FFD700" />
-      <Text style={styles.loadingText}>
-        {currentStep === 'transcribing' 
-          ? `Transcribing your gratitudes... ${Math.round(progress * 100)}%`
-          : 'Analyzing your gratitude practice...'}
-      </Text>
-    </View>
-  );
+  const renderLoadingState = () => {
+    const stepIndex = Math.min(
+      Math.floor(progress * ANALYSIS_STEPS.length),
+      ANALYSIS_STEPS.length - 1
+    );
+
+    return (
+      <View style={styles.loadingContainer}>
+        <MaterialCommunityIcons
+          name={ANALYSIS_STEPS[stepIndex].icon}
+          size={48}
+          color={ANALYSIS_STEPS[stepIndex].color}
+        />
+        <Text style={styles.loadingText}>
+          {ANALYSIS_STEPS[stepIndex].text}
+        </Text>
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+        </View>
+      </View>
+    );
+  };
 
   const renderAnalysis = () => (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -239,7 +314,7 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#0F172A',
     padding: 16,
   },
   loadingContainer: {
@@ -248,7 +323,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: '#E2E8F0',
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
@@ -260,52 +335,81 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#E2E8F0',
     textAlign: 'center',
     marginVertical: 24,
+    marginTop: 50,
+    letterSpacing: 0.5,
   },
   section: {
     marginBottom: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 12,
+    color: '#38BDF8',
+    marginBottom: 16,
+    letterSpacing: 0.3,
   },
   text: {
     fontSize: 16,
-    color: '#FFFFFF',
-    lineHeight: 24,
+    color: '#E2E8F0',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   bulletPoint: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
-    gap: 8,
+    marginBottom: 16,
+    gap: 12,
+    paddingRight: 12,
   },
   completeButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#38BDF8',
     paddingVertical: 16,
     borderRadius: 30,
-    marginTop: 24,
+    marginTop: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   completeButtonText: {
-    color: '#000000',
+    color: '#0F172A',
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   errorText: {
-    color: '#DC2626',
+    color: '#EF4444',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
+  },
+  progressContainer: {
+    width: '80%',
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 2,
+    marginTop: 24,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#38BDF8',
+    borderRadius: 2,
   },
 });
 
