@@ -26,7 +26,7 @@ const introContent = [
   },
   {
     title: "How to Practice",
-    content: "Touch and hold each bead while speaking your gratitude aloud.\n\nThe format is:\n\n\"I am grateful for [something] because [reason]\"\n\nTake your time with each bead - the deeper you reflect, the more powerful the practice."
+    content: "1. Press and hold a highlighted bead for 1 second to open the recording screen\n\n2. Speak your gratitude aloud into the microphone\n\n3. Tap the red button when you're done recording\n\nThe format is:\n\"I am grateful for [something] because [reason]\"\n\nTake your time with each bead - the deeper you reflect, the more powerful the practice."
   },
   {
     title: "Example Gratitudes",

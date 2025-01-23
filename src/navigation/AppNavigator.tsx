@@ -261,6 +261,14 @@ export type RootStackParamList = {
     challengeId?: string;
     returnTo?: keyof RootStackParamList;
   };
+  GratitudeBeadsAnalysis: {
+    recordings: Array<{
+      beadIndex: number;
+      audioPath: string;
+    }>;
+    context?: 'daily' | 'challenge';
+    challengeId?: string;
+  };
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -607,6 +615,8 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
             animation: 'slide_from_right',
           }}
         />
+
+
 
       </Stack.Navigator>
     </NavigationContainer>

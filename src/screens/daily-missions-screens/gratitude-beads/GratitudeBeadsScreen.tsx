@@ -92,6 +92,7 @@ const Bead: React.FC<BeadProps> = ({
   isRecording 
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const pressStartTime = useRef<number>(0);
 
   useEffect(() => {
     if (isCurrent) {
@@ -114,17 +115,29 @@ const Bead: React.FC<BeadProps> = ({
     }
   }, [isCurrent]);
 
-  const handleLongPress = () => {
+  const handlePressIn = () => {
     if (!isCurrent) return;
-    // Initial touch feedback
-    Vibration.vibrate(HAPTICS.TOUCH);
-    onHold();
+    pressStartTime.current = Date.now();
+  };
+
+  const handlePressOut = () => {
+    pressStartTime.current = 0;
+  };
+
+  const handlePress = () => {
+    if (!isCurrent) return;
+    const pressDuration = Date.now() - pressStartTime.current;
+    if (pressDuration >= 1000) {
+      Vibration.vibrate(HAPTICS.TOUCH);
+      onHold();
+    }
   };
 
   return (
     <TouchableOpacity
-      onLongPress={handleLongPress}
-      delayLongPress={1000}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
       activeOpacity={isCurrent ? 0.7 : 1}
     >
       <Animated.View
@@ -195,10 +208,10 @@ const setupAudioFile = async (url: string): Promise<string> => {
   }
 };
 
-// Add new interface for transcriptions
-interface BeadTranscription {
+// Modify the interface to store audio paths instead of transcriptions
+interface BeadRecording {
   beadIndex: number;
-  transcription: string;
+  audioPath: string;
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeBeads'>;
@@ -211,7 +224,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
   const backgroundMusic = useRef<Sound | null>(null);
-  const [transcriptions, setTranscriptions] = useState<BeadTranscription[]>([]);
+  const [recordings, setRecordings] = useState<BeadRecording[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [currentRecordingBead, setCurrentRecordingBead] = useState<number | null>(null);
   const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
@@ -307,6 +320,12 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       const audioPath = await audioRecorderPlayer.current.stopRecorder();
       audioRecorderPlayer.current.removeRecordBackListener();
       
+      // Store the audio path
+      setRecordings(prev => [...prev, {
+        beadIndex: currentRecordingBead,
+        audioPath: audioPath
+      }]);
+      
       // Mark bead as completed and move to next IMMEDIATELY
       setCompletedBeads(prev => [...prev, currentRecordingBead]);
       setCurrentBead(prev => Math.min(prev + 1, TOTAL_BEADS - 1));
@@ -316,49 +335,9 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       setShowRecordingModal(false);
       setRecordingDuration(0);
 
-      // Handle transcription in background
-      const formData = new FormData();
-      formData.append('file', {
-        uri: audioPath,
-        type: 'audio/m4a',
-        name: 'audio.m4a'
-      } as any);
-      formData.append('model', 'whisper-1');
-      formData.append('language', 'en');
-      formData.append('prompt', 'The audio is a gratitude statement starting with "I am grateful for" followed by a reason');
-
-      // Call Whisper API
-      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Config.OPENAI_API_KEY}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // Add transcription to state
-      setTranscriptions(prev => [
-        ...prev,
-        {
-          beadIndex: currentRecordingBead,
-          transcription: result.text
-        }
-      ]);
-
     } catch (error) {
-      console.error('Failed to stop recording or transcribe:', error);
-      Alert.alert('Error', 'Failed to process recording. Please try again.');
-      
-      // If transcription fails, remove the bead from completed
-      setCompletedBeads(prev => prev.filter(b => b !== currentRecordingBead));
-      setCurrentBead(currentRecordingBead);
+      console.error('Failed to stop recording:', error);
+      Alert.alert('Error', 'Failed to save recording. Please try again.');
     } finally {
       setCurrentRecordingBead(null);
     }
@@ -391,7 +370,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     return { x, y };
   };
 
-  // Modify handleComplete to remove analysis navigation
+  // Modify handleComplete to include recordings
   const handleComplete = async () => {
     if (completedBeads.length < TOTAL_BEADS) {
       Alert.alert(
@@ -407,19 +386,10 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       if (route.params?.context === 'challenge' && route.params.challengeId) {
         await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: 'Your subconscious mind shapes your reality.',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
       } else {
         await markDailyExerciseAsCompleted('gratitude-beads');
-        navigation.navigate('MainTabs');
       }
+      navigation.navigate('MainTabs');
     } catch (error) {
       console.error('Error completing exercise:', error);
     }
@@ -439,8 +409,8 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       // Move back to previous bead
       setCurrentBead(prev => Math.max(0, prev - 1));
       
-      // Remove the transcription for this bead
-      setTranscriptions(prev => prev.filter(t => t.beadIndex !== lastCompletedBead));
+      // Remove the recording for this bead
+      setRecordings(prev => prev.filter(r => r.beadIndex !== lastCompletedBead));
       
       // Stop recording if it's in progress
       if (isRecording) {
