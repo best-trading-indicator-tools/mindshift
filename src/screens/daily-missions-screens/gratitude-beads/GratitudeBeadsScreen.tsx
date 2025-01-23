@@ -386,10 +386,18 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       if (route.params?.context === 'challenge' && route.params.challengeId) {
         await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
+        navigation.navigate('GratitudeBeadsAnalysis', {
+          recordings: recordings,
+          context: 'challenge',
+          challengeId: route.params.challengeId
+        });
       } else {
         await markDailyExerciseAsCompleted('gratitude-beads');
+        navigation.navigate('GratitudeBeadsAnalysis', {
+          recordings: recordings,
+          context: 'daily'
+        });
       }
-      navigation.navigate('MainTabs');
     } catch (error) {
       console.error('Error completing exercise:', error);
     }

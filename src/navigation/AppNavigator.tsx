@@ -57,6 +57,7 @@ import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
 import { GoldenChecklistAnalysisScreen } from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistAnalysisScreen';
 import { DailyGratitudeAnalysisScreen } from '../screens/daily-missions-screens/daily-gratitudes/DailyGratitudeAnalysisScreen';
 import type { ChecklistEntry } from '../types/checklist';
+import GratitudeBeadsAnalysisScreen from '../screens/daily-missions-screens/gratitude-beads/GratitudeBeadsAnalysisScreen';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -616,7 +617,15 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           }}
         />
 
-
+        <Stack.Screen
+          name="GratitudeBeadsAnalysis"
+          component={GratitudeBeadsAnalysisScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_right',
+          }}
+        />
 
       </Stack.Navigator>
     </NavigationContainer>
