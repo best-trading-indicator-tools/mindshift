@@ -208,18 +208,21 @@ Example tone:
       // Transcribe all recordings
       const totalRecordings = route.params.recordings.length;
       console.log('Total recordings to process:', totalRecordings);
-      console.log('Recordings data:', JSON.stringify(route.params.recordings));
+      console.log('Recordings data:', JSON.stringify(route.params.recordings, null, 2));
       
       const transcriptionResults: Transcription[] = [];
 
       // First 3 steps for transcription (0-42%)
       for (let i = 0; i < totalRecordings; i++) {
         const recording = route.params.recordings[i];
-        console.log(`Processing recording ${i + 1}:`, recording);
+        console.log(`Processing recording ${i + 1} for bead ${recording.beadIndex}:`, {
+          audioPath: recording.audioPath,
+          fileExists: await RNFS.exists(recording.audioPath)
+        });
         
         setProgress((i * 0.42) / totalRecordings);
         const text = await transcribeAudio(recording.audioPath);
-        console.log(`Transcription result for recording ${i + 1}:`, text);
+        console.log(`Transcription result for bead ${recording.beadIndex}:`, text);
         
         transcriptionResults.push({
           beadIndex: recording.beadIndex,
@@ -227,7 +230,7 @@ Example tone:
         });
       }
 
-      console.log('All transcription results:', JSON.stringify(transcriptionResults));
+      console.log('All transcription results:', JSON.stringify(transcriptionResults, null, 2));
       setTranscriptions(transcriptionResults);
       setCurrentStep('analyzing');
 

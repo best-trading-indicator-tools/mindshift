@@ -24,7 +24,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import { AudioEncoderAndroidType, AudioSourceAndroidType, AVEncoderAudioQualityIOSType, AVEncodingOption } from 'react-native-audio-recorder-player';
-import Config from 'react-native-config';
+import { config } from '../../../config/env';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -301,8 +301,9 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
         setRecordingDuration(e.currentPosition);
       });
 
+      // Let the recorder handle the file path
       const uri = await audioRecorderPlayer.current.startRecorder(undefined, audioSet);
-      console.log('Recording started', uri);
+      console.log('Recording started at:', uri);
 
     } catch (error) {
       console.error('Failed to start recording:', error);
@@ -320,23 +321,18 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       const audioPath = await audioRecorderPlayer.current.stopRecorder();
       audioRecorderPlayer.current.removeRecordBackListener();
       
-      // Check if we already have a recording for this bead
-      const existingRecordingIndex = recordings.findIndex(r => r.beadIndex === currentRecordingBead);
+      // Create a unique filename for this recording
+      const uniqueFilename = `bead_${currentRecordingBead}_${Date.now()}.m4a`;
+      const uniquePath = `${RNFS.CachesDirectoryPath}/${uniqueFilename}`;
       
-      if (existingRecordingIndex !== -1) {
-        // Update existing recording
-        setRecordings(prev => prev.map((rec, index) => 
-          index === existingRecordingIndex 
-            ? { ...rec, audioPath: audioPath }
-            : rec
-        ));
-      } else {
-        // Add new recording
-        setRecordings(prev => [...prev, {
-          beadIndex: currentRecordingBead,
-          audioPath: audioPath
-        }]);
-      }
+      // Copy the recording to a unique file
+      await RNFS.copyFile(audioPath, uniquePath);
+      
+      // Add new recording or update existing one with the unique path
+      setRecordings(prev => {
+        const updatedRecordings = prev.filter(r => r.beadIndex !== currentRecordingBead);
+        return [...updatedRecordings, { beadIndex: currentRecordingBead, audioPath: uniquePath }];
+      });
       
       // Mark bead as completed and move to next IMMEDIATELY
       setCompletedBeads(prev => [...prev, currentRecordingBead]);
