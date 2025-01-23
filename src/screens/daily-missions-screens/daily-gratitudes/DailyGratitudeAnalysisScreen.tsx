@@ -98,37 +98,32 @@ export const DailyGratitudeAnalysisScreen: React.FC<Props> = ({ navigation, rout
   const getAnalysisPrompt = (entries: string[]) => {
     return {
       role: "system",
-      content: `You are an AI analyzing daily gratitude entries. Provide a deep, personal analysis in a conversational tone. Focus on emotional patterns, personal growth, and meaningful insights. Structure your response as a JSON object with the following format:
+      content: `You are an AI analyzing daily gratitude entries. Provide a concise, meaningful analysis in a conversational tone. Focus on key insights and actionable takeaways. Structure your response as a JSON object with the following format:
 
 {
   "emotionalAnalysis": {
-    "dominantEmotion": "A paragraph about the primary emotions expressed...",
-    "emotionalGrowth": "A paragraph about emotional development...",
-    "emotionalInsight": "A paragraph with deeper emotional understanding..."
+    "dominantEmotion": "One clear paragraph about the primary emotion and its significance...",
+    "emotionalGrowth": "One focused paragraph about emotional development potential..."
   },
   "thematicAnalysis": {
-    "recurringThemes": "A paragraph about common themes in gratitude...",
-    "valueAlignment": "A paragraph about personal values reflected...",
-    "lifeAreas": "A paragraph about life areas most appreciated..."
+    "recurringThemes": "One insightful paragraph about the main theme...",
+    "valueAlignment": "One paragraph connecting to personal values..."
   },
   "personalGrowth": {
-    "selfAwareness": "A paragraph about increased self-awareness...",
-    "mindsetShift": "A paragraph about changes in perspective...",
-    "futureOrientation": "A paragraph about growth opportunities..."
+    "selfAwareness": "One paragraph about what this reveals about self-awareness...",
+    "mindsetShift": "One paragraph suggesting how to build on this mindset..."
   },
   "relationshipInsights": {
-    "connections": "A paragraph about relationship patterns...",
-    "appreciation": "A paragraph about deepening appreciation...",
-    "socialImpact": "A paragraph about social connections..."
+    "connections": "One paragraph about relationship patterns if relevant...",
+    "appreciation": "One paragraph about expanding appreciation..."
   }
 }
 
 Guidelines:
-- Write in a warm, personal tone
-- Focus on patterns and deeper meanings
-- Connect insights to personal growth
-- Suggest actionable ways to deepen gratitude practice
-- Highlight unique aspects of the person's gratitude style
+- Keep each paragraph short and focused
+- Highlight one key insight per section
+- Be encouraging and specific
+- Suggest one concrete way to deepen the practice
 
 Analyze these entries: ${JSON.stringify(entries)}`
     };
@@ -308,6 +303,29 @@ Analyze these entries: ${JSON.stringify(entries)}`
           </View>
         )}
       </AnimatedScrollView>
+
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity 
+          style={styles.completeButton}
+          onPress={() => {
+            if (route.params?.context === 'challenge' && route.params?.challengeId) {
+              navigation.navigate('ChallengeDetail', { 
+                challenge: {
+                  id: route.params.challengeId,
+                  title: 'Daily Gratitude',
+                  duration: 21,
+                  description: 'Practice daily gratitude',
+                  image: null
+                }
+              });
+            } else {
+              navigation.navigate('MainTabs');
+            }
+          }}
+        >
+          <Text style={styles.completeButtonText}>Complete Exercise</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -421,5 +439,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 32,
+  },
+  bottomContainer: {
+    padding: 16,
+    backgroundColor: '#1E1E1E',
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  completeButton: {
+    backgroundColor: '#B91C1C',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  completeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
