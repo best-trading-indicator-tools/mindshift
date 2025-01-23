@@ -6,7 +6,8 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import DraggableFlatList, {
   RenderItemParams,
-  ScaleDecorator
+  ScaleDecorator,
+  DraggableFlatListProps
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -158,9 +159,6 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
   const [editingIncantation, setEditingIncantation] = useState<IncantationItem | null>(null);
   const [editingText, setEditingText] = useState('');
   const { context = 'daily', challengeId, returnTo } = route.params || {};
-
-  // Add ref for the scroll view
-  const scrollRef = React.useRef(null);
 
   useEffect(() => {
     loadIncantations();
@@ -322,10 +320,8 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
         <View style={styles.container}>
           <Header />
           <DraggableFlatList
-            ref={scrollRef}
             data={incantations}
             onDragEnd={({ data }) => {
-              // Immediately update state to prevent flicker
               setIncantations(data);
               saveNewOrder(data).catch(error => 
                 console.error('Error saving new order:', error)
@@ -344,7 +340,6 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
               restSpeedThreshold: 0.2,
               restDisplacementThreshold: 0.2,
             }}
-            simultaneousHandlers={scrollRef}
           />
           
           <Modal

@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions, Modal, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal, SafeAreaView, StatusBar } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Slider from '@react-native-community/slider';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import Animated, { 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withTiming,
+  interpolate,
+  Extrapolate,
+  runOnJS
+} from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActiveIncantationsExercise'>;
 
@@ -14,11 +22,54 @@ const SCROLL_DURATION = 5000; // 5 seconds per incantation
 const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }) => {
   const { incantations, context = 'daily', challengeId, returnTo } = route.params || {};
   const [isPaused, setIsPaused] = useState(false);
-  const scrollY = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
-  const [scrollDuration, setScrollDuration] = useState(SCROLL_DURATION / 1000); // Convert to seconds
+  const [scrollDuration, setScrollDuration] = useState(SCROLL_DURATION / 1000);
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [showAiFeedback, setShowAiFeedback] = useState(false);
+  
+  const progress = useSharedValue(0);
+  const lastUpdateTime = useRef(Date.now());
+  const incantationStartTimes = useRef<number[]>([]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      progress.value,
+      [0, incantations.length - 1],
+      [-SCREEN_HEIGHT * (incantations.length - 1), 0],
+      Extrapolate.CLAMP
+    );
+
+    return {
+      transform: [{ translateY }]
+    };
+  });
+
+  const startAnimation = useCallback(() => {
+    if (!isPaused && currentIndex < incantations.length) {
+      progress.value = withTiming(currentIndex + 1, {
+        duration: scrollDuration * 1000,
+      }, (finished) => {
+        if (finished) {
+          runOnJS(setCurrentIndex)(currentIndex + 1);
+          if (currentIndex + 1 === incantations.length) {
+            runOnJS(handleCompletion)();
+            runOnJS(navigateAway)();
+          }
+        }
+      });
+      
+      // Record start time for AI analysis
+      incantationStartTimes.current[currentIndex] = Date.now();
+    }
+  }, [currentIndex, isPaused, scrollDuration]);
+
+  useEffect(() => {
+    if (!isPaused) {
+      startAnimation();
+    }
+  }, [currentIndex, isPaused, startAnimation]);
 
   const navigateAway = useCallback(() => {
     if (returnTo) {
@@ -36,33 +87,19 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
     }
   }, [navigation, returnTo, challengeId]);
 
-  useEffect(() => {
-    if (!isPaused && currentIndex < incantations.length) {
-      const animation = Animated.timing(scrollY, {
-        toValue: (currentIndex + 1) * SCREEN_HEIGHT,
-        duration: scrollDuration * 1000,
-        useNativeDriver: true,
-      });
-
-      animation.start(({ finished }) => {
-        if (finished) {
-          setCurrentIndex(prev => {
-            const newIndex = prev + 1;
-            if (newIndex === incantations.length) {
-              handleCompletion();
-              navigateAway();
-            }
-            return newIndex;
-          });
-        }
-      });
-
-      return () => animation.stop();
-    }
-  }, [currentIndex, isPaused, scrollDuration, navigateAway]);
-
   const handleCompletion = async () => {
     try {
+      // Calculate average time spent on each incantation
+      const avgTime = incantationStartTimes.current.reduce((acc, time, index) => {
+        const nextTime = incantationStartTimes.current[index + 1] || Date.now();
+        return acc + (nextTime - time);
+      }, 0) / incantationStartTimes.current.length;
+
+      // Generate AI feedback based on practice patterns
+      const feedback = await generateAiFeedback(avgTime, incantations);
+      setAiAnalysis(feedback);
+      setShowAiFeedback(true);
+
       if (context === 'challenge' && challengeId) {
         await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
       } else {
@@ -73,9 +110,19 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
     }
   };
 
+  const generateAiFeedback = async (avgTime: number, incantations: string[]) => {
+    // TODO: Implement AI feedback generation
+    // This would connect to your AI service to analyze:
+    // - Time spent on each incantation
+    // - Pattern of practice
+    // - Consistency of timing
+    // - Suggestions for improvement
+    return "Great job on completing your incantations! Your timing was consistent and focused.";
+  };
+
   const handleLastIncantation = async () => {
     setCurrentIndex(incantations.length - 1);
-    scrollY.setValue((incantations.length - 1) * SCREEN_HEIGHT);
+    progress.value = incantations.length - 1;
     await handleCompletion();
     navigateAway();
   };
@@ -108,15 +155,17 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
 
   const handleNextIncantation = () => {
     if (currentIndex < incantations.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      scrollY.setValue((currentIndex + 1) * SCREEN_HEIGHT);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      progress.value = nextIndex;
     }
   };
 
   const handlePreviousIncantation = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-      scrollY.setValue((currentIndex - 1) * SCREEN_HEIGHT);
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      progress.value = prevIndex;
     }
   };
 
@@ -196,12 +245,7 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
             <Animated.View
               style={[
                 styles.scrollContainer,
-                {
-                  transform: [{ translateY: scrollY.interpolate({
-                    inputRange: [0, SCREEN_HEIGHT * incantations.length],
-                    outputRange: [-SCREEN_HEIGHT * (incantations.length - 1), 0],
-                  })}],
-                },
+                animatedStyle
               ]}
             >
               {incantations.map((incantation, index) => (
@@ -276,6 +320,29 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
                   onPress={handleSettingsClose}
                 >
                   <Text style={styles.continueButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={showAiFeedback}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowAiFeedback(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Practice Analysis</Text>
+                <Text style={styles.modalText}>{aiAnalysis}</Text>
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={() => {
+                    setShowAiFeedback(false);
+                    navigateAway();
+                  }}
+                >
+                  <Text style={styles.continueButtonText}>Continue</Text>
                 </TouchableOpacity>
               </View>
             </View>
