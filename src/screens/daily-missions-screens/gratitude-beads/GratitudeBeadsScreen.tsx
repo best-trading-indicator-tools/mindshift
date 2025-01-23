@@ -320,11 +320,23 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       const audioPath = await audioRecorderPlayer.current.stopRecorder();
       audioRecorderPlayer.current.removeRecordBackListener();
       
-      // Store the audio path
-      setRecordings(prev => [...prev, {
-        beadIndex: currentRecordingBead,
-        audioPath: audioPath
-      }]);
+      // Check if we already have a recording for this bead
+      const existingRecordingIndex = recordings.findIndex(r => r.beadIndex === currentRecordingBead);
+      
+      if (existingRecordingIndex !== -1) {
+        // Update existing recording
+        setRecordings(prev => prev.map((rec, index) => 
+          index === existingRecordingIndex 
+            ? { ...rec, audioPath: audioPath }
+            : rec
+        ));
+      } else {
+        // Add new recording
+        setRecordings(prev => [...prev, {
+          beadIndex: currentRecordingBead,
+          audioPath: audioPath
+        }]);
+      }
       
       // Mark bead as completed and move to next IMMEDIATELY
       setCompletedBeads(prev => [...prev, currentRecordingBead]);

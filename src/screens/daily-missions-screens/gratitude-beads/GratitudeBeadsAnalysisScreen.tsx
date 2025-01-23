@@ -88,6 +88,8 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
 
   const transcribeAudio = async (audioPath: string): Promise<string> => {
     try {
+      console.log('Starting transcription for audio:', audioPath);
+      
       // Create form data
       const formData = new FormData();
       
@@ -100,12 +102,8 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
       
       formData.append('model', 'whisper-1');
       formData.append('response_format', 'json');
-      // Let Whisper auto-detect the language
       
-      console.log('Sending file to Whisper:', audioPath);
-      console.log('FormData:', JSON.stringify(formData));
-
-      // Call Whisper API
+      console.log('Sending request to Whisper API...');
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
@@ -115,69 +113,65 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
         body: formData
       });
 
-      console.log('Response status:', response.status);
+      console.log('Whisper API response status:', response.status);
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
+      console.log('Whisper API raw response:', responseText);
 
       if (!response.ok) {
-        console.error('Whisper API error details:', responseText);
         throw new Error(`Whisper API error: ${response.status} - ${responseText}`);
       }
 
-      try {
-        const data = JSON.parse(responseText);
-        if (!data.text) {
-          throw new Error('No transcription text in response');
-        }
-        return data.text;
-      } catch (parseError: Error | unknown) {
-        console.error('JSON Parse error:', parseError);
-        console.error('Response that failed to parse:', responseText);
-        const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown error';
-        throw new Error(`Failed to parse API response: ${errorMessage}`);
+      const data = JSON.parse(responseText);
+      console.log('Parsed response:', data);
+      
+      if (!data.text) {
+        throw new Error('No transcription text in response');
       }
 
-    } catch (error: Error | unknown) {
+      console.log('Successfully transcribed audio to:', data.text);
+      return data.text;
+
+    } catch (error) {
       console.error('Transcription error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setError(`Failed to transcribe audio: ${errorMessage}`);
       throw error;
     }
   };
 
   const analyzeGratitudes = async (transcriptions: Transcription[]): Promise<Analysis> => {
     try {
-      const prompt = `Analyze these ${transcriptions.length} distinct gratitude expressions (provide analysis in English regardless of the input language):
+      const prompt = `Analyze these ${transcriptions.length} gratitude expressions (provide analysis in English regardless of the input language):
 
 Your recordings:
 ${transcriptions.map((t, i) => `Expression ${i + 1}: "${t.text}"`).join('\n\n')}
 
-Please provide a natural, conversational analysis that addresses each gratitude expression distinctly:
+IMPORTANT RULES:
+1. If similar gratitudes appear multiple times, this is POSITIVE - it shows how important this aspect is to the person
+2. Repeated themes should be highlighted and weighted more heavily in the analysis
+3. Consider repetition as a sign of deep appreciation and emotional connection
 
-1. First, give a warm summary that ties together all your expressions and shows how they relate to each other
-2. Then, provide specific insights about each expression, making sure to address what each one reveals about you
-3. Finally, offer thoughtful recommendations based on the themes and patterns across all your expressions
+Please provide:
+1. A summary that acknowledges any repeated gratitudes as areas of special significance
+2. Individual insights that note patterns and repetitions as meaningful indicators
+3. Recommendations that build on what matters most to the person, as shown by their repeated expressions
 
 Format as JSON:
 {
-  "summary": "A warm summary that connects all your expressions together, showing how they relate and what they reveal about your overall gratitude practice",
+  "summary": "A summary that highlights repeated themes as areas of special significance...",
   "insights": [
-    "A deep insight about your first expression, discussing what it reveals about your values...",
-    "A thoughtful observation about your second expression, connecting it to different aspects of your life...",
-    (one insight per expression, each addressing its unique aspects)
+    "An insight noting the emotional weight shown through repetition...",
+    "Another insight exploring the patterns in expressions...",
+    (continue with more insights that embrace repetition)
   ],
   "recommendations": [
-    "A suggestion that builds on the themes from all your expressions...",
-    "Another recommendation that helps you explore new dimensions of gratitude..."
+    "A suggestion that builds on the most frequently expressed gratitudes...",
+    "Another recommendation that acknowledges recurring themes..."
   ]
 }
 
-Important: Make sure to address each expression distinctly in your insights, while finding meaningful connections between them.
-
 Example tone:
-"In your first expression, you showed appreciation for... which beautifully connects to your second expression about..."
-"I notice how these different aspects of gratitude complement each other..."
-"The way you express gratitude for both [...first thing...] and [...second thing...] suggests..."
+"Your repeated expression of gratitude for [topic] shows how deeply meaningful this is to you..."
+"The fact that [topic] appears multiple times reveals its special importance in your life..."
+"Your consistent appreciation of [topic] suggests this is a core value for you..."
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -213,34 +207,35 @@ Example tone:
     try {
       // Transcribe all recordings
       const totalRecordings = route.params.recordings.length;
+      console.log('Total recordings to process:', totalRecordings);
+      console.log('Recordings data:', JSON.stringify(route.params.recordings));
+      
       const transcriptionResults: Transcription[] = [];
 
       // First 3 steps for transcription (0-42%)
       for (let i = 0; i < totalRecordings; i++) {
         const recording = route.params.recordings[i];
-        setProgress((i * 0.42) / totalRecordings); // Progress from 0 to 0.42
+        console.log(`Processing recording ${i + 1}:`, recording);
+        
+        setProgress((i * 0.42) / totalRecordings);
         const text = await transcribeAudio(recording.audioPath);
+        console.log(`Transcription result for recording ${i + 1}:`, text);
+        
         transcriptionResults.push({
           beadIndex: recording.beadIndex,
           text: text
         });
       }
 
+      console.log('All transcription results:', JSON.stringify(transcriptionResults));
       setTranscriptions(transcriptionResults);
       setCurrentStep('analyzing');
 
       // Next 4 steps for analysis (43-100%)
-      setProgress(0.43); // Step 4
-      await new Promise(resolve => setTimeout(resolve, 800));
+      setProgress(0.43);
       
-      setProgress(0.57); // Step 5
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setProgress(0.71); // Step 6
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setProgress(0.85); // Step 7
       const analysisResult = await analyzeGratitudes(transcriptionResults);
+      console.log('Analysis result:', JSON.stringify(analysisResult));
       
       setProgress(1);
       setAnalysis(analysisResult);
