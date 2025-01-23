@@ -22,6 +22,9 @@ import { audioService, AUDIO_FILES } from '../../../services/audioService';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import { AudioEncoderAndroidType, AudioSourceAndroidType, AVEncoderAudioQualityIOSType, AVEncodingOption } from 'react-native-audio-recorder-player';
+import Config from 'react-native-config';
 
 // Enable playback in silence mode
 Sound.setCategory('Playback');
@@ -75,16 +78,20 @@ interface BeadProps {
   isCurrent: boolean;
   position: { x: number; y: number };
   onHold: () => void;
+  onRelease: () => void;
+  isRecording: boolean;
 }
 
-const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, onHold }) => {
-  const [isHolding, setIsHolding] = useState(false);
-  const [showParticles, setShowParticles] = useState(false);
-  const holdTimer = useRef<NodeJS.Timeout>();
-  const progressTimer = useRef<NodeJS.Timeout>();
+const Bead: React.FC<BeadProps> = ({ 
+  index, 
+  isCompleted, 
+  isCurrent, 
+  position, 
+  onHold,
+  onRelease,
+  isRecording 
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isCurrent) {
@@ -107,68 +114,17 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
     }
   }, [isCurrent]);
 
-  const handlePressIn = () => {
+  const handleLongPress = () => {
     if (!isCurrent) return;
-    
     // Initial touch feedback
     Vibration.vibrate(HAPTICS.TOUCH);
-    
-    setIsHolding(true);
-    Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: HOLD_DURATION,
-      useNativeDriver: false,
-    }).start();
-
-    // Rolling bead feedback
-    progressTimer.current = setInterval(() => {
-      Vibration.vibrate(HAPTICS.HOLD);
-    }, HOLD_DURATION / 3);
-
-    holdTimer.current = setTimeout(() => {
-      setIsHolding(false);
-      progressAnim.setValue(0);
-      clearInterval(progressTimer.current);
-      
-      // Completion feedback
-      Vibration.vibrate(HAPTICS.COMPLETE);
-      
-      // Completion animation sequence
-      setShowParticles(true);
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShowParticles(false);
-      });
-      
-      onHold();
-    }, HOLD_DURATION);
-  };
-
-  const handlePressOut = () => {
-    if (holdTimer.current) {
-      clearTimeout(holdTimer.current);
-    }
-    if (progressTimer.current) {
-      clearInterval(progressTimer.current);
-    }
-    setIsHolding(false);
-    progressAnim.setValue(0);
+    onHold();
   };
 
   return (
     <TouchableOpacity
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onLongPress={handleLongPress}
+      delayLongPress={1000}
       activeOpacity={isCurrent ? 0.7 : 1}
     >
       <Animated.View
@@ -188,8 +144,8 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
             style={[
               styles.glow,
               {
-                opacity: glowAnim.interpolate({
-                  inputRange: [0, 1],
+                opacity: scaleAnim.interpolate({
+                  inputRange: [1, 1.2],
                   outputRange: [0.3, 0.6],
                 }),
               },
@@ -210,47 +166,6 @@ const Bead: React.FC<BeadProps> = ({ index, isCompleted, isCurrent, position, on
             },
           ]}
         />
-        {isHolding && (
-          <Animated.View
-            style={[
-              styles.progressRing,
-              {
-                borderColor: '#FFD700',
-                borderWidth: 2,
-                opacity: progressAnim,
-              },
-            ]}
-          />
-        )}
-        {showParticles && (
-          <View style={styles.particlesContainer}>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.particle,
-                  {
-                    transform: [
-                      {
-                        translateX: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, Math.cos(i * Math.PI / 4) * 30],
-                        }),
-                      },
-                      {
-                        translateY: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, Math.sin(i * Math.PI / 4) * 30],
-                        }),
-                      },
-                    ],
-                    opacity: glowAnim,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-        )}
       </Animated.View>
     </TouchableOpacity>
   );
@@ -280,6 +195,12 @@ const setupAudioFile = async (url: string): Promise<string> => {
   }
 };
 
+// Add new interface for transcriptions
+interface BeadTranscription {
+  beadIndex: number;
+  transcription: string;
+}
+
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeBeads'>;
 
 const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -290,6 +211,14 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(true);
   const backgroundMusic = useRef<Sound | null>(null);
+  const [transcriptions, setTranscriptions] = useState<BeadTranscription[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentRecordingBead, setCurrentRecordingBead] = useState<number | null>(null);
+  const audioRecorderPlayer = useRef(new AudioRecorderPlayer());
+  const [showRecordingModal, setShowRecordingModal] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const longPressTimer = useRef<NodeJS.Timeout>();
+  const LONG_PRESS_DURATION = 1000; // 1 second
 
   const initAudio = async () => {
     try {
@@ -332,12 +261,118 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleBeadHold = () => {
-    if (!completedBeads.includes(currentBead)) {
-      // Mark current bead as completed
-      setCompletedBeads(prev => [...prev, currentBead]);
-      // Move to next bead
+  // Add function to handle recording
+  const startRecording = async (beadIndex: number) => {
+    try {
+      // First ensure any existing recording is stopped
+      if (isRecording) {
+        await audioRecorderPlayer.current.stopRecorder();
+        audioRecorderPlayer.current.removeRecordBackListener();
+      }
+
+      setIsRecording(true);
+      setCurrentRecordingBead(beadIndex);
+      setShowRecordingModal(true);
+      setRecordingDuration(0);
+
+      const audioSet = {
+        AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+        AudioSourceAndroid: AudioSourceAndroidType.MIC,
+        AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+        AVNumberOfChannelsKeyIOS: 2,
+        AVFormatIDKeyIOS: AVEncodingOption.aac,
+      };
+
+      // Add recording duration listener
+      audioRecorderPlayer.current.addRecordBackListener((e) => {
+        setRecordingDuration(e.currentPosition);
+      });
+
+      const uri = await audioRecorderPlayer.current.startRecorder(undefined, audioSet);
+      console.log('Recording started', uri);
+
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      Alert.alert('Error', 'Failed to start recording. Please try again.');
+      setIsRecording(false);
+      setCurrentRecordingBead(null);
+      setShowRecordingModal(false);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!isRecording || currentRecordingBead === null) return;
+
+    try {
+      const audioPath = await audioRecorderPlayer.current.stopRecorder();
+      audioRecorderPlayer.current.removeRecordBackListener();
+      
+      // Mark bead as completed and move to next IMMEDIATELY
+      setCompletedBeads(prev => [...prev, currentRecordingBead]);
       setCurrentBead(prev => Math.min(prev + 1, TOTAL_BEADS - 1));
+      
+      // Clean up recording state
+      setIsRecording(false);
+      setShowRecordingModal(false);
+      setRecordingDuration(0);
+
+      // Handle transcription in background
+      const formData = new FormData();
+      formData.append('file', {
+        uri: audioPath,
+        type: 'audio/m4a',
+        name: 'audio.m4a'
+      } as any);
+      formData.append('model', 'whisper-1');
+      formData.append('language', 'en');
+      formData.append('prompt', 'The audio is a gratitude statement starting with "I am grateful for" followed by a reason');
+
+      // Call Whisper API
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Config.OPENAI_API_KEY}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Add transcription to state
+      setTranscriptions(prev => [
+        ...prev,
+        {
+          beadIndex: currentRecordingBead,
+          transcription: result.text
+        }
+      ]);
+
+    } catch (error) {
+      console.error('Failed to stop recording or transcribe:', error);
+      Alert.alert('Error', 'Failed to process recording. Please try again.');
+      
+      // If transcription fails, remove the bead from completed
+      setCompletedBeads(prev => prev.filter(b => b !== currentRecordingBead));
+      setCurrentBead(currentRecordingBead);
+    } finally {
+      setCurrentRecordingBead(null);
+    }
+  };
+
+  const handleBeadHold = async () => {
+    if (!completedBeads.includes(currentBead)) {
+      await startRecording(currentBead);
+    }
+  };
+
+  const handleBeadRelease = async () => {
+    if (isRecording) {
+      await stopRecording();
     }
   };
 
@@ -356,6 +391,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     return { x, y };
   };
 
+  // Modify handleComplete to remove analysis navigation
   const handleComplete = async () => {
     if (completedBeads.length < TOTAL_BEADS) {
       Alert.alert(
@@ -368,9 +404,6 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     // Stop and cleanup all sounds
     audioService.releaseAllSounds();
     
-    // Vibrate with completion pattern
-    Vibration.vibrate(COMPLETION_VIBRATION);
-    
     try {
       if (route.params?.context === 'challenge' && route.params.challengeId) {
         await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
@@ -379,20 +412,13 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
             id: route.params.challengeId,
             title: 'Ultimate',
             duration: 21,
-            description: '',
-            image: null
+            description: 'Your subconscious mind shapes your reality.',
+            image: require('../../../assets/illustrations/challenges/challenge-21.png')
           }
         });
       } else {
         await markDailyExerciseAsCompleted('gratitude-beads');
-        // Show completion modal
-        setShowCompletionModal(true);
-        
-        // Navigate after a short delay
-        setTimeout(() => {
-          setShowCompletionModal(false);
-          navigation.navigate('MainTabs');
-        }, 100);
+        navigation.navigate('MainTabs');
       }
     } catch (error) {
       console.error('Error completing exercise:', error);
@@ -405,10 +431,27 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleUndo = () => {
     if (completedBeads.length > 0) {
+      const lastCompletedBead = completedBeads[completedBeads.length - 1];
+      
       // Remove last completed bead
       setCompletedBeads(prev => prev.slice(0, -1));
+      
       // Move back to previous bead
       setCurrentBead(prev => Math.max(0, prev - 1));
+      
+      // Remove the transcription for this bead
+      setTranscriptions(prev => prev.filter(t => t.beadIndex !== lastCompletedBead));
+      
+      // Stop recording if it's in progress
+      if (isRecording) {
+        audioRecorderPlayer.current.stopRecorder();
+        audioRecorderPlayer.current.removeRecordBackListener();
+        setIsRecording(false);
+        setShowRecordingModal(false);
+        setCurrentRecordingBead(null);
+        setRecordingDuration(0);
+      }
+      
       // Add a subtle vibration feedback
       Vibration.vibrate(50);
     }
@@ -440,6 +483,39 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
     
     return `M ${points.join(' L ')}`;
   };
+
+  // Modify the recording modal render function
+  const renderRecordingModal = () => (
+    <Modal
+      visible={showRecordingModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => {}} // Empty function to prevent modal from closing on Android back button
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.recordingModalContent}>
+          <Text style={styles.recordingTitle}>Recording Gratitude...</Text>
+          <Text style={styles.recordingInstructions}>
+            Speak your gratitude{'\n'}
+            Tap the red button when done
+          </Text>
+          <Text style={styles.recordingTimer}>
+            {new Date(recordingDuration).toISOString().substr(14, 5)}
+          </Text>
+          <TouchableOpacity 
+            style={[styles.recordingIndicator, isRecording && styles.recordingActive]}
+            onPress={handleBeadRelease}
+          >
+            <MaterialCommunityIcons 
+              name="microphone" 
+              size={32} 
+              color="#FFFFFF" 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={[styles.container, styles.safeArea]}>
@@ -528,6 +604,8 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
                     isCurrent={currentBead === index}
                     position={position}
                     onHold={handleBeadHold}
+                    onRelease={handleBeadRelease}
+                    isRecording={isRecording}
                   />
                 );
               })}
@@ -603,6 +681,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
+      {renderRecordingModal()}
     </SafeAreaView>
   );
 };
@@ -875,6 +954,57 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     paddingHorizontal: 16,
+  },
+  recordingModalContent: {
+    backgroundColor: '#1C1C1E',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    width: '85%',
+  },
+  recordingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  recordingInstructions: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 24,
+    opacity: 0.8,
+  },
+  recordingTimer: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 24,
+  },
+  recordingIndicator: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#B91C1C',
+    opacity: 0.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingActive: {
+    opacity: 1,
+    shadowColor: '#B91C1C',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
