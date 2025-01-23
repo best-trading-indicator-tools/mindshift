@@ -138,16 +138,23 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
       const prompt = `Analyze these ${transcriptions.length} gratitude expressions (provide analysis in English regardless of the input language):
       ${transcriptions.map(t => `${t.beadIndex + 1}. "${t.text}"`).join('\n')}
 
-      Please provide in English:
-      1. A brief summary of their overall gratitude practice
-      2. Key insights about what they value and appreciate
-      3. Personalized recommendations for deepening their gratitude practice
+      Please provide a personal analysis in English, directly addressing the user with "you":
+      1. A brief summary of their gratitude practice, using "you" and "your"
+      2. Key insights about what you personally value and appreciate
+      3. Personal recommendations to deepen your gratitude practice
 
-      Format the response as JSON with these keys:
+      Format the response as JSON with these keys, ensuring all text directly addresses the user with "you":
       {
-        "summary": "overall summary in English",
-        "insights": ["insight 1", "insight 2", ...],
-        "recommendations": ["recommendation 1", "recommendation 2", ...]
+        "summary": "summary directly addressing the user with 'you'",
+        "insights": ["insight 1 using 'you'", "insight 2 using 'you'", ...],
+        "recommendations": ["recommendation 1 using 'you'", "recommendation 2 using 'you'", ...]
+      }
+
+      Example format:
+      {
+        "summary": "You express deep gratitude for...",
+        "insights": ["You show a strong appreciation for...", "Your gratitude reflects..."],
+        "recommendations": ["Consider expanding your practice by...", "Try focusing on..."]
       }`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
