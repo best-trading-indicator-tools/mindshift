@@ -29,7 +29,7 @@ import { config } from '../../../config/env';
 // Enable playback in silence mode
 Sound.setCategory('Playback');
 
-const TOTAL_BEADS = 2;
+const TOTAL_BEADS = 4;
 const BEAD_SIZE = 30;
 const CIRCLE_RADIUS = Dimensions.get('window').width * 0.35;
 const HOLD_DURATION = 300; // Reduced from 500ms to 300ms for better responsiveness
@@ -446,15 +446,22 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   const generateBeadPath = (completedBeads: number[], getPosition: (index: number) => { x: number; y: number }) => {
     if (completedBeads.length < 2) return '';
     
-    // Sort beads by index to ensure correct path order
-    const sortedBeads = [...completedBeads].sort((a, b) => a - b);
+    // If all beads are completed, connect them all
+    if (completedBeads.length === TOTAL_BEADS) {
+      const points = Array.from({ length: TOTAL_BEADS }).map((_, index) => {
+        const pos = getPosition(index);
+        return `${pos.x + CIRCLE_RADIUS},${pos.y + CIRCLE_RADIUS}`;
+      });
+      // Connect all points and close the path
+      return `M ${points.join(' L ')} L ${points[0]}`;
+    }
     
+    // Otherwise, just connect completed beads in sequence
+    const sortedBeads = [...completedBeads].sort((a, b) => a - b);
     const points = sortedBeads.map(index => {
       const pos = getPosition(index);
-      // Add CIRCLE_RADIUS to center the path in the container
       return `${pos.x + CIRCLE_RADIUS},${pos.y + CIRCLE_RADIUS}`;
     });
-    
     return `M ${points.join(' L ')}`;
   };
 

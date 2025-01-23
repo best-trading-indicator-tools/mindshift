@@ -26,6 +26,9 @@ interface Transcription {
 
 interface Analysis {
   summary: string;
+  themeBreakdown: {
+    [key: string]: number;
+  };
   insights: string[];
   recommendations: string[];
 }
@@ -145,34 +148,41 @@ Your recordings:
 ${transcriptions.map((t, i) => `Expression ${i + 1}: "${t.text}"`).join('\n\n')}
 
 IMPORTANT RULES:
-1. If similar gratitudes appear multiple times, this is POSITIVE - it shows how important this aspect is to the person
-2. Repeated themes should be highlighted and weighted more heavily in the analysis
-3. Consider repetition as a sign of deep appreciation and emotional connection
+1. Group similar gratitudes into themes (e.g., relationships, personal growth, health)
+2. If you express similar gratitudes multiple times, this indicates high importance
+3. Consider your repetition as a sign of deep emotional connection
+4. Keep the analysis concise and impactful
+5. Address you directly with "you" and "your"
 
-Please provide:
-1. A summary that acknowledges any repeated gratitudes as areas of special significance
-2. Individual insights that note patterns and repetitions as meaningful indicators
-3. Recommendations that build on what matters most to the person, as shown by their repeated expressions
-
-Format as JSON:
+Please provide in this exact format:
 {
-  "summary": "A summary that highlights repeated themes as areas of special significance...",
+  "summary": "A 2-3 sentence summary highlighting your dominant themes and their significance in your life...",
+  "themeBreakdown": {
+    "theme1": percentage,
+    "theme2": percentage,
+    ...
+  },
   "insights": [
-    "An insight noting the emotional weight shown through repetition...",
-    "Another insight exploring the patterns in expressions...",
-    (continue with more insights that embrace repetition)
+    "Key insight about your most recurring theme...",
+    "Observation about the emotional connection in your expressions...",
+    "Pattern noticed in your gratitude focus..."
   ],
   "recommendations": [
-    "A suggestion that builds on the most frequently expressed gratitudes...",
-    "Another recommendation that acknowledges recurring themes..."
+    "One actionable suggestion based on your strongest theme...",
+    "One way to deepen your gratitude practice..."
   ]
 }
 
+Keep it focused and impactful:
+- Summary: 2-3 sentences maximum
+- Insights: 3-4 key points maximum
+- Recommendations: 2-3 actionable items
+- Highlight patterns rather than individual expressions
+
 Example tone:
-"Your repeated expression of gratitude for [topic] shows how deeply meaningful this is to you..."
-"The fact that [topic] appears multiple times reveals its special importance in your life..."
-"Your consistent appreciation of [topic] suggests this is a core value for you..."
-`;
+"Your gratitude consistently centers around [theme], showing its deep importance in your life..."
+"The way you express appreciation for [theme] reveals your core values..."
+"There's a strong pattern of gratitude around [theme], suggesting this deeply matters to you..."`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -316,7 +326,12 @@ Example tone:
       >
         <Text style={styles.title}>Your Gratitude Analysis</Text>
         
-        {analysis && (
+        {!analysis ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#38BDF8" />
+            <Text style={styles.loadingText}>Preparing your analysis...</Text>
+          </View>
+        ) : (
           <>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Summary</Text>
@@ -325,7 +340,7 @@ Example tone:
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Key Insights</Text>
-              {analysis.insights.map((insight, index) => (
+              {analysis?.insights?.map((insight, index) => (
                 <View key={index} style={styles.bulletPoint}>
                   <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
                   <Text style={styles.text}>{insight}</Text>
@@ -335,7 +350,7 @@ Example tone:
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Recommendations</Text>
-              {analysis.recommendations.map((recommendation, index) => (
+              {analysis?.recommendations?.map((recommendation, index) => (
                 <View key={index} style={styles.bulletPoint}>
                   <MaterialCommunityIcons name="lightbulb-outline" size={20} color="#FFD700" />
                   <Text style={styles.text}>{recommendation}</Text>
