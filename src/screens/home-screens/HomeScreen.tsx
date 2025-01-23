@@ -723,7 +723,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               {renderIcon('refresh', 24, '#FF4444')}
             </TouchableOpacity>
             <View style={styles.streakContainer}>
-              {renderIcon('fire', 24, '#FFD700')}
+              {renderIcon('fire', 24, '#B8860B')}
               <Text style={styles.streakText}>{streak}</Text>
             </View>
             <TouchableOpacity 

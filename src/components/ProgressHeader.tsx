@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   progressBase: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#FFD700',  // Base yellow color
+    backgroundColor: '#B8860B',  // Base amber color
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
   continueButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#B8860B',
     paddingVertical: 16,
     borderRadius: 30,
     marginBottom: 12,

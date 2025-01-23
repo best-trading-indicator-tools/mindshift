@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   progressBase: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#FFD700',  // Base yellow color
+    backgroundColor: '#B8860B',  // Base amber color
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

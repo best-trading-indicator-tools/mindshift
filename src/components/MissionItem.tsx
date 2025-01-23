@@ -27,7 +27,7 @@ const MissionItem: React.FC<MissionItemProps> = ({
         <MaterialCommunityIcons 
           name={isCompleted ? "check-circle" : "circle-outline"} 
           size={24} 
-          color={isCompleted ? "#4CAF50" : "#FFD700"} 
+          color={isCompleted ? "#4CAF50" : "#B8860B"} 
         />
       </View>
       
@@ -50,7 +50,7 @@ const MissionItem: React.FC<MissionItemProps> = ({
             </View>
             
             <View style={styles.iconContainer}>
-              <MaterialCommunityIcons name={icon} size={40} color="#FFD700" />
+              <MaterialCommunityIcons name={icon} size={40} color="#B8860B" />
             </View>
           </View>
         </View>

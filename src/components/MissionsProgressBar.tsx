@@ -33,7 +33,7 @@ const MissionsProgressBar: React.FC<Props> = ({ totalSteps, completedSteps, comp
             return (
               <LinearGradient
                 key={mission.id}
-                colors={isTransitionIntoCompleted ? ['#FFD700', '#10B981'] : ['#10B981', '#FFD700']}
+                colors={isTransitionIntoCompleted ? ['#B8860B', '#10B981'] : ['#10B981', '#B8860B']}
                 style={[
                   styles.missionLine,
                   {
@@ -55,7 +55,7 @@ const MissionsProgressBar: React.FC<Props> = ({ totalSteps, completedSteps, comp
                 {
                   top: `${top}%`,
                   height: `${stepHeight}%`,
-                  backgroundColor: isCompleted ? '#10B981' : '#FFD700',
+                  backgroundColor: isCompleted ? '#10B981' : '#B8860B',
                 },
               ]}
             />

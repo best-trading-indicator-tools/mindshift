@@ -106,7 +106,6 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
       formData.append('model', 'whisper-1');
       formData.append('response_format', 'json');
       
-      console.log('Sending request to Whisper API...');
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
@@ -116,22 +115,18 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
         body: formData
       });
 
-      console.log('Whisper API response status:', response.status);
       const responseText = await response.text();
-      console.log('Whisper API raw response:', responseText);
 
       if (!response.ok) {
         throw new Error(`Whisper API error: ${response.status} - ${responseText}`);
       }
 
       const data = JSON.parse(responseText);
-      console.log('Parsed response:', data);
       
       if (!data.text) {
         throw new Error('No transcription text in response');
       }
 
-      console.log('Successfully transcribed audio to:', data.text);
       return data.text;
 
     } catch (error) {
@@ -217,30 +212,22 @@ Example tone:
     try {
       // Transcribe all recordings
       const totalRecordings = route.params.recordings.length;
-      console.log('Total recordings to process:', totalRecordings);
-      console.log('Recordings data:', JSON.stringify(route.params.recordings, null, 2));
       
       const transcriptionResults: Transcription[] = [];
 
       // First 3 steps for transcription (0-42%)
       for (let i = 0; i < totalRecordings; i++) {
         const recording = route.params.recordings[i];
-        console.log(`Processing recording ${i + 1} for bead ${recording.beadIndex}:`, {
-          audioPath: recording.audioPath,
-          fileExists: await RNFS.exists(recording.audioPath)
-        });
         
         setProgress((i * 0.42) / totalRecordings);
         const text = await transcribeAudio(recording.audioPath);
-        console.log(`Transcription result for bead ${recording.beadIndex}:`, text);
-        
+
         transcriptionResults.push({
           beadIndex: recording.beadIndex,
           text: text
         });
       }
 
-      console.log('All transcription results:', JSON.stringify(transcriptionResults, null, 2));
       setTranscriptions(transcriptionResults);
       setCurrentStep('analyzing');
 
@@ -248,7 +235,6 @@ Example tone:
       setProgress(0.43);
       
       const analysisResult = await analyzeGratitudes(transcriptionResults);
-      console.log('Analysis result:', JSON.stringify(analysisResult));
       
       setProgress(1);
       setAnalysis(analysisResult);

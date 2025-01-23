@@ -23,8 +23,19 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      const filteredNotifs = notifs
+      // Create a map to store the latest notification of each type for today
+      const latestNotifsByType = new Map<string, Notification>();
+      
+      notifs
         .filter(n => new Date(n.timestamp) >= today)
+        .forEach(notification => {
+          const existingNotif = latestNotifsByType.get(notification.title);
+          if (!existingNotif || notification.timestamp > existingNotif.timestamp) {
+            latestNotifsByType.set(notification.title, notification);
+          }
+        });
+      
+      const filteredNotifs = Array.from(latestNotifsByType.values())
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       
       setNotifications(filteredNotifs);
