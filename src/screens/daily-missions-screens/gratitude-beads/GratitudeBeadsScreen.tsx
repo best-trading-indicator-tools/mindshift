@@ -371,36 +371,24 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   // Modify handleComplete to include recordings
-  const handleComplete = async () => {
-    if (completedBeads.length < TOTAL_BEADS) {
+  const handleComplete = () => {
+    // Make sure we have recordings for all completed beads
+    const allRecordings = recordings.filter(r => completedBeads.includes(r.beadIndex));
+    
+    if (allRecordings.length !== completedBeads.length) {
       Alert.alert(
-        'Not Done Yet',
-        `You still have ${TOTAL_BEADS - completedBeads.length} beads to go. Keep going!`
+        "Missing Recordings",
+        "Some beads are missing their recordings. Please record your gratitude for all beads."
       );
       return;
     }
 
-    // Stop and cleanup all sounds
-    audioService.releaseAllSounds();
-    
-    try {
-      if (route.params?.context === 'challenge' && route.params.challengeId) {
-        await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
-        navigation.navigate('GratitudeBeadsAnalysis', {
-          recordings: recordings,
-          context: 'challenge',
-          challengeId: route.params.challengeId
-        });
-      } else {
-        await markDailyExerciseAsCompleted('gratitude-beads');
-        navigation.navigate('GratitudeBeadsAnalysis', {
-          recordings: recordings,
-          context: 'daily'
-        });
-      }
-    } catch (error) {
-      console.error('Error completing exercise:', error);
-    }
+    // Navigate to analysis with all recordings
+    navigation.navigate('GratitudeBeadsAnalysis', {
+      recordings: allRecordings,
+      context: route.params?.context,
+      challengeId: route.params?.challengeId
+    });
   };
 
   const handleExit = () => {

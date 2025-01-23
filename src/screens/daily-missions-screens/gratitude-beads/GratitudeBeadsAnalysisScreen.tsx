@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -14,6 +15,7 @@ import Config from 'react-native-config';
 import RNFS from 'react-native-fs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GratitudeBeadsAnalysis'>;
 
@@ -73,6 +75,16 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollIndicatorOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const scrollIndicatorStyle = {
+    opacity: scrollIndicatorOpacity,
+  };
 
   const transcribeAudio = async (audioPath: string): Promise<string> => {
     try {
@@ -136,26 +148,34 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
   const analyzeGratitudes = async (transcriptions: Transcription[]): Promise<Analysis> => {
     try {
       const prompt = `Analyze these ${transcriptions.length} gratitude expressions (provide analysis in English regardless of the input language):
-      ${transcriptions.map(t => `${t.beadIndex + 1}. "${t.text}"`).join('\n')}
 
-      Please provide a personal analysis in English, directly addressing the user with "you":
-      1. A brief summary of their gratitude practice, using "you" and "your"
-      2. Key insights about what you personally value and appreciate
-      3. Personal recommendations to deepen your gratitude practice
+Your recordings:
+${transcriptions.map(t => `"${t.text}"`).join('\n')}
 
-      Format the response as JSON with these keys, ensuring all text directly addresses the user with "you":
-      {
-        "summary": "summary directly addressing the user with 'you'",
-        "insights": ["insight 1 using 'you'", "insight 2 using 'you'", ...],
-        "recommendations": ["recommendation 1 using 'you'", "recommendation 2 using 'you'", ...]
-      }
+Please provide a natural, conversational analysis that feels like a friend giving feedback:
 
-      Example format:
-      {
-        "summary": "You express deep gratitude for...",
-        "insights": ["You show a strong appreciation for...", "Your gratitude reflects..."],
-        "recommendations": ["Consider expanding your practice by...", "Try focusing on..."]
-      }`;
+1. A warm, personal summary of your overall gratitude expressions
+2. Individual insights about each expression, written naturally without numbering or labeling
+3. Thoughtful recommendations based on your expressions
+
+Format as JSON:
+{
+  "summary": "A warm, natural summary of your gratitude expressions",
+  "insights": [
+    "A natural insight about your first expression, focusing on what it reveals about you",
+    "A connected insight about your next expression, showing how it relates to your values"
+  ],
+  "recommendations": [
+    "A personal suggestion based on what you've expressed",
+    "Another thoughtful recommendation that builds on your gratitude practice"
+  ]
+}
+
+Example tone:
+"You've shown a beautiful appreciation for..." instead of "Bead 1 shows..."
+"This connects with your earlier gratitude..." instead of "In Bead 2..."
+"I notice how you value..." instead of "The analysis indicates..."
+`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -262,42 +282,69 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
   };
 
   const renderAnalysis = () => (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.title}>Your Gratitude Analysis</Text>
-      
-      {analysis && (
-        <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Summary</Text>
-            <Text style={styles.text}>{analysis.summary}</Text>
-          </View>
+    <View style={{ flex: 1 }}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          scrollY.setValue(offsetY);
+        }}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Your Gratitude Analysis</Text>
+        
+        {analysis && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Summary</Text>
+              <Text style={styles.text}>{analysis.summary}</Text>
+            </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Key Insights</Text>
-            {analysis.insights.map((insight, index) => (
-              <View key={index} style={styles.bulletPoint}>
-                <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
-                <Text style={styles.text}>{insight}</Text>
-              </View>
-            ))}
-          </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Key Insights</Text>
+              {analysis.insights.map((insight, index) => (
+                <View key={index} style={styles.bulletPoint}>
+                  <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
+                  <Text style={styles.text}>{insight}</Text>
+                </View>
+              ))}
+            </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recommendations</Text>
-            {analysis.recommendations.map((recommendation, index) => (
-              <View key={index} style={styles.bulletPoint}>
-                <MaterialCommunityIcons name="lightbulb-outline" size={20} color="#FFD700" />
-                <Text style={styles.text}>{recommendation}</Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Recommendations</Text>
+              {analysis.recommendations.map((recommendation, index) => (
+                <View key={index} style={styles.bulletPoint}>
+                  <MaterialCommunityIcons name="lightbulb-outline" size={20} color="#FFD700" />
+                  <Text style={styles.text}>{recommendation}</Text>
+                </View>
+              ))}
+            </View>
 
-      <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
-        <Text style={styles.completeButtonText}>Continue</Text>
-      </TouchableOpacity>
-    </ScrollView>
+            <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
+              <Text style={styles.completeButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ScrollView>
+
+      <Animated.View style={[styles.scrollIndicatorContainer, scrollIndicatorStyle]} pointerEvents="none">
+        <LinearGradient
+          colors={['rgba(15, 23, 42, 0)', 'rgba(15, 23, 42, 0.95)', 'rgba(15, 23, 42, 1)']}
+          style={styles.scrollIndicatorGradient}
+        >
+          <View style={styles.scrollIndicator}>
+            <MaterialCommunityIcons 
+              name="chevron-double-down" 
+              size={24} 
+              color="#38BDF8" 
+            />
+            <Text style={styles.scrollIndicatorText}>Scroll for more insights</Text>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </View>
   );
 
   if (error) {
@@ -417,6 +464,32 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#38BDF8',
     borderRadius: 2,
+  },
+  scrollIndicatorContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  scrollIndicatorGradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  scrollIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  scrollIndicatorText: {
+    color: '#38BDF8',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
