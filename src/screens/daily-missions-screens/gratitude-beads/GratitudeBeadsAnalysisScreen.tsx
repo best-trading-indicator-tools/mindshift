@@ -147,34 +147,37 @@ const GratitudeBeadsAnalysisScreen: React.FC<Props> = ({ navigation, route }) =>
 
   const analyzeGratitudes = async (transcriptions: Transcription[]): Promise<Analysis> => {
     try {
-      const prompt = `Analyze these ${transcriptions.length} gratitude expressions (provide analysis in English regardless of the input language):
+      const prompt = `Analyze these ${transcriptions.length} distinct gratitude expressions (provide analysis in English regardless of the input language):
 
 Your recordings:
-${transcriptions.map(t => `"${t.text}"`).join('\n')}
+${transcriptions.map((t, i) => `Expression ${i + 1}: "${t.text}"`).join('\n\n')}
 
-Please provide a natural, conversational analysis that feels like a friend giving feedback:
+Please provide a natural, conversational analysis that addresses each gratitude expression distinctly:
 
-1. A warm, personal summary of your overall gratitude expressions
-2. Individual insights about each expression, written naturally without numbering or labeling
-3. Thoughtful recommendations based on your expressions
+1. First, give a warm summary that ties together all your expressions and shows how they relate to each other
+2. Then, provide specific insights about each expression, making sure to address what each one reveals about you
+3. Finally, offer thoughtful recommendations based on the themes and patterns across all your expressions
 
 Format as JSON:
 {
-  "summary": "A warm, natural summary of your gratitude expressions",
+  "summary": "A warm summary that connects all your expressions together, showing how they relate and what they reveal about your overall gratitude practice",
   "insights": [
-    "A natural insight about your first expression, focusing on what it reveals about you",
-    "A connected insight about your next expression, showing how it relates to your values"
+    "A deep insight about your first expression, discussing what it reveals about your values...",
+    "A thoughtful observation about your second expression, connecting it to different aspects of your life...",
+    (one insight per expression, each addressing its unique aspects)
   ],
   "recommendations": [
-    "A personal suggestion based on what you've expressed",
-    "Another thoughtful recommendation that builds on your gratitude practice"
+    "A suggestion that builds on the themes from all your expressions...",
+    "Another recommendation that helps you explore new dimensions of gratitude..."
   ]
 }
 
+Important: Make sure to address each expression distinctly in your insights, while finding meaningful connections between them.
+
 Example tone:
-"You've shown a beautiful appreciation for..." instead of "Bead 1 shows..."
-"This connects with your earlier gratitude..." instead of "In Bead 2..."
-"I notice how you value..." instead of "The analysis indicates..."
+"In your first expression, you showed appreciation for... which beautifully connects to your second expression about..."
+"I notice how these different aspects of gratitude complement each other..."
+"The way you express gratitude for both [...first thing...] and [...second thing...] suggests..."
 `;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
