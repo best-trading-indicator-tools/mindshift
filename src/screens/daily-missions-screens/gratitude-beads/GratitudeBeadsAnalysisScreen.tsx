@@ -33,12 +33,12 @@ interface Analysis {
 const ANALYSIS_STEPS = [
   {
     text: "Transcribing your gratitude expressions...",
-    icon: "text-to-speech",
+    icon: "microphone",
     color: "#EC4899" // Pink
   },
   {
     text: "Identifying gratitude patterns...",
-    icon: "pattern",
+    icon: "chart-timeline-variant",
     color: "#8B5CF6" // Purple
   },
   {
@@ -48,7 +48,7 @@ const ANALYSIS_STEPS = [
   },
   {
     text: "Discovering recurring themes...",
-    icon: "telescope",
+    icon: "magnify-expand",
     color: "#F59E0B" // Amber
   },
   {
@@ -58,7 +58,7 @@ const ANALYSIS_STEPS = [
   },
   {
     text: "Measuring mindfulness levels...",
-    icon: "meditation",
+    icon: "brain",
     color: "#3B82F6" // Blue
   },
   {
@@ -212,21 +212,34 @@ Example tone:
       const totalRecordings = route.params.recordings.length;
       const transcriptionResults: Transcription[] = [];
 
+      // First 3 steps for transcription (0-42%)
       for (let i = 0; i < totalRecordings; i++) {
         const recording = route.params.recordings[i];
+        setProgress((i * 0.42) / totalRecordings); // Progress from 0 to 0.42
         const text = await transcribeAudio(recording.audioPath);
         transcriptionResults.push({
           beadIndex: recording.beadIndex,
           text: text
         });
-        setProgress((i + 1) / totalRecordings);
       }
 
       setTranscriptions(transcriptionResults);
       setCurrentStep('analyzing');
 
-      // Analyze transcriptions
+      // Next 4 steps for analysis (43-100%)
+      setProgress(0.43); // Step 4
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setProgress(0.57); // Step 5
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setProgress(0.71); // Step 6
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setProgress(0.85); // Step 7
       const analysisResult = await analyzeGratitudes(transcriptionResults);
+      
+      setProgress(1);
       setAnalysis(analysisResult);
       setCurrentStep('complete');
 
