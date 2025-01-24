@@ -107,7 +107,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     title: 'Deep Mind Programming',
     duration: 7,
     description: 'Maximize your mindset transformation through strategic exercise sequencing. This 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
-    image: require('../../assets/illustrations/challenges/challenge-21.png')
+    image: require('../../assets/illustrations/challenges/relaxation.png')
   } : {
     id: '1',
     title: 'Ultimate',
