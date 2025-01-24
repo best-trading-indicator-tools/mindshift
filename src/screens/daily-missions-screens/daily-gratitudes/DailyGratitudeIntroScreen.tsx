@@ -5,6 +5,7 @@ import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitudeIntro'>;
 
@@ -64,61 +65,71 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [route.params]);
 
   return (
-    <View style={styles.container}>
-      <ProgressHeader
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        onExit={handleExit}
-        onNext={handleNext}
-        showNext={true}
-      />
+    <LinearGradient 
+      colors={['#4A1625', '#3B1D35', '#2D1B3F']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <View style={styles.mainContainer}>
+        <ProgressHeader
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onExit={handleExit}
+          onNext={handleNext}
+          showNext={true}
+        />
 
-      <View style={styles.content}>
         <View style={styles.effectivenessTip}>
           <MaterialCommunityIcons name="information" size={18} color="#000000" />
           <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
         </View>
 
-        <View style={styles.textContent}>
-          {currentContent && (
-            <>
-              <Text style={styles.title}>{currentContent.title}</Text>
-              <Text style={styles.description}>{currentContent.content}</Text>
-            </>
-          )}
+        <View style={styles.content}>
+          <View style={styles.textContent}>
+            {currentContent && (
+              <>
+                <Text style={styles.title}>{currentContent.title}</Text>
+                <Text style={styles.description}>{currentContent.content}</Text>
+              </>
+            )}
+          </View>
         </View>
-      </View>
 
-      <TouchableOpacity
-        style={styles.nextButton}
-        onPress={handleNext}
-      >
-        <Text style={styles.nextButtonText}>
-          {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={handleNext}
+        >
+          <Text style={styles.nextButtonText}>
+            {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+  },
+  mainContainer: {
+    flex: 1,
+    paddingBottom: 16,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 80,
+    justifyContent: 'center',
   },
   textContent: {
-    paddingTop: 8,
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 24,
     textAlign: 'center',
   },
   description: {
@@ -127,24 +138,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 28,
     opacity: 0.8,
-    marginBottom: 24,
-  },
-  nextButton: {
-    backgroundColor: '#B91C1C',
-    marginHorizontal: 24,
-    marginBottom: 120,
-    paddingVertical: 16,
-    borderRadius: 12,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  nextButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   effectivenessTip: {
     flexDirection: 'row',
@@ -153,8 +146,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginBottom: 32,
-    marginTop: 12,
+    marginTop: 32,
+    marginHorizontal: 24,
     alignSelf: 'center',
     borderWidth: 1,
     borderColor: '#D4AF37',
@@ -165,6 +158,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
     letterSpacing: 0.3,
+  },
+  nextButton: {
+    backgroundColor: '#B91C1C',
+    marginHorizontal: 24,
+    marginBottom: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
