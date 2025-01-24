@@ -10,12 +10,30 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AppNavigator from './src/navigation/AppNavigator';
-import { ActivityIndicator, View, unstable_batchedUpdates } from 'react-native';
+import { ActivityIndicator, View, unstable_batchedUpdates, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { getQuestionnaireStatus } from './src/services/questionnaireService';
 import { enableScreens } from 'react-native-screens';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+
+// Disable Reanimated warnings in development
+if (__DEV__) {
+  const IGNORED_LOGS = [
+    'Sending `onAnimatedValueUpdate`',
+    'Animated: `useNativeDriver`',
+    'RCTBridge required dispatch_sync',
+    'Require cycle:',
+    'Tried to modify key',
+    'Please report: Excessive number of pending callbacks',
+  ];
+
+  const oldConsoleWarn = console.warn;
+  console.warn = (...args) => {
+    if (IGNORED_LOGS.some(log => args[0] && args[0].includes(log))) return;
+    oldConsoleWarn.apply(console, args);
+  };
+}
 
 // Enable screens
 enableScreens();

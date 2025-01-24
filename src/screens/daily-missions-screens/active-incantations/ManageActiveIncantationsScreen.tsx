@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, Modal, TextInput, Animated, LogBox } from 'react-native';
 import { Button } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -7,10 +7,12 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
-  DraggableFlatListProps
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Ignore specific Reanimated warning
+LogBox.ignoreLogs(['Tried to modify key \'current\' of an object which has been already passed to a worklet']);
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ManageActiveIncantations'>;
 
@@ -257,7 +259,7 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
     }
 
     return (
-      <ScaleDecorator activeScale={1.02}>
+      <ScaleDecorator>
         <TouchableOpacity
           onPressIn={drag}
           delayPressIn={0}
@@ -265,22 +267,10 @@ const ManageActiveIncantationsScreen: React.FC<Props> = ({ navigation, route }) 
           style={[
             styles.recordingItem,
             styles.recordingItemEdit,
-            isActive && { 
-              opacity: 0.9,
-              backgroundColor: '#1A232D', 
-              elevation: 8,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              transform: [{ scale: 1.02 }],
-            }
+            isActive && styles.draggingItem
           ]}
         >
-          <View style={[
-            styles.recordingContent,
-            { transform: [{ translateX: isActive ? 0 : 0 }] }
-          ]}>
+          <View style={styles.recordingContent}>
             <MaterialCommunityIcons 
               name="menu" 
               size={24} 
@@ -467,7 +457,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   draggingItem: {
-    backgroundColor: '#1E1E1E',
+    opacity: 0.9,
+    backgroundColor: '#1A232D',
+    transform: [{ scale: 1.02 }],
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   dragHandle: {
     padding: 8,
