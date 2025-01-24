@@ -126,15 +126,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'center',
+    marginTop: -40,
   },
   textContent: {
     alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 24,
+    marginBottom: 32,
     textAlign: 'center',
   },
   description: {
