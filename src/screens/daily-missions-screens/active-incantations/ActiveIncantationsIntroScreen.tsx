@@ -68,8 +68,8 @@ const ActiveIncantationsIntroScreen: React.FC<Props> = ({ navigation, route }) =
 
       <View style={styles.content}>
         <View style={styles.effectivenessTip}>
-          <MaterialCommunityIcons name="star" size={20} color="#6366F1" />
-          <Text style={styles.effectivenessTipText}>2x more effective after Self-Hypnosis</Text>
+          <MaterialCommunityIcons name="information" size={18} color="#000000" />
+          <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
         </View>
 
         <View style={styles.textContainer}>
@@ -163,20 +163,21 @@ const styles = StyleSheet.create({
   effectivenessTip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#D4AF37',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 30,
+    borderRadius: 8,
     marginBottom: 32,
+    marginTop: 12,
     alignSelf: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#D4AF37',
   },
   effectivenessTipText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
-    marginLeft: 10,
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
     letterSpacing: 0.3,
   },
 });
