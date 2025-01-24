@@ -379,7 +379,7 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   // Modify handleComplete to include recordings
-  const handleComplete = () => {
+  const handleComplete = async () => {
     // Make sure we have recordings for all completed beads
     const allRecordings = recordings.filter(r => completedBeads.includes(r.beadIndex));
     
@@ -397,6 +397,21 @@ const GratitudeBeadsScreen: React.FC<Props> = ({ navigation, route }) => {
       context: route.params?.context,
       challengeId: route.params?.challengeId
     });
+
+    // Mark exercise as completed based on context
+    try {
+      if (route.params?.context === 'challenge' && route.params?.challengeId) {
+        const exerciseId = route.params.challengeId === '2' ? 'gratitude-beads-3' : 'gratitude-beads';
+        await markChallengeExerciseAsCompleted(route.params.challengeId, exerciseId);
+        if (route.params?.onComplete) {
+          route.params.onComplete();
+        }
+      } else {
+        await markDailyExerciseAsCompleted('gratitude-beads');
+      }
+    } catch (error) {
+      console.error('Error marking exercise as completed:', error);
+    }
   };
 
   const handleExit = () => {

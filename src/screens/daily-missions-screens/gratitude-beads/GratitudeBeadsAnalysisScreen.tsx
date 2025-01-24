@@ -252,26 +252,21 @@ Example tone:
     processRecordings();
   }, []);
 
-  const handleComplete = async () => {
-    try {
-      if (route.params?.context === 'challenge' && route.params.challengeId) {
-        await markChallengeExerciseAsCompleted(route.params.challengeId, 'gratitude-beads');
-        navigation.navigate('ChallengeDetail', {
-          challenge: {
-            id: route.params.challengeId,
-            title: 'Ultimate',
-            duration: 21,
-            description: 'Your subconscious mind shapes your reality.',
-            image: require('../../../assets/illustrations/challenges/challenge-21.png')
-          }
-        });
-      } else {
-        await markDailyExerciseAsCompleted('gratitude-beads');
-        navigation.navigate('MainTabs');
-      }
-    } catch (error) {
-      console.error('Error completing exercise:', error);
-      Alert.alert('Error', 'Failed to mark exercise as completed');
+  const handleComplete = () => {
+    if (route.params?.context === 'challenge' && route.params?.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId,
+          title: route.params.challengeId === '2' ? 'Deep Mind Programming' : 'Ultimate',
+          duration: route.params.challengeId === '2' ? 7 : 21,
+          description: route.params.challengeId === '2' ? 
+            'Maximize your mindset transformation through strategic exercise sequencing.' :
+            'Your subconscious mind shapes your reality.',
+          image: require('../../../assets/illustrations/challenges/challenge-21.png')
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
     }
   };
 
