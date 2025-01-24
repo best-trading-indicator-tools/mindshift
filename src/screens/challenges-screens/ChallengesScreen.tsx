@@ -18,14 +18,14 @@ const challenges = [
     id: '2',
     title: 'Deep Mind\nProgramming',
     duration: 7,
-    description: 'Maximize your mindset transformation through strategic exercise sequencing. This 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
+    description: 'Maximize your mindset transformation through strategic exercise sequencing.\nThis 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
     image: require('../../assets/illustrations/challenges/relaxation.png'),
   },
   {
     id: '1',
     title: 'Ultimate',
     duration: 21,
-    description: 'Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
+    description: 'Your subconscious mind shapes your reality.\nThis 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
     image: require('../../assets/illustrations/challenges/challenge-21.png'),
   },
   // Add more challenges here as needed

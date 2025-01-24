@@ -403,7 +403,8 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     const navigationParams = {
       returnTo: 'ChallengeDetail' as keyof RootStackParamList,
       challengeId: challenge.id,
-      context: 'challenge' as const
+      context: 'challenge' as const,
+      onComplete: () => handleExerciseComplete(exerciseId)
     };
 
     type NavigationScreens = 
@@ -415,7 +416,8 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       | 'GratitudeBeadsIntro'
       | 'SunBreathTutorial'
       | 'VisionBoardIntro'
-      | 'MentorBoardIntro';
+      | 'MentorBoardIntro'
+      | 'SelfHypnosisIntro';
 
     const navigationMap: Record<string, NavigationScreens> = {
       'deep-breathing': 'DeepBreathingIntro',
@@ -426,7 +428,14 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       'gratitude-beads': 'GratitudeBeadsIntro',
       'sun-breath': 'SunBreathTutorial',
       'vision-board': 'VisionBoardIntro',
-      'mentor-board': 'MentorBoardIntro'
+      'mentor-board': 'MentorBoardIntro',
+      'self-hypnosis-1': 'SelfHypnosisIntro',
+      'self-hypnosis-2': 'SelfHypnosisIntro',
+      'self-hypnosis-3': 'SelfHypnosisIntro',
+      'self-hypnosis-4': 'SelfHypnosisIntro',
+      'self-hypnosis-5': 'SelfHypnosisIntro',
+      'self-hypnosis-6': 'SelfHypnosisIntro',
+      'self-hypnosis-7': 'SelfHypnosisIntro'
     };
 
     const screen = navigationMap[exerciseId];

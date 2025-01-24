@@ -134,13 +134,16 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
       // Schedule notification for optimal follow-up exercises
       await schedulePostHypnosisNotification();
       
+      // Call onComplete if provided
+      route.params?.onComplete?.();
+      
       if (returnTo) {
         navigation.navigate('ChallengeDetail', {
           challenge: {
             id: challengeId || '1',
-            title: 'Ultimate',
-            duration: 21,
-            description: 'Your subconscious mind shapes your reality.',
+            title: challengeId === '2' ? 'Deep Mind Programming' : 'Ultimate',
+            duration: challengeId === '2' ? 7 : 21,
+            description: challengeId === '2' ? 'Maximize your mindset transformation through strategic exercise sequencing.' : 'Your subconscious mind shapes your reality.',
             image: require('../../../assets/illustrations/challenges/challenge-21.png')
           }
         });
