@@ -435,7 +435,9 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       'self-hypnosis-4': 'SelfHypnosisIntro',
       'self-hypnosis-5': 'SelfHypnosisIntro',
       'self-hypnosis-6': 'SelfHypnosisIntro',
-      'self-hypnosis-7': 'SelfHypnosisIntro'
+      'self-hypnosis-7': 'SelfHypnosisIntro',
+      'active-incantations-1': 'ActiveIncantationsIntro',
+      'active-incantations-7': 'ActiveIncantationsIntro'
     };
 
     const screen = navigationMap[exerciseId];
