@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#D4AF37',
   },
   nextButtonText: {
     color: '#000000',
