@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions, ImageBackground } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions, ImageBackground, StatusBar } from 'react-native';
 import { Text } from '@rneui/themed';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -358,12 +358,18 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     return null;
   }
 
-  const weeks = [
-    { id: 1, title: 'Week 1' },
-    { id: 2, title: 'Week 2' },
-    { id: 3, title: 'Week 3' },
-    { id: 4, title: 'Week 4' },
-  ];
+  // Fonction pour générer les tabs de semaines en fonction de la durée
+  const getWeekTabs = (duration: number) => {
+    if (duration <= 7) return [];
+    const numberOfWeeks = Math.min(4, Math.ceil(duration / 7));
+    return Array.from({ length: numberOfWeeks }, (_, i) => ({
+      label: `Week ${i + 1}`,
+      value: i + 1
+    }));
+  };
+
+  // Récupérer les tabs de semaines pour ce challenge
+  const weekTabs = getWeekTabs(challenge.duration);
 
   const handleExerciseComplete = async (exerciseId: string) => {
     if (!challenge) return;
@@ -457,6 +463,8 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.headerButton}
@@ -505,7 +513,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'trainings' && styles.activeTab]}
             onPress={() => setActiveTab('trainings')}
           >
@@ -513,7 +521,7 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               Trainings
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'preview' && styles.activeTab]}
             onPress={() => setActiveTab('preview')}
           >
@@ -523,37 +531,39 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {activeTab === 'trainings' && (
-          <>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.weeksContainer}
-            >
-              {weeks.map((week, index) => (
-                <TouchableOpacity 
-                  key={week.id} 
-                  style={styles.weekItem}
-                  onPress={() => setSelectedWeek(week.id)}
-                >
-                  <View style={[
-                    styles.weekDot,
-                    selectedWeek === week.id && styles.activeWeekDot
-                  ]} />
-                  <Text style={[
-                    styles.weekText,
-                    selectedWeek === week.id && styles.activeWeekText
-                  ]}>Week {week.id}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+        {/* Week selector - affiché uniquement si weekTabs n'est pas vide */}
+        {weekTabs.length > 0 && (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.weekSelector}
+          >
+            {weekTabs.map((tab) => (
+              <TouchableOpacity
+                key={tab.value}
+                style={[
+                  styles.weekTab,
+                  selectedWeek === tab.value && styles.selectedWeekTab
+                ]}
+                onPress={() => setSelectedWeek(tab.value)}
+              >
+                <Text style={[
+                  styles.weekTabText,
+                  selectedWeek === tab.value && styles.selectedWeekTabText
+                ]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-            <View style={styles.exercisesContainer}>
-              {exercises
-                .filter(exercise => exercise.week === selectedWeek)
-                .map((exercise, index) => renderExerciseCard(exercise, index))}
-            </View>
-          </>
+        {activeTab === 'trainings' && (
+          <ScrollView style={styles.exerciseList}>
+            {exercises
+              .filter(exercise => !weekTabs.length || exercise.week === selectedWeek)
+              .map((exercise, index) => renderExerciseCard(exercise, index))}
+          </ScrollView>
         )}
 
         {activeTab === 'preview' && (
@@ -703,117 +713,27 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  weeksContainer: {
+  weekSelector: {
     paddingHorizontal: 16,
     marginTop: 20,
   },
-  weekItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 24,
+  weekTab: {
+    padding: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
-  weekDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginRight: 8,
+  selectedWeekTab: {
+    borderBottomColor: '#FCD34D',
   },
-  activeWeekDot: {
-    backgroundColor: '#FCD34D',
-  },
-  weekText: {
+  weekTabText: {
     color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 14,
   },
-  activeWeekText: {
+  selectedWeekTabText: {
     color: '#FCD34D',
   },
-  exercisesContainer: {
+  exerciseList: {
     padding: 16,
-  },
-  exerciseCard: {
-    backgroundColor: '#151932',
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
-    position: 'relative',
-    height: 300,
-  },
-  cardTopSection: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  cardBottomSection: {
-    padding: 20,
-    justifyContent: 'space-between',
-    height: '100%',
-    position: 'relative',
-    zIndex: 2,
-  },
-  cardBottomSectionNoImage: {
-    height: '100%',
-  },
-  exerciseBackgroundImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    opacity: 1,
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 'auto',
-    backgroundColor: 'rgba(21, 25, 50, 0.4)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  exerciseTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    flexShrink: 1,
-    marginRight: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  exerciseDescription: {
-    fontSize: 15,
-    color: '#FFFFFF',
-    width: '100%',
-    lineHeight: 22,
-    fontWeight: '500',
-    marginTop: 'auto',
-    marginBottom: 32,
-  },
-  startButton: {
-    backgroundColor: '#FCD34D',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-  },
-  startButtonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '600',
   },
   previewText: {
     color: '#FFFFFF',
@@ -862,6 +782,86 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     paddingTop: 20,
+  },
+  exerciseCard: {
+    backgroundColor: '#151932',
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    height: 300,
+  },
+  cardTopSection: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  exerciseBackgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 1,
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  cardBottomSection: {
+    padding: 20,
+    justifyContent: 'space-between',
+    height: '100%',
+    position: 'relative',
+    zIndex: 2,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 'auto',
+    backgroundColor: 'rgba(21, 25, 50, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  exerciseTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    flexShrink: 1,
+    marginRight: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  exerciseDescription: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    width: '100%',
+    lineHeight: 22,
+    fontWeight: '500',
+    marginTop: 'auto',
+    marginBottom: 32,
+  },
+  startButton: {
+    backgroundColor: '#FCD34D',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '100%',
+  },
+  startButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
