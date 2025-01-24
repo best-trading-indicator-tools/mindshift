@@ -275,7 +275,8 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
           });
 
           if (context === 'challenge' && challengeId) {
-            await markChallengeExerciseAsCompleted(challengeId, 'daily-gratitude');
+            const exerciseId = challengeId === '2' ? 'daily-gratitude-2' : 'daily-gratitude';
+            await markChallengeExerciseAsCompleted(challengeId, exerciseId);
             if (route.params?.onComplete) {
               route.params.onComplete();
             }

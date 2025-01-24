@@ -101,7 +101,10 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
       setShowAiFeedback(true);
 
       if (context === 'challenge' && challengeId) {
-        await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
+        const exerciseId = challengeId === '2' ? 
+          currentIndex === 0 ? 'active-incantations-1' : 'active-incantations-7' : 
+          'active-incantations';
+        await markChallengeExerciseAsCompleted(challengeId, exerciseId);
       } else {
         await markDailyExerciseAsCompleted('active-incantations');
       }
@@ -137,7 +140,10 @@ const ActiveIncantationsExerciseScreen: React.FC<Props> = ({ route, navigation }
   const handleExit = async () => {
     try {
       if (context === 'challenge' && challengeId) {
-        await markChallengeExerciseAsCompleted(challengeId, 'active-incantations');
+        const exerciseId = challengeId === '2' ? 
+          currentIndex === 0 ? 'active-incantations-1' : 'active-incantations-7' : 
+          'active-incantations';
+        await markChallengeExerciseAsCompleted(challengeId, exerciseId);
       } else {
         await markDailyExerciseAsCompleted('active-incantations');
       }
