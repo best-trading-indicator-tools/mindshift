@@ -19,7 +19,7 @@ const challenges = [
     title: 'Deep Mind\nProgramming',
     duration: 7,
     description: 'Maximize your mindset transformation through strategic exercise sequencing.\nThis 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
-    image: require('../../assets/illustrations/challenges/relaxation.png'),
+    image: require('../../assets/illustrations/challenges/challenge-7.png'),
   },
   {
     id: '1',

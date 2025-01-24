@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitudeIntro'>;
 
@@ -73,9 +74,18 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       />
 
       <View style={styles.content}>
+        <View style={styles.effectivenessTip}>
+          <MaterialCommunityIcons name="star" size={20} color="#6366F1" />
+          <Text style={styles.effectivenessTipText}>2x more effective after Self-Hypnosis</Text>
+        </View>
+
         <View style={styles.textContent}>
-          <Text style={styles.title}>{currentContent.title}</Text>
-          <Text style={styles.description}>{currentContent.content}</Text>
+          {currentContent && (
+            <>
+              <Text style={styles.title}>{currentContent.title}</Text>
+              <Text style={styles.description}>{currentContent.content}</Text>
+            </>
+          )}
         </View>
       </View>
 
@@ -135,6 +145,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  effectivenessTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginBottom: 32,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  effectivenessTipText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: 10,
+    letterSpacing: 0.3,
   },
 });
 

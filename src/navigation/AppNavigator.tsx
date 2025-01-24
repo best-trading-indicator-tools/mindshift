@@ -81,6 +81,7 @@ export type RootStackParamList = {
     returnTo?: keyof RootStackParamList;
   } | undefined;
   ActiveIncantationsIntro: {
+    context?: 'daily' | 'challenge';
     returnTo?: keyof RootStackParamList;
     challengeId?: string;
   } | undefined;
