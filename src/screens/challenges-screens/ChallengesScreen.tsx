@@ -15,6 +15,13 @@ type Props = CompositeScreenProps<
 
 const challenges = [
   {
+    id: '2',
+    title: 'Deep Mind Programming',
+    duration: 7,
+    description: 'Maximize your mindset transformation through strategic exercise sequencing. This 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
+    image: require('../../assets/illustrations/challenges/challenge-21.png'),
+  },
+  {
     id: '1',
     title: 'Ultimate',
     duration: 21,

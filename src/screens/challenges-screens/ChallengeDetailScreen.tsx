@@ -102,8 +102,14 @@ const ExerciseCard: React.FC<Exercise & {
 
 const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const challengeId = route.params?.challenge?.id;
-  const challenge = {
-    id: challengeId,
+  const challenge = challengeId === '2' ? {
+    id: '2',
+    title: 'Deep Mind Programming',
+    duration: 7,
+    description: 'Maximize your mindset transformation through strategic exercise sequencing. This 7-day challenge uses the power of self-hypnosis to amplify the effects of gratitude and affirmations.',
+    image: require('../../assets/illustrations/challenges/challenge-21.png')
+  } : {
+    id: '1',
     title: 'Ultimate',
     duration: 21,
     description: 'Your subconscious mind shapes your reality. This 21-day challenge uses proven techniques to rewire your thought patterns and transform your mindset.\nPerfect for anyone seeking deeper happiness, lasting motivation, and emotional well-being.',
@@ -122,8 +128,114 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     lastUpdate?: number;
   }>({});
 
-  const exercises: Exercise[] = [
-    // Week 1 Exercises
+  const exercises: Exercise[] = challengeId === '2' ? [
+    // Day 1
+    {
+      id: 'self-hypnosis-1',
+      title: 'Self-Hypnosis',
+      description: 'Begin with self-hypnosis to open your subconscious mind and enhance receptivity to the following exercises.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'active-incantations-1',
+      title: 'Active Incantations',
+      description: 'While your mind is in a receptive state, practice powerful affirmations to reinforce positive beliefs.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/active-incantations.png')
+    },
+    // Day 2
+    {
+      id: 'self-hypnosis-2',
+      title: 'Self-Hypnosis',
+      description: 'Prepare your mind for deep gratitude practice.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'daily-gratitude-2',
+      title: 'Daily Gratitude',
+      description: 'Express profound gratitude with your mind in an optimal state for appreciation.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/daily-gratitude.png')
+    },
+    // Day 3
+    {
+      id: 'self-hypnosis-3',
+      title: 'Self-Hypnosis',
+      description: 'Enter a state of deep receptivity before your gratitude beads practice.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'gratitude-beads-3',
+      title: 'Gratitude Beads',
+      description: 'Use meditation beads for a deeply mindful gratitude practice.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/gratitude-beads.png')
+    },
+    // Day 4
+    {
+      id: 'self-hypnosis-4',
+      title: 'Self-Hypnosis',
+      description: 'Prepare your mind for enhanced visualization.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'vision-board-4',
+      title: 'Vision Board',
+      description: 'Create and visualize your goals with heightened mental clarity.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/vision-board.png')
+    },
+    // Day 5
+    {
+      id: 'self-hypnosis-5',
+      title: 'Self-Hypnosis',
+      description: 'Open your mind to deeper self-reflection.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'golden-checklist-5',
+      title: 'Golden Checklist',
+      description: 'Create your ideal daily routine with enhanced awareness.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/golden-checklist.png')
+    },
+    // Day 6
+    {
+      id: 'self-hypnosis-6',
+      title: 'Self-Hypnosis',
+      description: 'Prepare for deep passive programming.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'passive-incantations-6',
+      title: 'Passive Incantations',
+      description: 'Listen to guided affirmations in a highly receptive state.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/passive-incantations.png')
+    },
+    // Day 7
+    {
+      id: 'self-hypnosis-7',
+      title: 'Self-Hypnosis',
+      description: 'Final deep programming session.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/deep-breathing.png')
+    },
+    {
+      id: 'active-incantations-7',
+      title: 'Active Incantations',
+      description: 'Conclude with powerful affirmations to lock in your progress.',
+      week: 1,
+      image: require('../../assets/illustrations/challenges/active-incantations.png')
+    }
+  ] : [
+    // Original Ultimate Challenge exercises
     {
       id: 'deep-breathing',
       title: 'Deep Breathing',
@@ -159,7 +271,6 @@ const ChallengeDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       week: 1,
       image: require('../../assets/illustrations/challenges/golden-checklist.png')
     },
-    // Week 2 Exercises
     {
       id: 'gratitude-beads',
       title: 'Gratitude Beads',

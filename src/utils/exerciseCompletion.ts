@@ -173,8 +173,11 @@ export const getExerciseCompletion = async (
   }
 };
 
-// Get total number of exercises in the challenge
-const TOTAL_CHALLENGE_EXERCISES = 9; // Total number of exercises in the 21-day challenge
+// Get total number of exercises in each challenge
+const CHALLENGE_EXERCISES = {
+  '1': 9, // Ultimate challenge (21 days)
+  '2': 14 // Deep Mind Programming challenge (7 days)
+};
 
 // Get challenge progress
 export const getChallengeProgress = async (challengeId: string): Promise<{
@@ -189,18 +192,19 @@ export const getChallengeProgress = async (challengeId: string): Promise<{
     );
     
     const completedCount = challengeKeys.length;
-    const progressPercentage = Math.round((completedCount / TOTAL_CHALLENGE_EXERCISES) * 100);
+    const totalExercises = CHALLENGE_EXERCISES[challengeId as keyof typeof CHALLENGE_EXERCISES] || 9;
+    const progressPercentage = Math.round((completedCount / totalExercises) * 100);
 
     return {
       completedCount,
-      totalExercises: TOTAL_CHALLENGE_EXERCISES,
+      totalExercises,
       progressPercentage
     };
   } catch (error) {
     console.error('Error getting challenge progress:', error);
     return {
       completedCount: 0,
-      totalExercises: TOTAL_CHALLENGE_EXERCISES,
+      totalExercises: CHALLENGE_EXERCISES[challengeId as keyof typeof CHALLENGE_EXERCISES] || 9,
       progressPercentage: 0
     };
   }
