@@ -7,6 +7,7 @@ import Sound from 'react-native-sound';
 import Slider from '@react-native-community/slider';
 import { markDailyExerciseAsCompleted, markChallengeExerciseAsCompleted } from '../../../utils/exerciseCompletion';
 import LinearGradient from 'react-native-linear-gradient';
+import { schedulePostHypnosisNotification } from '../../../services/notificationService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SelfHypnosisExercise'>;
 
@@ -129,6 +130,9 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
       } else {
         await markDailyExerciseAsCompleted('self-hypnosis');
       }
+      
+      // Schedule notification for optimal follow-up exercises
+      await schedulePostHypnosisNotification();
       
       if (returnTo) {
         navigation.navigate('ChallengeDetail', {

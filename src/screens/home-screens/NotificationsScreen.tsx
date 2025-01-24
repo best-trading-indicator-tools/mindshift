@@ -69,15 +69,24 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       style={[
         styles.notificationCard,
         type === 'success' && styles.successCard,
+        type === 'info' && styles.infoCard,
         isRead && styles.readCard
       ]}
       onPress={() => handleNotificationPress({ id, type, title, message, timestamp, isRead })}
     >
       <View style={styles.notificationIcon}>
         <MaterialCommunityIcons 
-          name={type === 'success' ? 'trophy' : 'bell-ring'}
+          name={
+            type === 'success' ? 'trophy' : 
+            type === 'info' ? 'meditation' :
+            'bell-ring'
+          }
           size={24} 
-          color={type === 'success' ? '#FFD700' : '#FFFFFF'} 
+          color={
+            type === 'success' ? '#FFD700' :
+            type === 'info' ? '#6366F1' :
+            '#FFFFFF'
+          } 
         />
       </View>
       <View style={styles.notificationContent}>
@@ -175,6 +184,11 @@ const styles = StyleSheet.create({
   },
   successCard: {
     backgroundColor: '#1a1f3d',
+  },
+  infoCard: {
+    backgroundColor: '#1a1f3d',
+    borderLeftWidth: 4,
+    borderLeftColor: '#6366F1',
   },
   readCard: {
     opacity: 0.7,

@@ -6,7 +6,7 @@ import { getChallengeProgress } from '../utils/exerciseCompletion';
 
 export interface Notification {
   id: string;
-  type: 'success' | 'reminder';
+  type: 'success' | 'reminder' | 'info';
   title: string;
   message: string;
   timestamp: Date;
@@ -262,5 +262,39 @@ export const clearNotifications = async () => {
   } catch (error) {
     console.error('Error clearing notifications:', error);
     return false;
+  }
+};
+
+export const schedulePostHypnosisNotification = async () => {
+  try {
+    const notificationId = `post-hypnosis-${Date.now()}`;
+    const scheduledTime = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
+
+    if (Platform.OS === 'ios') {
+      PushNotificationIOS.addNotificationRequest({
+        id: notificationId,
+        title: '🧘‍♂️ Perfect Time for Mindfulness',
+        body: 'Your mind is in a receptive state after self-hypnosis.\nThis is an ideal time for Active Incantations or Daily Gratitude.',
+        fireDate: scheduledTime,
+      });
+    } else {
+      PushNotification.localNotificationSchedule({
+        id: notificationId,
+        title: '🧘‍♂️ Perfect Time for Mindfulness',
+        message: 'Your mind is in a receptive state after self-hypnosis.\nThis is an ideal time for Active Incantations or Daily Gratitude.',
+        date: scheduledTime,
+        allowWhileIdle: true,
+      });
+    }
+
+    // Also add an in-app notification
+    await addNotification({
+      id: notificationId,
+      title: '🧘‍♂️ Perfect Time for Mindfulness',
+      message: 'Your mind is in a receptive state after self-hypnosis.\nThis is an ideal time for Active Incantations or Daily Gratitude.',
+      type: 'info',
+    });
+  } catch (error) {
+    console.error('Error scheduling post-hypnosis notification:', error);
   }
 }; 
