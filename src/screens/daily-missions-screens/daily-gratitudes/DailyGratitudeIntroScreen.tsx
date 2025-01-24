@@ -81,8 +81,8 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
         />
 
         <View style={styles.effectivenessTip}>
-          <MaterialCommunityIcons name="information" size={18} color="#000000" />
-          <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
+          <MaterialCommunityIcons name="information" size={18} color="#FFFFFF" />
+          <Text style={styles.effectivenessTipText}>Try our guided meditation first to 3X the benefits</Text>
         </View>
 
         <View style={styles.content}>
@@ -149,9 +149,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#B8860B',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     marginTop: 32,
     marginHorizontal: 24,
     alignSelf: 'center',
@@ -160,10 +160,11 @@ const styles = StyleSheet.create({
   },
   effectivenessTipText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-    letterSpacing: 0.3,
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: 10,
+    letterSpacing: 0.5,
+    lineHeight: 20,
   },
   nextButtonContainer: {
     marginHorizontal: 24,
