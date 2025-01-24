@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
@@ -96,14 +96,19 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.nextButton}
+        <Pressable
+          style={({ pressed }) => [
+            styles.nextButtonContainer,
+            pressed && styles.nextButtonPressed
+          ]}
           onPress={handleNext}
         >
-          <Text style={styles.nextButtonText}>
-            {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.nextButton}>
+            <Text style={styles.nextButtonText}>
+              {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
+            </Text>
+          </View>
+        </Pressable>
       </View>
     </LinearGradient>
   );
@@ -159,18 +164,31 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     letterSpacing: 0.3,
   },
-  nextButton: {
-    backgroundColor: '#B91C1C',
+  nextButtonContainer: {
     marginHorizontal: 24,
-    marginBottom: 32,
-    paddingVertical: 16,
+    marginBottom: 92,
     borderRadius: 12,
+    width: '50%',
+    alignSelf: 'center',
+  },
+  nextButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  nextButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD700',
   },
   nextButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
 });
 
