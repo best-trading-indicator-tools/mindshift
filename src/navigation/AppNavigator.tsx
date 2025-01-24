@@ -53,7 +53,6 @@ import SelfHypnosisIntroScreen from '../screens/daily-missions-screens/self-hypn
 import SelfHypnosisExerciseScreen from '../screens/daily-missions-screens/self-hypnosis/SelfHypnosisExerciseScreen';
 import GuidedRelaxationIntroScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationIntroScreen';
 import GuidedRelaxationExerciseScreen from '../screens/caroussel-challenges-screens/guided-relaxation/GuidedRelaxationExerciseScreen';
-import ExerciseAnalysisScreen from '../screens/analysis/ExerciseAnalysisScreen';
 import { GoldenChecklistAnalysisScreen } from '../screens/daily-missions-screens/golden-checklist/GoldenChecklistAnalysisScreen';
 import { DailyGratitudeAnalysisScreen } from '../screens/daily-missions-screens/daily-gratitudes/DailyGratitudeAnalysisScreen';
 import type { ChecklistEntry } from '../types/checklist';
@@ -244,13 +243,7 @@ export type RootStackParamList = {
   };
   GuidedRelaxationIntro: undefined;
   GuidedRelaxationExercise: undefined;
-  ExerciseAnalysis: {
-    exerciseType: string;
-    entries: string[] | ChecklistEntry[];
-    context?: string;
-    challengeId?: string;
-    returnTo?: keyof RootStackParamList;
-  };
+
   GoldenChecklistAnalysis: {
     entries: ChecklistEntry[];
     context?: 'challenge' | 'daily';
@@ -585,16 +578,6 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestion
           name="GuidedRelaxationExercise"
           component={GuidedRelaxationExerciseScreen}
           options={{ headerShown: false }}
-        />
-
-        <Stack.Screen
-          name="ExerciseAnalysis"
-          component={ExerciseAnalysisScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
         />
 
         <Stack.Screen
