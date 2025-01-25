@@ -77,7 +77,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <LinearGradient 
-      colors={['#2D1B3F', '#3B1D35', '#4A1625']} 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
       style={styles.container}
       start={{x: 0.5, y: 0}}
       end={{x: 0.5, y: 1}}
@@ -97,7 +97,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons name="meditation" size={18} color="rgba(255, 255, 255, 0.95)" />
-          <Text style={styles.effectivenessTipText}>Try our guided meditation first to 3X the benefits</Text>
+          <Text style={styles.effectivenessTipText}>Enhance your practice with guided meditation</Text>
           <MaterialCommunityIcons name="chevron-right" size={20} color="rgba(255, 255, 255, 0.95)" style={styles.chevronIcon} />
         </TouchableOpacity>
 
