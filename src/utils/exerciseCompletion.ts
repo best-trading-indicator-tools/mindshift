@@ -2,10 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addNotification } from '../services/notificationService';
 import { addPoints, updateDailyStreak, checkAndUpdateAchievements } from '../services/achievementService';
 
-// Separate key prefixes for different contexts
-const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
-const CHALLENGE_COMPLETION_KEY_PREFIX = '@challenge_exercise_completion:';
-const CAROUSEL_COMPLETION_KEY_PREFIX = '@carousel_exercise_completion:';
+// Constants for exercise completion
+const DAILY_COMPLETION_KEY_PREFIX = 'daily_exercise_';
+const CHALLENGE_COMPLETION_KEY_PREFIX = 'challenge_exercise_';
+const CAROUSEL_COMPLETION_KEY_PREFIX = 'carousel_exercise_';
+const POINTS_PER_EXERCISE = 50;
 
 interface ExerciseCompletion {
   exerciseId: string;
@@ -300,28 +301,44 @@ export async function getAllCompletedExercises(): Promise<string[]> {
 }
 
 // For carousel exercises
-export const markCarouselExerciseAsCompleted = async (exerciseId: string): Promise<void> => {
+const getCarouselCompletionMessage = (exerciseId: string) => {
+  switch (exerciseId) {
+    case 'mentor-board':
+      return {
+        title: '🌟 Mentor Board Created',
+        message: 'Fantastic! You\'ve created your personal board of mentors. Let them inspire your journey ahead!'
+      };
+    case 'vision-board':
+      return {
+        title: '✨ Vision Board Created',
+        message: 'Amazing! You\'ve visualized your dreams. Keep this vision close as you work towards your goals!'
+      };
+    default:
+      return {
+        title: '🎯 Exercise Completed',
+        message: 'Great job! You\'ve completed this exercise. Keep exploring and growing!'
+      };
+  }
+};
+
+export async function markCarouselExerciseAsCompleted(exerciseId: string) {
   try {
     const key = `${CAROUSEL_COMPLETION_KEY_PREFIX}${exerciseId}`;
-    const completion: ExerciseCompletion = {
-      exerciseId,
-      completedAt: new Date().toISOString(),
-      context: 'carousel'
-    };
-    await AsyncStorage.setItem(key, JSON.stringify(completion));
+    await AsyncStorage.setItem(key, new Date().toISOString());
+
+    // Add points for completing the exercise
+    await addPoints('DAILY_MISSION');
 
     // Add notification for carousel exercise completion
+    const notification = getCarouselCompletionMessage(exerciseId);
     await addNotification({
       id: `carousel-${exerciseId}-${Date.now()}`,
-      title: '🎯 Exercise Completed',
-      message: 'Great job! You\'ve completed this exercise. Keep exploring and growing!',
+      title: notification.title,
+      message: notification.message,
       type: 'success'
     });
 
-    // Add points when carousel exercise is completed
-    await addPoints('DAILY_MISSION');
-    await checkAndUpdateAchievements(0);
   } catch (error) {
     console.error('Error marking carousel exercise as completed:', error);
   }
-}; 
+} 

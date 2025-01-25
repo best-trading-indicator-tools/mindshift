@@ -19,7 +19,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import { MentorBoard } from '../../types/mentorBoard';
-import { markChallengeExerciseAsCompleted, markDailyExerciseAsCompleted } from '../../utils/exerciseCompletion';
+import { markChallengeExerciseAsCompleted, markCarouselExerciseAsCompleted } from '../../utils/exerciseCompletion';
 import { loadMentorBoards, saveMentorBoard, deleteMentorBoard } from '../../services/mentorBoardService';
 import WikimediaImagePicker from '../../components/WikimediaImagePicker';
 import DraggableCollage from '../../components/DraggableCollage';
@@ -75,7 +75,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
         if (route.params?.context === 'challenge' && route.params.challengeId) {
           await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
         } else {
-          await markDailyExerciseAsCompleted('mentor-board');
+          await markCarouselExerciseAsCompleted('mentor-board');
         }
       }
     } catch (error) {
@@ -101,7 +101,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
       if (route.params?.context === 'challenge' && route.params.challengeId) {
         await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
       } else {
-        await markDailyExerciseAsCompleted('mentor-board');
+        await markCarouselExerciseAsCompleted('mentor-board');
       }
       
       await loadBoards();
@@ -184,7 +184,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
                   if (route.params?.context === 'challenge' && route.params.challengeId) {
                     await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
                   } else {
-                    await markDailyExerciseAsCompleted('mentor-board');
+                    await markCarouselExerciseAsCompleted('mentor-board');
                   }
                 }
 
@@ -436,7 +436,7 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
                   if (route.params?.context === 'challenge' && route.params.challengeId) {
                     await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
                   } else {
-                    await markDailyExerciseAsCompleted('mentor-board');
+                    await markCarouselExerciseAsCompleted('mentor-board');
                   }
                 }
                 
