@@ -5,11 +5,12 @@ import { addPoints, updateDailyStreak, checkAndUpdateAchievements } from '../ser
 // Separate key prefixes for different contexts
 const DAILY_COMPLETION_KEY_PREFIX = '@daily_exercise_completion:';
 const CHALLENGE_COMPLETION_KEY_PREFIX = '@challenge_exercise_completion:';
+const CAROUSEL_COMPLETION_KEY_PREFIX = '@carousel_exercise_completion:';
 
 interface ExerciseCompletion {
   exerciseId: string;
   completedAt: string;
-  context: 'daily' | 'challenge';
+  context: 'daily' | 'challenge' | 'carousel';
   challengeId?: string; // Only present for challenge exercises
 }
 
@@ -296,4 +297,31 @@ export async function getAllCompletedExercises(): Promise<string[]> {
     console.error('Error getting completed exercises:', error);
     return [];
   }
-} 
+}
+
+// For carousel exercises
+export const markCarouselExerciseAsCompleted = async (exerciseId: string): Promise<void> => {
+  try {
+    const key = `${CAROUSEL_COMPLETION_KEY_PREFIX}${exerciseId}`;
+    const completion: ExerciseCompletion = {
+      exerciseId,
+      completedAt: new Date().toISOString(),
+      context: 'carousel'
+    };
+    await AsyncStorage.setItem(key, JSON.stringify(completion));
+
+    // Add notification for carousel exercise completion
+    await addNotification({
+      id: `carousel-${exerciseId}-${Date.now()}`,
+      title: '🎯 Exercise Completed',
+      message: 'Great job! You\'ve completed this exercise. Keep exploring and growing!',
+      type: 'success'
+    });
+
+    // Add points when carousel exercise is completed
+    await addPoints('DAILY_MISSION');
+    await checkAndUpdateAchievements(0);
+  } catch (error) {
+    console.error('Error marking carousel exercise as completed:', error);
+  }
+}; 
