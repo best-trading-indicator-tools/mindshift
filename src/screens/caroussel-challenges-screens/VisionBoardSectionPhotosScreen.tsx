@@ -383,7 +383,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#FFFFFF',
     marginBottom: 24,
-    paddingHorizontal: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    minHeight: 100,
   },
   photoContainer: {
     marginBottom: 24,

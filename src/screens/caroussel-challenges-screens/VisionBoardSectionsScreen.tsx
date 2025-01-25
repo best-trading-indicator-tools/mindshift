@@ -516,13 +516,13 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container}>
-        <LinearGradient 
-          colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
-          style={styles.container}
-          start={{x: 0.5, y: 0}}
-          end={{x: 0.5, y: 1}}
-        >
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
@@ -556,7 +556,7 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
                   style={styles.exitButton}
                   onPress={handleExit}
                 >
-                  <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
+                  <Text style={styles.exitText}>Exit</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -646,8 +646,8 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
               </View>
             </TouchableOpacity>
           </Modal>
-        </LinearGradient>
-      </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
     </GestureHandlerRootView>
   );
 };
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 8,
   },
   exitText: {

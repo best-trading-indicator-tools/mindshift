@@ -167,7 +167,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
               style={styles.exitButton}
               onPress={handleExit}
             >
-              <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
+              <Text style={styles.exitText}>Exit</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.addButton}
@@ -553,12 +553,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   exitButton: {
-    width: 40,
-    height: 40,
     backgroundColor: '#D4AF37',
-    borderRadius: 20,
+    borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  exitText: {
+    color: '#000000',
+    fontSize: 15,
+    fontWeight: '600',
   },
   placeholderContainer: {
     position: 'absolute',
