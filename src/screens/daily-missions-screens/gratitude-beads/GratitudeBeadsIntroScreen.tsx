@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -7,6 +7,8 @@ import ProgressHeader from '../../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 type RouteParams = {
   context?: 'challenge' | 'daily';
@@ -79,47 +81,62 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const currentContent = introContent[currentStep - 1];
 
   return (
-    <View style={styles.container}>
-      <ProgressHeader
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        onExit={handleExit}
-        onNext={handleNext}
-        showNext={true}
-      />
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <View style={styles.mainContainer}>
+        <ProgressHeader
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onExit={handleExit}
+          onNext={handleNext}
+          showNext={true}
+        />
 
-      <View style={styles.content}>
-        <View style={styles.effectivenessTip}>
-          <MaterialCommunityIcons name="information" size={18} color="#000000" />
-          <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
+        <View style={styles.content}>
+          <View style={styles.effectivenessTip}>
+            <MaterialCommunityIcons name="information" size={18} color="#000000" />
+            <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
+          </View>
+
+          <View style={styles.textContent}>
+            {currentContent && (
+              <>
+                <Text style={styles.title}>{currentContent.title}</Text>
+                <Text style={styles.description}>{currentContent.content}</Text>
+              </>
+            )}
+          </View>
         </View>
 
-        <View style={styles.textContent}>
-          {currentContent && (
-            <>
-              <Text style={styles.title}>{currentContent.title}</Text>
-              <Text style={styles.description}>{currentContent.content}</Text>
-            </>
-          )}
+        <View style={styles.nextButtonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.nextButton,
+              pressed && styles.nextButtonPressed
+            ]}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextButtonText}>
+              {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
+            </Text>
+          </Pressable>
         </View>
       </View>
-
-      <TouchableOpacity
-        style={styles.nextButton}
-        onPress={handleNext}
-      >
-        <Text style={styles.nextButtonText}>
-          {currentStep === totalSteps ? 'Start Exercise' : 'Next'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+  },
+  mainContainer: {
+    flex: 1,
+    paddingBottom: 16,
   },
   content: {
     flex: 1,
@@ -130,37 +147,55 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 34,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 24,
     textAlign: 'center',
+    letterSpacing: 0.5,
     marginTop: 20,
   },
   description: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: 19,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    lineHeight: 28,
-    opacity: 0.8,
+    lineHeight: 32,
+    maxWidth: '85%',
+    letterSpacing: 0.3,
+    alignSelf: 'center',
     marginBottom: 24,
   },
-  nextButton: {
-    backgroundColor: '#E31837',
-    marginHorizontal: 24,
-    marginBottom: 80,
-    paddingVertical: 16,
-    borderRadius: 12,
+  nextButtonContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+    alignItems: 'center',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
   },
+  nextButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D4AF37',
+    width: '60%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  nextButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+    backgroundColor: '#BFA030',
+  },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   effectivenessTip: {
     flexDirection: 'row',
