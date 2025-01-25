@@ -61,48 +61,7 @@ const challenges = [
     icon: 'sleep',
     colors: ['#4A90E2', '#1A1A1A'],
   },
-  {
-    title: 'Meditation',
-    subtitle: 'Find your inner peace',
-    icon: 'meditation',
-    colors: ['#9C27B0', '#E91E63'],
-  },
-  {
-    title: 'Gratitude Journal',
-    subtitle: 'Practice daily gratitude',
-    icon: 'notebook',
-    colors: ['#FF9800', '#F44336'],
-  },
-  {
-    title: 'Sleep Better',
-    subtitle: 'Improve your sleep quality',
-    icon: 'moon-waning-crescent',
-    colors: ['#2196F3', '#673AB7'],
-  },
-  {
-    title: 'Mindful Minutes',
-    subtitle: '5 minutes of mindfulness',
-    icon: 'timer-sand',
-    colors: ['#009688', '#4CAF50'],
-  },
-  {
-    title: 'Positive Affirmations',
-    subtitle: 'Build self-confidence',
-    icon: 'heart',
-    colors: ['#FF4081', '#7C4DFF'],
-  },
-  {
-    title: 'Stress Relief',
-    subtitle: 'Quick relaxation exercises',
-    icon: 'yoga',
-    colors: ['#00BCD4', '#3F51B5'],
-  },
-  {
-    title: 'Social Connect',
-    subtitle: 'Stay connected with loved ones',
-    icon: 'account-group',
-    colors: ['#FFC107', '#FF5722'],
-  },
+
 ];
 
 const DAILY_MISSIONS = [
