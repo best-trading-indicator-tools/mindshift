@@ -19,6 +19,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import PexelsImagePicker from '../../components/PexelsImagePicker';
 import { VisionBoard } from './VisionBoardScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardSectionPhotos'>;
 
@@ -230,7 +231,7 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
             }}
           >
             <Text style={styles.menuItemText}>Edit Section's Name</Text>
-            <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
+            <MaterialCommunityIcons name="pencil" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           
           <View style={styles.menuDivider} />
@@ -243,7 +244,7 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
             }}
           >
             <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
-            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
+            <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF4B4B" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -251,96 +252,108 @@ const VisionBoardSectionPhotosScreen: React.FC<Props> = ({ navigation, route }) 
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#FF4B8C" />
-        </TouchableOpacity>
-        <View style={styles.headerTitle}>
-          <Text style={styles.title}>{sectionName}</Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.menuButton}
-          onPress={() => setShowMenu(true)}
-        >
-          <MaterialCommunityIcons name="dots-horizontal" size={24} color="#666666" />
-        </TouchableOpacity>
-      </View>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <ScrollView style={styles.content}>
-          <TextInput
-            style={styles.descriptionInput}
-            placeholder="Add description..."
-            placeholderTextColor="#999999"
-            multiline
-            value={description}
-            onChangeText={setDescription}
-          />
-          
-          {photos.map((photo, index) => (
-            <View key={index} style={styles.photoContainer}>
-              <Image 
-                source={{ uri: photo.src.large || photo.src.medium || photo.src.original }}
-                style={styles.photo}
-              />
-              <TouchableOpacity 
-                style={styles.removePhotoButton}
-                onPress={() => handleRemovePhoto(index)}
-              >
-                <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TextInput
-                style={styles.captionInput}
-                placeholder="Add caption..."
-                placeholderTextColor="#999999"
-                value={captions[index]}
-                onChangeText={(text) => setCaptions({ ...captions, [index]: text })}
-              />
-            </View>
-          ))}
-        </ScrollView>
-
-        <View style={styles.bottomButtons}>
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
           <TouchableOpacity 
-            style={styles.addPhotosButton}
-            onPress={handleAddPhotos}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <MaterialCommunityIcons name="image-plus" size={24} color="#FF4B4B" />
-            <Text style={styles.addPhotosText}>Add Photos</Text>
+            <MaterialCommunityIcons name="chevron-left" size={32} color="#D4AF37" />
           </TouchableOpacity>
-
+          <View style={styles.headerTitle}>
+            <Text style={styles.title}>{sectionName}</Text>
+          </View>
           <TouchableOpacity 
-            style={styles.doneButton}
-            onPress={handleDone}
+            style={styles.menuButton}
+            onPress={() => setShowMenu(true)}
           >
-            <MaterialCommunityIcons name="check" size={24} color="#FFFFFF" />
-            <Text style={styles.doneButtonText}>Done</Text>
+            <MaterialCommunityIcons name="dots-horizontal" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
 
-      <PexelsImagePicker
-        visible={showPexelsPicker}
-        onClose={() => setShowPexelsPicker(false)}
-        onSelectPhotos={handleSelectPhotos}
-        initialSearchTerm={sectionName}
-      />
-      {renderMenu()}
-    </SafeAreaView>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView style={styles.content}>
+            <TextInput
+              style={styles.descriptionInput}
+              placeholder="Add description..."
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              multiline
+              value={description}
+              onChangeText={setDescription}
+            />
+            
+            {photos.map((photo, index) => (
+              <View key={index} style={styles.photoContainer}>
+                <Image 
+                  source={{ uri: photo.src.large || photo.src.medium || photo.src.original }}
+                  style={styles.photo}
+                />
+                <TouchableOpacity 
+                  style={styles.removePhotoButton}
+                  onPress={() => handleRemovePhoto(index)}
+                >
+                  <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+                <TextInput
+                  style={styles.captionInput}
+                  placeholder="Add caption..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={captions[index]}
+                  onChangeText={(text) => setCaptions({ ...captions, [index]: text })}
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.bottomButtons}>
+            <TouchableOpacity 
+              style={styles.addPhotosButton}
+              onPress={handleAddPhotos}
+            >
+              <MaterialCommunityIcons name="image-plus" size={24} color="#FFFFFF" />
+              <Text style={styles.addPhotosText}>Add Photos</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.doneButton}
+              onPress={handleDone}
+            >
+              <MaterialCommunityIcons name="check" size={24} color="#FFFFFF" />
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+
+        <PexelsImagePicker
+          visible={showPexelsPicker}
+          onClose={() => setShowPexelsPicker(false)}
+          onSelectPhotos={handleSelectPhotos}
+          initialSearchTerm={sectionName}
+        />
+        {renderMenu()}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -352,13 +365,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  headerRight: {
-    width: 40,
-  },
   title: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   backButton: {
     width: 40,
@@ -371,7 +381,7 @@ const styles = StyleSheet.create({
   },
   descriptionInput: {
     fontSize: 17,
-    color: '#666666',
+    color: '#FFFFFF',
     marginBottom: 24,
     paddingHorizontal: 16,
   },
@@ -379,15 +389,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   photo: {
     width: '100%',
@@ -398,7 +400,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -407,8 +409,9 @@ const styles = StyleSheet.create({
   },
   captionInput: {
     fontSize: 15,
-    color: '#666666',
+    color: '#FFFFFF',
     padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   bottomButtons: {
     flexDirection: 'row',
@@ -420,13 +423,15 @@ const styles = StyleSheet.create({
   addPhotosButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFE4E4',
+    backgroundColor: 'rgba(212, 175, 55, 0.2)',
     padding: 12,
     borderRadius: 8,
     width: '45%',
-  }, 
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
   addPhotosText: {
-    color: '#FF4B4B',
+    color: '#FFFFFF',
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '600',
@@ -435,7 +440,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF0000',
+    backgroundColor: '#D4AF37',
     padding: 12,
     borderRadius: 8,
     width: '45%',
@@ -453,19 +458,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E293B',
     borderRadius: 12,
     width: '80%',
     maxWidth: 300,
     padding: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   menuItem: {
     flexDirection: 'row',
@@ -476,18 +475,18 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: '#000000',
+    color: '#FFFFFF',
   },
   deleteText: {
-    color: '#FF0000',
+    color: '#FF4B4B',
   },
   deleteItem: {
-    borderTopColor: '#E5E5E5',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
     borderTopWidth: 1,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: '#E5E5E5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: 16,
   },
   menuButton: {
