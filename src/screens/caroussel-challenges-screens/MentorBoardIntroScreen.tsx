@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ProgressHeader from '../../components/ProgressHeader';
 import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardIntro'>;
 
@@ -48,7 +49,7 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       case 0:
         return (
           <View style={styles.pageContainer}>
-            <Text style={styles.titleText} numberOfLines={1} adjustsFontSizeToFit>
+            <Text style={styles.titleText}>
               THE MAGICAL POWER OF THE MENTOR BOARD
             </Text>
             <View style={styles.illustrationContainer}>
@@ -64,9 +65,17 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation, route }) => {
       case 1:
         return (
           <View style={styles.pageContainer}>
-            <Text style={styles.titleText} numberOfLines={1} adjustsFontSizeToFit>
+            <Text style={styles.titleText}>
               THE MAGICAL POWER OF THE MENTOR BOARD
             </Text>
+            <View style={styles.illustrationContainer}>
+              <LottieView
+                source={require('../../assets/illustrations/intros/mentor-board/mentor-intro-2.lottie')}
+                autoPlay
+                loop
+                style={styles.illustration}
+              />
+            </View>
             <View style={styles.fullTextContent}>
               <Text style={styles.explanationText}>
                 As a reminder, I regularly update my mentor board.
@@ -83,9 +92,9 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation, route }) => {
 
       case 2:
         return (
-          <ScrollView style={styles.scrollView}>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
             <View style={styles.pageContainer}>
-              <Text style={styles.titleText} numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={styles.titleText}>
                 THE MAGICAL POWER OF THE MENTOR BOARD
               </Text>
               <View style={styles.mentorsList}>
@@ -153,33 +162,36 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingBottom: 120,
+  },
   pageContainer: {
     flex: 1,
     padding: 24,
   },
   titleText: {
-    fontSize: 42,
+    fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 32,
-    marginTop: 0,
+    marginBottom: 24,
     textAlign: 'center',
     letterSpacing: 0.5,
-    paddingHorizontal: 20,
+    marginTop: 0,
+    maxWidth: '100%',
+    alignSelf: 'center',
   },
   illustrationContainer: {
-    flex: 1,
-    height: 500,
+    height: 280,
     justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   illustration: {
     width: '100%',
     height: '100%',
   },
   fullTextContent: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 24,
+    marginTop: -40,
+    gap: 14,
   },
   explanationText: {
     fontSize: 19,
@@ -188,7 +200,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   mentorsList: {
-    flex: 1,
     gap: 16,
     paddingBottom: 20,
   },
