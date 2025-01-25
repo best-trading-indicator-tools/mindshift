@@ -41,6 +41,15 @@ const introContent = [
   }
 ];
 
+const { width } = Dimensions.get('window');
+const ANIMATION_SIZE = width * 0.5; // 50% of screen width
+
+const BEADS_ANIMATIONS = {
+  1: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-1.lottie'),
+  2: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-2.lottie'),
+  3: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-3.lottie'),
+};
+
 const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = introContent.length;
@@ -79,6 +88,7 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const currentContent = introContent[currentStep - 1];
+  const currentAnimation = BEADS_ANIMATIONS[currentStep as keyof typeof BEADS_ANIMATIONS];
 
   return (
     <LinearGradient 
@@ -106,6 +116,18 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
             {currentContent && (
               <>
                 <Text style={styles.title}>{currentContent.title}</Text>
+                
+                {currentAnimation && (
+                  <View style={styles.lottieContainer}>
+                    <LottieView
+                      source={currentAnimation}
+                      autoPlay
+                      loop
+                      style={styles.lottieAnimation}
+                    />
+                  </View>
+                )}
+
                 <Text style={styles.description}>{currentContent.content}</Text>
               </>
             )}
@@ -216,6 +238,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
     letterSpacing: 0.3,
+  },
+  lottieContainer: {
+    width: ANIMATION_SIZE,
+    height: ANIMATION_SIZE,
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
   },
 });
 
