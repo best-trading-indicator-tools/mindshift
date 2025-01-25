@@ -25,19 +25,19 @@ const introContent = [
   },
   {
     title: "Scientific Benefits",
-    content: "Research shows that expressing gratitude increases happiness by 25%, reduces stress by 23%, and improves sleep quality. Speaking gratitude aloud activates multiple areas of your brain, strengthening the positive effects."
+    content: "Research shows that expressing gratitude increases happiness by 25%, reduces stress by 23%, and improves sleep quality.\nSpeaking gratitude aloud activates multiple areas of your brain, strengthening the positive effects."
   },
   {
     title: "How to Practice",
-    content: "1. Press a highlighted bead to open the recording screen\n\n2. Speak your gratitude aloud into the microphone\n\n3. Tap the red button when you're done recording\n\nThe format is:\n\"I am grateful for [something] because [reason]\"\n\nTake your time with each bead - the deeper you reflect, the more powerful the practice."
+    content: "1. Press a highlighted bead\n2. Speak your gratitude aloud\n3. Tap to finish recording\n\n\nFormat: \"I am grateful for [X] because [Y]\""
   },
   {
     title: "Example Gratitudes",
-    content: "\"I am grateful for my morning coffee because it gives me a peaceful moment to start my day.\"\n\n\"I am grateful for challenges because they help me grow stronger.\"\n\n\"I am grateful for my friend Sarah because she always listens without judgment.\""
+    content: "\"I am grateful for my morning coffee because it gives me a peaceful start.\"\n\n\"I am grateful for challenges because they help me grow.\""
   },
   {
     title: "Ready to Begin?",
-    content: "Remember to:\n\n• Speak each gratitude aloud\n\n• Hold the bead until it's validated\n\n• Be specific with your reasons\n\nThis practice becomes more powerful with each day you do it."
+    content: "• Speak each gratitude aloud\n\n• Be specific with your reasons\n\n• Take your time to reflect"
   }
 ];
 
@@ -48,6 +48,8 @@ const BEADS_ANIMATIONS = {
   1: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-1.lottie'),
   2: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-2.lottie'),
   3: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-3.lottie'),
+  4: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-4.lottie'),
+  5: require('../../../assets/illustrations/intros/gratitude-beads/beads-intro-5.lottie'),
 };
 
 const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -87,6 +89,13 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const handleEffectivenessTipPress = () => {
+    navigation.navigate('SelfHypnosisIntro', {
+      challengeId: route.params?.challengeId,
+      returnTo: route.params?.returnTo
+    });
+  };
+
   const currentContent = introContent[currentStep - 1];
   const currentAnimation = BEADS_ANIMATIONS[currentStep as keyof typeof BEADS_ANIMATIONS];
 
@@ -107,10 +116,17 @@ const GratitudeBeadsIntroScreen: React.FC<Props> = ({ navigation, route }) => {
         />
 
         <View style={styles.content}>
-          <View style={styles.effectivenessTip}>
-            <MaterialCommunityIcons name="information" size={18} color="#000000" />
+          <Pressable 
+            style={({ pressed }) => [
+              styles.effectivenessTip,
+              pressed && styles.effectivenessTipPressed
+            ]}
+            onPress={handleEffectivenessTipPress}
+          >
+            <MaterialCommunityIcons name="information-outline" size={20} color="#000000" />
             <Text style={styles.effectivenessTipText}>3x more effective after Self-Hypnosis</Text>
-          </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#000000" />
+          </Pressable>
 
           <View style={styles.textContent}>
             {currentContent && (
@@ -163,7 +179,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 80,
+    paddingBottom: 120,
   },
   textContent: {
     paddingTop: 8,
@@ -175,21 +191,21 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
     letterSpacing: 0.5,
-    marginTop: 20,
+    marginTop: 0,
   },
   description: {
     fontSize: 19,
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     lineHeight: 32,
-    maxWidth: '85%',
+    maxWidth: '95%',
     letterSpacing: 0.3,
     alignSelf: 'center',
-    marginBottom: 24,
+    marginBottom: 40,
   },
   nextButtonContainer: {
     paddingHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: 48,
     alignItems: 'center',
     position: 'absolute',
     bottom: 0,
@@ -226,18 +242,24 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginBottom: 32,
+    marginBottom: 12,
     marginTop: 12,
     alignSelf: 'center',
     borderWidth: 1,
     borderColor: '#D4AF37',
+    justifyContent: 'space-between',
   },
   effectivenessTipText: {
     color: '#000000',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginHorizontal: 8,
     letterSpacing: 0.3,
+    flex: 1,
+  },
+  effectivenessTipPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
   lottieContainer: {
     width: ANIMATION_SIZE,
