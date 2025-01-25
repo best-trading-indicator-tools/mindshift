@@ -65,6 +65,10 @@
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to your microphone to record your affirmations.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to select mentor images.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take mentor photos.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>

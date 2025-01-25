@@ -20,6 +20,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { searchWikimediaImages } from '../services/mentorBoardService';
 import { WikimediaSearchResult, MentorImage } from '../types/mentorBoard';
 import LinearGradient from 'react-native-linear-gradient';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 interface Props {
   visible: boolean;
@@ -199,6 +200,32 @@ const WikimediaImagePicker: React.FC<Props> = ({
     }
   };
 
+  const handleLocalImagePick = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 1,
+        selectionLimit: 0, // 0 means unlimited
+      });
+
+      if (result.assets && result.assets.length > 0) {
+        const localMentors: MentorImage[] = result.assets.map(asset => ({
+          id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+          url: asset.uri || '',
+          name: asset.fileName || 'Local Image',
+          description: '',
+          source: 'Local Device',
+          sourceUrl: '',
+        }));
+
+        onSelectMentors(localMentors);
+      }
+    } catch (error) {
+      console.error('Error picking local images:', error);
+      Alert.alert('Error', 'Failed to load images from device');
+    }
+  };
+
   const renderImageItem = ({ item }: { item: WikimediaSearchResult }) => {
     const isSelected = selectedImages.some(selected => selected.pageid === item.pageid);
 
@@ -274,6 +301,14 @@ const WikimediaImagePicker: React.FC<Props> = ({
                 <MaterialCommunityIcons name="magnify" size={24} color="#000000" />
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity 
+              style={styles.localImageButton}
+              onPress={handleLocalImagePick}
+            >
+              <MaterialCommunityIcons name="image-plus" size={24} color="#FFFFFF" />
+              <Text style={styles.localImageButtonText}>Add from Device</Text>
+            </TouchableOpacity>
 
             {showSuggestions && suggestions.length > 0 && (
               <View style={styles.suggestionsContainer}>
@@ -555,6 +590,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666666',
     marginTop: 2,
+  },
+  localImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 12,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  localImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 

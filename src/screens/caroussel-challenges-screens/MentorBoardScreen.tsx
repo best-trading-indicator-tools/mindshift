@@ -97,7 +97,14 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
       };
 
       await saveMentorBoard(newBoard);
-      await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+      
+      // Use the appropriate completion function based on context
+      if (route.params?.context === 'challenge' && route.params.challengeId) {
+        await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
+      } else {
+        await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+      }
+      
       await loadBoards();
       setShowNewBoardModal(false);
       setNewBoardName('');
@@ -427,7 +434,11 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
                 
                 // Mark exercise as completed when mentors are added
                 if (updatedBoard.mentors.length > 0) {
-                  await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+                  if (route.params?.context === 'challenge' && route.params.challengeId) {
+                    await markChallengeExerciseAsCompleted(route.params.challengeId, 'mentor-board');
+                  } else {
+                    await markExerciseAsCompleted('mentor-board', 'Mentor Board');
+                  }
                 }
                 
                 // Then update local state
