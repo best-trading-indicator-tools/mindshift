@@ -21,7 +21,7 @@ const introContent = [
   },
   {
     title: "Express Your Way",
-    content: "Type it or say it - your choice! Express gratitude in the way that feels most natural to you. Both methods are equally powerful."
+    content: "Type it or say it - your choice! Express gratitude in the way that feels most natural to you.\nBoth methods are equally powerful."
   },
   {
     title: "Try This Example",
@@ -29,8 +29,12 @@ const introContent = [
   }
 ];
 
-// Temporarily use the same animation for all steps
-const GRATITUDE_ANIMATION = require('../../../assets/illustrations/intros/daily-gratitude/intro-1.lottie');
+const GRATITUDE_ANIMATIONS = {
+  1: require('../../../assets/illustrations/intros/daily-gratitude/intro-1.lottie'),
+  2: require('../../../assets/illustrations/intros/daily-gratitude/intro-2.lottie'),
+  3: require('../../../assets/illustrations/intros/daily-gratitude/intro-3.lottie'), 
+  // 4: require('../../../../assets/illustrations/intros/daily-gratitude/intro-4.lottie'), // TODO: When available
+};
 
 const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -70,6 +74,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const currentContent = introContent[currentStep - 1];
+  const currentAnimation = GRATITUDE_ANIMATIONS[currentStep as keyof typeof GRATITUDE_ANIMATIONS] || GRATITUDE_ANIMATIONS[1];
 
   useEffect(() => {
     console.log('DailyGratitudeIntro mounted with route params:', route.params);
@@ -107,7 +112,7 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
             
             <View style={styles.lottieContainer}>
               <LottieView
-                source={GRATITUDE_ANIMATION}
+                source={currentAnimation}
                 autoPlay
                 loop
                 style={styles.lottieAnimation}
