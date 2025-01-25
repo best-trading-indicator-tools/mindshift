@@ -301,7 +301,8 @@ const MentorBoardScreen: React.FC<Props> = ({ navigation, route }) => {
                         setShowImagePicker(true);
                       }}
                     >
-                      <Text style={styles.emptyText}>Click to choose mentors</Text>
+                      <MaterialCommunityIcons name="plus" size={32} color="#000000" />
+                      <Text style={[styles.emptyText, { color: '#000000', marginTop: 12 }]}>Click to add mentors</Text>
                     </TouchableOpacity>
                   )}
                 </View>
