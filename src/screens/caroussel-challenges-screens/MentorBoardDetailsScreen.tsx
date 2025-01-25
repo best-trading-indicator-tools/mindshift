@@ -16,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { MentorBoard, MentorImage } from '../../types/mentorBoard';
 import { loadMentorBoards, saveMentorBoard } from '../../services/mentorBoardService';
 import WikimediaImagePicker from '../../components/WikimediaImagePicker';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardDetails'>;
 
@@ -96,100 +97,108 @@ const MentorBoardDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#000000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>{board.name}</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.title}>{board.name}</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      <FlatList
-        data={board.mentors}
-        renderItem={renderMentorItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-      />
+        <FlatList
+          data={board.mentors}
+          renderItem={renderMentorItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+        />
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setShowImagePicker(true)}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
-          <Text style={[styles.buttonText, styles.addButtonText]}>Add Mentors</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.doneButton}
-          onPress={() => {
-            if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
-              navigation.navigate('ChallengeDetail', {
-                challenge: {
-                  id: route.params.challengeId,
-                  title: 'Ultimate',
-                  duration: 21,
-                  description: 'Create your own board of mentors to inspire and guide you.',
-                  image: require('../../assets/illustrations/challenges/challenge-21.png')
-                }
-              });
-            } else {
-              navigation.goBack();
+        <View style={styles.bottomBar}>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => setShowImagePicker(true)}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#000000" />
+            <Text style={[styles.buttonText, styles.addButtonText]}>Add Mentors</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.doneButton}
+            onPress={() => {
+              if ((route.params?.returnTo === 'ChallengeDetail' || route.params?.context === 'challenge') && route.params.challengeId) {
+                navigation.navigate('ChallengeDetail', {
+                  challenge: {
+                    id: route.params.challengeId,
+                    title: 'Ultimate',
+                    duration: 21,
+                    description: 'Create your own board of mentors to inspire and guide you.',
+                    image: require('../../assets/illustrations/challenges/challenge-21.png')
+                  }
+                });
+              } else {
+                navigation.goBack();
+              }
+            }}
+          >
+            <Text style={[styles.buttonText, styles.doneButtonText]}>Done</Text>
+          </TouchableOpacity>
+        </View>
+
+        <WikimediaImagePicker
+          visible={showImagePicker}
+          onClose={() => setShowImagePicker(false)}
+          onSelectMentors={async (newMentors) => {
+            if (!board) return;
+
+            try {
+              // Check if adding these mentors would exceed the limit
+              if (board.mentors.length + newMentors.length > 15) {
+                Alert.alert(
+                  'Mentor Limit Reached',
+                  `You can only have up to 15 mentors per board. You currently have ${board.mentors.length} mentors and are trying to add ${newMentors.length} more.`
+                );
+                return;
+              }
+
+              const updatedBoard = {
+                ...board,
+                mentors: [...board.mentors, ...newMentors],
+              };
+              await saveMentorBoard(updatedBoard);
+              setBoard(updatedBoard);
+              setShowImagePicker(false);
+            } catch (error) {
+              console.error('Error adding mentors:', error);
+              Alert.alert('Error', 'Failed to add mentors');
             }
           }}
-        >
-          <Text style={[styles.buttonText, styles.doneButtonText]}>Done</Text>
-        </TouchableOpacity>
-      </View>
-
-      <WikimediaImagePicker
-        visible={showImagePicker}
-        onClose={() => setShowImagePicker(false)}
-        onSelectMentors={async (newMentors) => {
-          if (!board) return;
-
-          try {
-            // Check if adding these mentors would exceed the limit
-            if (board.mentors.length + newMentors.length > 15) {
-              Alert.alert(
-                'Mentor Limit Reached',
-                `You can only have up to 15 mentors per board. You currently have ${board.mentors.length} mentors and are trying to add ${newMentors.length} more.`
-              );
-              return;
-            }
-
-            const updatedBoard = {
-              ...board,
-              mentors: [...board.mentors, ...newMentors],
-            };
-            await saveMentorBoard(updatedBoard);
-            setBoard(updatedBoard);
-            setShowImagePicker(false);
-          } catch (error) {
-            console.error('Error adding mentors:', error);
-            Alert.alert('Error', 'Failed to add mentors');
-          }
-        }}
-      />
-    </SafeAreaView>
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  safeContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    backgroundColor: 'transparent',
   },
   backButton: {
     padding: 8,
@@ -198,7 +207,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   placeholder: {
     width: 40,
@@ -207,6 +216,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   listContent: {
     padding: 16,
@@ -214,25 +224,18 @@ const styles = StyleSheet.create({
   mentorItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   mentorImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   mentorInfo: {
     flex: 1,
@@ -241,14 +244,14 @@ const styles = StyleSheet.create({
   mentorName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   deleteButton: {
     position: 'absolute',
     top: 8,
     right: 8,
     padding: 4,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     zIndex: 1,
   },
@@ -256,15 +259,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 32 : 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     gap: 12,
   },
   addButton: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     borderRadius: 8,
     padding: 12,
     justifyContent: 'center',
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     flex: 1,
-    backgroundColor: '#FCD34D',
+    backgroundColor: '#D4AF37',
     borderRadius: 8,
     padding: 12,
     justifyContent: 'center',
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
   },
 });
 
