@@ -30,7 +30,7 @@ const ANIMATION_SIZE = width * 0.5; // 50% of screen width
 const HYPNOSIS_ANIMATIONS = {
   1: require('../../../assets/illustrations/intros/self-hypnosis/hypno-intro-1.lottie'),
   2: require('../../../assets/illustrations/intros/self-hypnosis/hypno-intro-2.lottie'),
-  3: require('../../../assets/illustrations/intros/self-hypnosis/hypno-intro-1.lottie'), // Temporarily reuse first animation
+  3: require('../../../assets/illustrations/intros/self-hypnosis/hypno-intro-3.lottie'), 
 };
 
 const SelfHypnosisIntroScreen: React.FC<Props> = ({ navigation, route }) => {
