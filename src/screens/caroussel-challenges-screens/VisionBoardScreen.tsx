@@ -280,13 +280,13 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
           ))}
         </ScrollView>
 
-        <TouchableOpacity 
-          style={styles.createNewBoardButton}
-          onPress={() => setShowNewBoardModal(true)}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
-          <Text style={styles.createNewBoardText}>Create a New Board</Text>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.createNewBoardButton}
+            onPress={() => setShowNewBoardModal(true)}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
+            <Text style={styles.createNewBoardText}>Create a New Board</Text>
+          </TouchableOpacity>
 
         {/* New Board Modal */}
         <Modal

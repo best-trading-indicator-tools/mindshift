@@ -16,6 +16,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PEXELS_API_KEY } from '@env';
 import { launchImageLibrary } from 'react-native-image-picker';
+import LinearGradient from 'react-native-linear-gradient';
 
 
 interface PexelsPhoto {
@@ -248,109 +249,101 @@ const PexelsImagePicker: React.FC<Props> = ({
   );
 
   return (
-    <Modal visible={visible} animationType="slide">
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <MaterialCommunityIcons name="chevron-left" size={32} color="#FF4B8C" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Add Photos</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <MaterialCommunityIcons name="magnify" size={24} color="#666" />
-            <TextInput
-              style={styles.searchInput}
-              value={searchTerm}
-              onChangeText={(text) => {
-                setSearchTerm(text);
-                if (text.length > 2) {
-                  searchPhotos(text);
-                }
-              }}
-              placeholder="Search photos..."
-            />
-            {searchTerm ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchTerm('');
-                  searchPhotos('');
-                }}
-              >
-                <MaterialCommunityIcons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            ) : null}
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={onClose}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={32} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.title}>Add Photos</Text>
           </View>
-        </View>
 
-        <View style={styles.tagsSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tagScrollContent}
-          >
-            {relatedSearches.map((tag) => (
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <MaterialCommunityIcons name="magnify" size={24} color="rgba(255, 255, 255, 0.7)" />
+              <TextInput
+                style={styles.searchInput}
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+                placeholder="Search photos..."
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                onSubmitEditing={() => searchPhotos(searchTerm)}
+              />
+              {searchTerm ? (
+                <TouchableOpacity onPress={() => setSearchTerm('')}>
+                  <MaterialCommunityIcons name="close" size={24} color="rgba(255, 255, 255, 0.7)" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          <View style={styles.suggestionsContainer}>
+            {relatedSearches.map((term) => (
               <TouchableOpacity
-                key={tag}
-                style={[
-                  styles.tagButton,
-                  searchTerm === tag && styles.tagButtonActive
-                ]}
-                onPress={() => handleTagPress(tag)}
-                activeOpacity={0.7}
+                key={term}
+                style={styles.suggestionButton}
+                onPress={() => setSearchTerm(term)}
               >
-                <Text style={[
-                  styles.tagText,
-                  searchTerm === tag && styles.tagTextActive
-                ]}>{tag}</Text>
+                <Text style={styles.suggestionText}>{term}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
-        </View>
+          </View>
 
-        <View style={styles.poweredByContainer}>
-          <Text style={styles.poweredByText}>Powered by Pexels™</Text>
-          <TouchableOpacity 
-            style={styles.addFromPhone}
-            onPress={handleAddFromPhone}
-          >
-            <MaterialCommunityIcons name="plus" size={20} color="#000" />
-            <Text style={styles.addFromPhoneText}>Add from Phone</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator size="large" color="#FFD700" style={styles.loader} />
-        ) : (
-          <FlatList
-            data={photos}
-            renderItem={renderPhoto}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.photosGrid}
-          />
-        )}
-
-        {selectedPhotos.length > 0 && (
-          <View style={styles.bottomBar}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.selectedPhotosContainer}
+          <View style={styles.sourceInfo}>
+            <Text style={styles.sourceText}>Powered by Pexels™</Text>
+            <TouchableOpacity 
+              style={styles.addFromPhoneButton}
+              onPress={handleAddFromPhone}
             >
-              {selectedPhotos.map((uri, index) => renderSelectedThumbnail(uri, index))}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={handleAddPhotos}
-            >
-              <MaterialCommunityIcons name="arrow-right" size={24} color="#000" />
+              <MaterialCommunityIcons name="plus" size={20} color="#FFFFFF" />
+              <Text style={styles.addFromPhoneText}>Add from Phone</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </SafeAreaView>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#FFD700" style={styles.loader} />
+          ) : (
+            <FlatList
+              data={photos}
+              renderItem={renderPhoto}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              contentContainerStyle={styles.photosGrid}
+            />
+          )}
+
+          {selectedPhotos.length > 0 && (
+            <View style={styles.bottomBar}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.selectedPhotosContainer}
+              >
+                {selectedPhotos.map((uri, index) => renderSelectedThumbnail(uri, index))}
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddPhotos}
+              >
+                <MaterialCommunityIcons name="arrow-right" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </SafeAreaView>
+      </LinearGradient>
     </Modal>
   );
 };
@@ -358,101 +351,84 @@ const PexelsImagePicker: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 16,
   },
-  closeButton: {
+  backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  placeholder: {
-    width: 40,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
   searchContainer: {
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 44,
+    paddingHorizontal: 16,
+    height: 48,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
     fontSize: 16,
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
-  tagsSection: {
-    height: 60,
-    marginBottom: 24,
+  suggestionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
-  tagButton: {
-    backgroundColor: '#F5F5F5',
+  suggestionButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  tagButtonActive: {
-    backgroundColor: '#FF4B8C',
-  },
-  tagText: {
-    fontSize: 15,
-    color: '#000000',
-    fontWeight: '500',
-  },
-  tagTextActive: {
+  suggestionText: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: 16,
   },
-  poweredByContainer: {
+  sourceInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  poweredByText: {
-    color: '#666',
-    fontSize: 14,
+  sourceText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 16,
   },
-  addFromPhone: {
+  addFromPhoneButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
+    gap: 8,
   },
   addFromPhoneText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#000000',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
   photosGrid: {
     padding: 8,
