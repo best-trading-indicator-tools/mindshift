@@ -15,6 +15,8 @@ import { VisionBoard, VisionBoardSection } from './VisionBoardScreen';
 import PexelsImagePicker from '../../components/PexelsImagePicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
+import LinearGradient from 'react-native-linear-gradient';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NewVisionBoardSection'>;
 
@@ -123,123 +125,128 @@ const NewVisionBoardSection: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#E31837" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.title}>Great! Let's give a name to your{'\n'}new section.</Text>
-        
-        <TextInput
-          style={styles.input}
-          value={sectionName}
-          onChangeText={setSectionName}
-          placeholder="Name your section"
-          placeholderTextColor="#999999"
-          autoFocus
-        />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <SafeAreaView style={styles.container}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialCommunityIcons name="chevron-left" size={32} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        <Text style={styles.subtitle}>or pick one from below</Text>
+          <View style={styles.content}>
+            <Text style={styles.title}>Great! Let's give a name to your{'\n'}new section.</Text>
+            
+            <TextInput
+              style={styles.input}
+              value={sectionName}
+              onChangeText={setSectionName}
+              placeholder="Name your section"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            />
 
-        <View style={styles.suggestionsContainer}>
-          {SUGGESTED_SECTIONS.map((section) => (
-            <TouchableOpacity
-              key={section}
-              style={styles.suggestionChip}
-              onPress={() => setSectionName(section)}
+            <Text style={styles.orText}>or pick one from below</Text>
+
+            <View style={styles.suggestionsContainer}>
+              {SUGGESTED_SECTIONS.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion}
+                  style={styles.suggestionButton}
+                  onPress={() => setSectionName(suggestion)}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.continueButton, !sectionName.trim() && styles.continueButtonDisabled]}
+              onPress={handleCreateSection}
+              disabled={!sectionName.trim()}
             >
-              <Text style={styles.suggestionText}>{section}</Text>
+              <Text style={styles.continueButtonText}>Continue</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
+        </SafeAreaView>
 
-        <TouchableOpacity
-          style={[styles.continueButton, !sectionName.trim() && styles.continueButtonDisabled]}
-          onPress={handleCreateSection}
-          disabled={!sectionName.trim()}
-        >
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
-
-      <PexelsImagePicker
-        visible={showPexelsPicker}
-        onClose={() => setShowPexelsPicker(false)}
-        onSelectPhotos={handleSelectPhotos}
-        initialSearchTerm={sectionName}
-      />
-    </SafeAreaView>
+        <PexelsImagePicker
+          visible={showPexelsPicker}
+          onClose={() => setShowPexelsPicker(false)}
+          onSelectPhotos={handleSelectPhotos}
+          initialSearchTerm={sectionName}
+        />
+      </LinearGradient>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
+    marginLeft: 16,
+    marginTop: 8,
   },
   content: {
     flex: 1,
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 40,
-    lineHeight: 36,
   },
   input: {
     fontSize: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#E31837',
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 8,
-    marginBottom: 32,
-    color: '#000000',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#999999',
+    color: '#FFFFFF',
     marginBottom: 24,
+  },
+  orText: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 16,
   },
   suggestionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginHorizontal: -4,
+    gap: 12,
+    marginBottom: 40,
   },
-  suggestionChip: {
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 8,
+  suggestionButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 100,
   },
   suggestionText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    color: '#000000',
+    fontWeight: '500',
   },
   continueButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     paddingVertical: 16,
-    borderRadius: 30,
+    borderRadius: 100,
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: Platform.OS === 'ios' ? 34 : 24,
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
   },
   continueButtonDisabled: {
     opacity: 0.5,
