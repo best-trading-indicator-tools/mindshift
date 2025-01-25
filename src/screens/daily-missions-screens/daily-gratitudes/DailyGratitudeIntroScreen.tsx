@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Dimensions, ViewStyle } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
@@ -33,8 +33,12 @@ const GRATITUDE_ANIMATIONS = {
   1: require('../../../assets/illustrations/intros/daily-gratitude/intro-1.lottie'),
   2: require('../../../assets/illustrations/intros/daily-gratitude/intro-2.lottie'),
   3: require('../../../assets/illustrations/intros/daily-gratitude/intro-3.lottie'), 
-  // 4: require('../../../../assets/illustrations/intros/daily-gratitude/intro-4.lottie'), // TODO: When available
+  4: require('../../../assets/illustrations/intros/daily-gratitude/intro-4.lottie'), 
 };
+
+const { width } = Dimensions.get('window');
+const ANIMATION_SIZE = width * 0.5; // 50% of screen width
+const SMALL_ANIMATION_SIZE = width * 0.35; // 35% of screen width for page 4
 
 const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -80,6 +84,35 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     console.log('DailyGratitudeIntro mounted with route params:', route.params);
   }, [route.params]);
 
+  const getLottieContainerStyle = (step: number): ViewStyle | ViewStyle[] => {
+    if (step === 4) {
+      return [
+        styles.lottieContainer,
+        {
+          width: SMALL_ANIMATION_SIZE,
+          height: SMALL_ANIMATION_SIZE,
+          marginBottom: 16,
+          marginTop: -8
+        }
+      ];
+    }
+    return styles.lottieContainer;
+  };
+
+  const getContentStyles = (step: number): ViewStyle | ViewStyle[] => {
+    if (step === 4) {
+      return [
+        styles.textContent,
+        {
+          paddingVertical: 0,
+          justifyContent: 'flex-start' as const,
+          marginTop: 16
+        }
+      ];
+    }
+    return styles.textContent;
+  };
+
   return (
     <LinearGradient 
       colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
@@ -107,10 +140,10 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <View style={styles.textContent}>
+          <View style={getContentStyles(currentStep)}>
             <Text style={styles.title}>{currentContent.title}</Text>
             
-            <View style={styles.lottieContainer}>
+            <View style={getLottieContainerStyle(currentStep)}>
               <LottieView
                 source={currentAnimation}
                 autoPlay
@@ -140,9 +173,6 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     </LinearGradient>
   );
 };
-
-const { width } = Dimensions.get('window');
-const ANIMATION_SIZE = width * 0.5; // 50% of screen width
 
 const styles = StyleSheet.create({
   container: {
@@ -234,7 +264,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#D4AF37',
-    width: '45%',
+    width: '60%',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
