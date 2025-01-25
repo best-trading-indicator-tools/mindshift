@@ -517,129 +517,136 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => {
-              if (isReorderMode) {
-                setIsReorderMode(false);
-              } else {
-                navigation.goBack();
-              }
-            }}
-          >
-            <MaterialCommunityIcons 
-              name={isReorderMode ? "close" : "chevron-left"} 
-              size={32} 
-              color="#FF4B8C" 
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>
-            {isReorderMode ? "Reorder Sections" : board?.name}
-          </Text>
-          <View style={styles.headerRight}>
-            {isReorderMode ? (
-              <TouchableOpacity 
-                style={styles.doneButton}
-                onPress={() => setIsReorderMode(false)}
-              >
-                <Text style={styles.doneText}>Done</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity 
-                style={styles.exitButton}
-                onPress={handleExit}
-              >
-                <Text style={styles.exitText}>Exit</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {board && (
-          <DraggableFlatList
-            data={board.sections}
-            onDragEnd={({ data }) => {
-              setBoard(prev => prev ? { ...prev, sections: data } : null);
-              saveNewOrder(data);
-            }}
-            keyExtractor={(item) => item.id}
-            renderItem={renderSectionItem}
-            dragItemOverflow={true}
-            activationDistance={20}
-            contentContainerStyle={styles.sectionsContainer}
-          />
-        )}
-
-        {!isReorderMode && (
-          <TouchableOpacity 
-            style={styles.newSectionButton}
-            onPress={() => navigation.navigate('NewVisionBoardSection', { boardId: board?.id })}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
-            <Text style={styles.newSectionText}>New Section</Text>
-          </TouchableOpacity>
-        )}
-
-        <Modal
-          visible={showMenu}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowMenu(false)}
+        <LinearGradient 
+          colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+          style={styles.container}
+          start={{x: 0.5, y: 0}}
+          end={{x: 0.5, y: 1}}
         >
-          <TouchableOpacity 
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowMenu(false)}
-          >
-            <View style={styles.menuContainer}>
-              <TouchableOpacity 
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  if (selectedSection?.id && selectedSection?.name) {
-                    navigation.navigate('VisionBoardEditSectionName', { 
-                      boardId,
-                      sectionId: selectedSection.id,
-                      currentName: selectedSection.name
-                    });
-                  }
-                }}
-              >
-                <Text style={styles.menuItemText}>Edit Section's Name</Text>
-                <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
-              </TouchableOpacity>
-              
-              <View style={styles.menuDivider} />
-              
-              <TouchableOpacity 
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  setIsReorderMode(true);
-                }}
-              >
-                <Text style={styles.menuItemText}>Move Section</Text>
-                <MaterialCommunityIcons name="drag" size={20} color="#000000" />
-              </TouchableOpacity>
-              
-              <View style={styles.menuDivider} />
-              
-              <TouchableOpacity 
-                style={[styles.menuItem, styles.deleteItem]}
-                onPress={() => {
-                  setShowMenu(false);
-                  if (selectedSection) {
-                    handleDeleteSection(selectedSection.id);
-                  }
-                }}
-              >
-                <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
-              </TouchableOpacity>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => {
+                if (isReorderMode) {
+                  setIsReorderMode(false);
+                } else {
+                  navigation.goBack();
+                }
+              }}
+            >
+              <MaterialCommunityIcons 
+                name={isReorderMode ? "close" : "chevron-left"} 
+                size={32} 
+                color="#FFFFFF" 
+              />
+            </TouchableOpacity>
+            <Text style={styles.title}>
+              {isReorderMode ? "Reorder Sections" : board?.name}
+            </Text>
+            <View style={styles.headerRight}>
+              {isReorderMode ? (
+                <TouchableOpacity 
+                  style={styles.doneButton}
+                  onPress={() => setIsReorderMode(false)}
+                >
+                  <Text style={styles.doneText}>Done</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.exitButton}
+                  onPress={handleExit}
+                >
+                  <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
+                </TouchableOpacity>
+              )}
             </View>
-          </TouchableOpacity>
-        </Modal>
+          </View>
+
+          {board && (
+            <DraggableFlatList
+              data={board.sections}
+              onDragEnd={({ data }) => {
+                setBoard(prev => prev ? { ...prev, sections: data } : null);
+                saveNewOrder(data);
+              }}
+              keyExtractor={(item) => item.id}
+              renderItem={renderSectionItem}
+              dragItemOverflow={true}
+              activationDistance={20}
+              contentContainerStyle={styles.sectionsContainer}
+            />
+          )}
+
+          {!isReorderMode && (
+            <TouchableOpacity 
+              style={styles.newSectionButton}
+              onPress={() => navigation.navigate('NewVisionBoardSection', { boardId: board?.id })}
+            >
+              <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+              <Text style={styles.newSectionText}>New Section</Text>
+            </TouchableOpacity>
+          )}
+
+          <Modal
+            visible={showMenu}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowMenu(false)}
+          >
+            <TouchableOpacity 
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setShowMenu(false)}
+            >
+              <View style={styles.menuContainer}>
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setShowMenu(false);
+                    if (selectedSection?.id && selectedSection?.name) {
+                      navigation.navigate('VisionBoardEditSectionName', { 
+                        boardId,
+                        sectionId: selectedSection.id,
+                        currentName: selectedSection.name
+                      });
+                    }
+                  }}
+                >
+                  <Text style={styles.menuItemText}>Edit Section's Name</Text>
+                  <MaterialCommunityIcons name="pencil" size={20} color="#000000" />
+                </TouchableOpacity>
+                
+                <View style={styles.menuDivider} />
+                
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setShowMenu(false);
+                    setIsReorderMode(true);
+                  }}
+                >
+                  <Text style={styles.menuItemText}>Move Section</Text>
+                  <MaterialCommunityIcons name="drag" size={20} color="#000000" />
+                </TouchableOpacity>
+                
+                <View style={styles.menuDivider} />
+                
+                <TouchableOpacity 
+                  style={[styles.menuItem, styles.deleteItem]}
+                  onPress={() => {
+                    setShowMenu(false);
+                    if (selectedSection) {
+                      handleDeleteSection(selectedSection.id);
+                    }
+                  }}
+                >
+                  <Text style={[styles.menuItemText, styles.deleteText]}>Delete Section</Text>
+                  <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF0000" />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </LinearGradient>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -648,7 +655,6 @@ const VisionBoardSectionsScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -656,23 +662,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
   },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    flex: 1,
+    textAlign: 'center',
+  },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 'auto',
-  },
   exitButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#D4AF37',
     borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
@@ -684,87 +687,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  content: {
-    flex: 1,
-    padding: PADDING_SIZE,
+  sectionsContainer: {
+    padding: 16,
+    paddingTop: 8,
+    backgroundColor: 'transparent',
+  },
+  sectionWrapper: {
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
-  },
-  boardInfo: {
-    marginBottom: 24,
-    paddingHorizontal: 8,
-  },
-  photoInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  totalPhotos: {
-    fontSize: 16,
-    color: '#666666',
-  },
-  seeAll: {
-    fontSize: 16,
-    color: '#FF4B8C',
-  },
-  section: {
-    marginBottom: 24,
   },
   sectionName: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 8,
-  },
-  photoGrid: {
-    marginBottom: 24,
-  },
-  masonryLayout: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 2,
-    alignItems: 'flex-start',
-  },
-  masonryItem: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#F5F5F5',
-  },
-  hero: {
-    width: '100%',
-    aspectRatio: 1.8,
-  },
-  vertical: {
-    width: '40%',
-    aspectRatio: 0.8,
-  },
-  horizontal: {
-    width: '59.5%',
-    aspectRatio: 1.4,
-  },
-  medium: {
-    width: '49.5%',
-    aspectRatio: 1.2,
-  },
-  small: {
-    width: '32.5%',
-    aspectRatio: 1,
-  },
-  placeholder: {
-    flex: 1,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smallPhotos: {
-    flex: 1,
-    gap: 8,
   },
   newSectionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 100,
@@ -778,10 +722,108 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  photo: {
+  menuContainer: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 12,
+    width: '80%',
+    maxWidth: 300,
+    padding: 8,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  doneButton: {
+    backgroundColor: '#D4AF37',
+    borderRadius: 100,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  doneText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    paddingTop: 16,
+    marginBottom: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5E5',
     width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  },
+  sectionContent: {
+    marginTop: 4,
+    paddingBottom: 16,
+  },
+  warningBubble: {
+    backgroundColor: 'rgba(255, 75, 106, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  warningText: {
+    color: '#FF4B6A',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  sectionHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  draggingSection: {
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    transform: [{ scale: 1.02 }],
+  },
+  reorderSection: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  dragHandle: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  deleteText: {
+    color: '#FF0000',
+  },
+  deleteItem: {
+    borderTopColor: '#E5E5E5',
+    borderTopWidth: 1,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E5E5',
+    marginHorizontal: 16,
+  },
+  menuButton: {
+    padding: 4,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#666666',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   collageContainer: {
     overflow: 'hidden',
@@ -868,119 +910,8 @@ const styles = StyleSheet.create({
     right: 0,
     height: '20%',
   },
-  sectionWrapper: {
-    marginBottom: 16,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    paddingHorizontal: 16,
-  },
-  sectionContent: {
-    marginTop: 4,
-    paddingBottom: 16,
-  },
-  warningBubble: {
-    backgroundColor: 'rgba(255, 75, 106, 0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 100,
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
-  warningText: {
-    color: '#FF4B6A',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  sectionHeader: {
-    paddingTop: 16,
-    marginBottom: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E5E5',
-    width: '100%',
-  },
-  stackedContainer: {
-    flex: 1,
-    height: (SECTION_SIZE - (SECTION_PADDING * 2)) / 2,
-    gap: GAP_SIZE,
-  },
-  stackedWide: {
-    width: '100%',
-    height: ((SECTION_SIZE - (SECTION_PADDING * 2)) / 2 - GAP_SIZE) / 2,
-  },
-  dynamicGrid: {
-    position: 'relative',
-    width: '100%',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    width: '80%',
-    maxWidth: 300,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#000000',
-  },
-  deleteText: {
-    color: '#FF0000',
-  },
-  deleteItem: {
-    borderTopColor: '#E5E5E5',
-    borderTopWidth: 1,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#E5E5E5',
-    marginHorizontal: 16,
-  },
-  menuButton: {
-    padding: 4,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#666666',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionHeaderContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
+  headerRight: {
+    width: 'auto',
   },
   loadingContainer: {
     flex: 1,
@@ -1016,40 +947,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 8,
   },
-  draggingSection: {
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    transform: [{ scale: 1.02 }],
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  reorderSection: {
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+  placeholder: {
+    flex: 1,
+    borderRadius: 8,
+    minHeight: 100,
   },
-  dragHandle: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  doneButton: {
-    backgroundColor: '#E31837',
-    borderRadius: 100,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  doneText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  sectionsContainer: {
-    padding: 16,
-    paddingTop: 8,
-    backgroundColor: '#F5F5F5',
+  dynamicGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: GAP_SIZE,
   },
 });
 

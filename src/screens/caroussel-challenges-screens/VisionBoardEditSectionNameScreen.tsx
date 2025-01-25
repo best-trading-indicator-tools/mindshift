@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VisionBoard } from './VisionBoardScreen';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VisionBoardEditSectionName'>;
 
@@ -52,33 +53,40 @@ const VisionBoardEditSectionNameScreen: React.FC<Props> = ({ navigation, route }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="chevron-left" size={32} color="#FF4B8C" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Edit Section Name</Text>
-        <TouchableOpacity 
-          style={styles.saveButton}
-          onPress={handleSave}
-        >
-          <Text style={styles.saveText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialCommunityIcons name="chevron-left" size={32} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Edit Section Name</Text>
+          <TouchableOpacity 
+            style={styles.saveButton}
+            onPress={handleSave}
+          >
+            <Text style={styles.saveText}>Save</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.content}>
-        <TextInput
-          style={styles.input}
-          value={newName}
-          onChangeText={setNewName}
-          placeholder="Enter section name"
-          placeholderTextColor="#999999"
-          autoFocus
-          maxLength={50}
-        />
-      </View>
+        <View style={styles.content}>
+          <TextInput
+            style={styles.input}
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="Enter section name"
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            autoFocus
+            maxLength={50}
+          />
+        </View>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
@@ -86,7 +94,6 @@ const VisionBoardEditSectionNameScreen: React.FC<Props> = ({ navigation, route }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -102,17 +109,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
     flex: 1,
     textAlign: 'center',
-    marginLeft: 40, // To center the title accounting for the save button
+    marginLeft: 40,
   },
   saveButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   saveText: {
-    color: '#FF4B8C',
+    color: '#D4AF37',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -122,9 +129,9 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 8,
-    color: '#000000',
+    color: '#FFFFFF',
   },
 });
 

@@ -121,7 +121,8 @@ export const DailyGratitudeAnalysisScreen: React.FC<Props> = ({ navigation, rout
 
 Guidelines:
 - Keep each paragraph short and focused
-- Highlight one key insight per section
+- Use the "You" pronoun as you're addressing the user directly
+- Highlight one key insight per section (3-4 sentences max per section)
 - Be encouraging and specific
 - Suggest one concrete way to deepen the practice
 

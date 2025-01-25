@@ -21,6 +21,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { LayoutTile } from '../../types/layout';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
 import { markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
+import LinearGradient from 'react-native-linear-gradient';
 
 export interface VisionBoardSection {
   id: string;
@@ -153,206 +154,213 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Vision Boards</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.exitButton}
-            onPress={handleExit}
-          >
-            <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => setShowNewBoardModal(true)}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Vision Boards</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.exitButton}
+              onPress={handleExit}
+            >
+              <MaterialCommunityIcons name="exit-to-app" size={24} color="#000000" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => setShowNewBoardModal(true)}
+            >
+              <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <ScrollView style={styles.content}>
-        {visionBoards.map((board) => (
-          <TouchableOpacity
-            key={board.id}
-            style={[
-              styles.boardCard,
-              styles.boardCardWithImage,
-              (!board.sections.length || !board.sections[0].photos.length) && styles.boardCardEmpty
-            ]}
-            onPress={() => {
-              if (board.sections.length === 0) {
-                navigation.navigate('NewVisionBoardSection', { 
-                  boardId: board.id,
-                  context: route.params?.context,
-                  challengeId: route.params?.challengeId,
-                  returnTo: route.params?.returnTo
-                });
-              } else {
-                navigation.navigate('VisionBoardSections', { 
-                  boardId: board.id,
-                  context: route.params?.context,
-                  challengeId: route.params?.challengeId,
-                  returnTo: route.params?.returnTo
-                });
-              }
-            }}
-          >
-            {board.sections.length > 0 && board.sections[0].photos.length > 0 ? (
-              <Image
-                source={{ uri: board.sections[0].photos[0] }}
-                style={styles.previewImage}
-              />
-            ) : (
-              <View style={styles.placeholderContainer}>
-                <MaterialCommunityIcons name="image-area" size={120} color="#666666" />
-              </View>
-            )}
-            <View style={[
-              styles.boardHeader,
-              board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.boardHeaderOverImage
-            ]}>
-              <View style={styles.boardTitleRow}>
-                <View>
-                  <Text style={[
-                    styles.boardName,
-                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
-                  ]}>{board.name}</Text>
-                  <Text style={[
-                    styles.sectionCount,
-                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
-                  ]}>{board.sections.length} {board.sections.length <= 1 ? 'Section' : 'Sections'}</Text>
+        <ScrollView style={styles.content}>
+          {visionBoards.map((board) => (
+            <TouchableOpacity
+              key={board.id}
+              style={[
+                styles.boardCard,
+                styles.boardCardWithImage,
+                (!board.sections.length || !board.sections[0].photos.length) && styles.boardCardEmpty
+              ]}
+              onPress={() => {
+                if (board.sections.length === 0) {
+                  navigation.navigate('NewVisionBoardSection', { 
+                    boardId: board.id,
+                    context: route.params?.context,
+                    challengeId: route.params?.challengeId,
+                    returnTo: route.params?.returnTo
+                  });
+                } else {
+                  navigation.navigate('VisionBoardSections', { 
+                    boardId: board.id,
+                    context: route.params?.context,
+                    challengeId: route.params?.challengeId,
+                    returnTo: route.params?.returnTo
+                  });
+                }
+              }}
+            >
+              {board.sections.length > 0 && board.sections[0].photos.length > 0 ? (
+                <Image
+                  source={{ uri: board.sections[0].photos[0] }}
+                  style={styles.previewImage}
+                />
+              ) : (
+                <View style={styles.placeholderContainer}>
+                  <MaterialCommunityIcons name="image-area" size={120} color="#666666" />
                 </View>
-                <TouchableOpacity
-                  style={styles.menuButton}
-                  onPress={() => {
-                    Alert.alert(
-                      board.name,
-                      '',
-                      [
-                        {
-                          text: "Edit Board's Name",
-                          onPress: () => {
-                            setEditingBoard(board);
-                            setShowEditModal(true);
-                          }
-                        },
-                        {
-                          text: 'Share With Friends',
-                          onPress: () => {
-                            // TODO: Implement share functionality
-                          }
-                        },
-                        {
-                          text: 'Delete Board',
-                          style: 'destructive',
-                          onPress: () => handleDeleteBoard(board)
-                        },
-                        {
-                          text: 'Cancel',
-                          style: 'cancel'
-                        }
-                      ]
-                    );
-                  }}
-                >
-                  <View style={[
-                    styles.menuButtonCircle,
-                    board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.menuButtonOverImage
-                  ]}>
-                    <MaterialCommunityIcons 
-                      name="dots-horizontal" 
-                      size={20} 
-                      color={board.sections.length > 0 && board.sections[0].photos.length > 0 ? "#FFFFFF" : "#666666"} 
-                    />
+              )}
+              <View style={[
+                styles.boardHeader,
+                board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.boardHeaderOverImage
+              ]}>
+                <View style={styles.boardTitleRow}>
+                  <View>
+                    <Text style={[
+                      styles.boardName,
+                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                    ]}>{board.name}</Text>
+                    <Text style={[
+                      styles.sectionCount,
+                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                    ]}>{board.sections.length} {board.sections.length <= 1 ? 'Section' : 'Sections'}</Text>
                   </View>
+                  <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => {
+                      Alert.alert(
+                        board.name,
+                        '',
+                        [
+                          {
+                            text: "Edit Board's Name",
+                            onPress: () => {
+                              setEditingBoard(board);
+                              setShowEditModal(true);
+                            }
+                          },
+                          {
+                            text: 'Share With Friends',
+                            onPress: () => {
+                              // TODO: Implement share functionality
+                            }
+                          },
+                          {
+                            text: 'Delete Board',
+                            style: 'destructive',
+                            onPress: () => handleDeleteBoard(board)
+                          },
+                          {
+                            text: 'Cancel',
+                            style: 'cancel'
+                          }
+                        ]
+                      );
+                    }}
+                  >
+                    <View style={[
+                      styles.menuButtonCircle,
+                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.menuButtonOverImage
+                    ]}>
+                      <MaterialCommunityIcons 
+                        name="dots-horizontal" 
+                        size={20} 
+                        color={board.sections.length > 0 && board.sections[0].photos.length > 0 ? "#FFFFFF" : "#666666"} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <TouchableOpacity 
+          style={styles.createNewBoardButton}
+          onPress={() => setShowNewBoardModal(true)}
+        >
+          <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
+          <Text style={styles.createNewBoardText}>Create a New Board</Text>
+        </TouchableOpacity>
+
+        {/* New Board Modal */}
+        <Modal
+          visible={showNewBoardModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowNewBoardModal(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowNewBoardModal(false)}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardAvoidingView}
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.handle} />
+                <Text style={styles.modalTitle}>Create New Vision Board</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newBoardName}
+                  onChangeText={setNewBoardName}
+                  placeholder="Vision Board 2025"
+                  placeholderTextColor="#666"
+                  autoFocus
+                />
+                <TouchableOpacity 
+                  style={[styles.createButton, !newBoardName.trim() && styles.createButtonDisabled]}
+                  onPress={handleCreateBoard}
+                  disabled={!newBoardName.trim()}
+                >
+                  <Text style={styles.createButtonText}>Create</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </KeyboardAvoidingView>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        </Modal>
 
-      <TouchableOpacity 
-        style={styles.createNewBoardButton}
-        onPress={() => setShowNewBoardModal(true)}
-      >
-        <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
-        <Text style={styles.createNewBoardText}>Create a New Board</Text>
-      </TouchableOpacity>
-
-      {/* New Board Modal */}
-      <Modal
-        visible={showNewBoardModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowNewBoardModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowNewBoardModal(false)}
+        {/* Edit Board Modal */}
+        <Modal
+          visible={showEditModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowEditModal(false)}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.keyboardAvoidingView}
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowEditModal(false)}
           >
             <View style={styles.modalContent}>
               <View style={styles.handle} />
-              <Text style={styles.modalTitle}>Create New Vision Board</Text>
+              <Text style={styles.modalTitle}>Edit Vision Board</Text>
               <TextInput
                 style={styles.input}
-                value={newBoardName}
-                onChangeText={setNewBoardName}
-                placeholder="Vision Board 2025"
+                value={editingBoard?.name || ''}
+                onChangeText={(text) => editingBoard && setEditingBoard({...editingBoard, name: text})}
+                placeholder="Vision Board Name"
                 placeholderTextColor="#666"
                 autoFocus
               />
               <TouchableOpacity 
-                style={[styles.createButton, !newBoardName.trim() && styles.createButtonDisabled]}
-                onPress={handleCreateBoard}
-                disabled={!newBoardName.trim()}
+                style={[styles.createButton, !editingBoard?.name.trim() && styles.createButtonDisabled]}
+                onPress={handleEditBoard}
+                disabled={!editingBoard?.name.trim()}
               >
-                <Text style={styles.createButtonText}>Create</Text>
+                <Text style={styles.createButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Edit Board Modal */}
-      <Modal
-        visible={showEditModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowEditModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.handle} />
-            <Text style={styles.modalTitle}>Edit Vision Board</Text>
-            <TextInput
-              style={styles.input}
-              value={editingBoard?.name || ''}
-              onChangeText={(text) => editingBoard && setEditingBoard({...editingBoard, name: text})}
-              placeholder="Vision Board Name"
-              placeholderTextColor="#666"
-              autoFocus
-            />
-            <TouchableOpacity 
-              style={[styles.createButton, !editingBoard?.name.trim() && styles.createButtonDisabled]}
-              onPress={handleEditBoard}
-              disabled={!editingBoard?.name.trim()}
-            >
-              <Text style={styles.createButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+          </TouchableOpacity>
+        </Modal>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
@@ -360,7 +368,6 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -371,12 +378,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   addButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -384,10 +391,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   boardCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -439,12 +446,12 @@ const styles = StyleSheet.create({
   boardName: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   sectionCount: {
     fontSize: 16,
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   menuButton: {
     padding: 4,
@@ -459,7 +466,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   createNewBoardButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -486,19 +493,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1C1C1E',
     borderRadius: 20,
     padding: 20,
     paddingTop: 12,
     margin: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   handle: {
     width: 40,
@@ -512,19 +511,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
     fontSize: 18,
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 24,
   },
   createButton: {
-    backgroundColor: '#E31837',
+    backgroundColor: '#D4AF37',
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: 'center',
@@ -545,7 +544,7 @@ const styles = StyleSheet.create({
   exitButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#D4AF37',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -556,13 +555,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   boardCardEmpty: {
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
 
