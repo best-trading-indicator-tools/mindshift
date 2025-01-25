@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Dimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import ProgressHeader from '../../../components/ProgressHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyGratitudeIntro'>;
 
@@ -27,6 +28,9 @@ const introContent = [
     content: "✨ \"I'm grateful for my friend because they always listen without judgment\"\n\nvs\n\n\"I'm grateful for my friend\"\n\nFeel the difference?"
   }
 ];
+
+// Temporarily use the same animation for all steps
+const GRATITUDE_ANIMATION = require('../../../assets/illustrations/intros/daily-gratitude/intro-1.lottie');
 
 const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -99,12 +103,18 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.content}>
           <View style={styles.textContent}>
-            {currentContent && (
-              <>
-                <Text style={styles.title}>{currentContent.title}</Text>
-                <Text style={styles.description}>{currentContent.content}</Text>
-              </>
-            )}
+            <Text style={styles.title}>{currentContent.title}</Text>
+            
+            <View style={styles.lottieContainer}>
+              <LottieView
+                source={GRATITUDE_ANIMATION}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+
+            <Text style={styles.description}>{currentContent.content}</Text>
           </View>
         </View>
 
@@ -125,6 +135,9 @@ const DailyGratitudeIntroScreen: React.FC<Props> = ({ navigation, route }) => {
     </LinearGradient>
   );
 };
+
+const { width } = Dimensions.get('window');
+const ANIMATION_SIZE = width * 0.5; // 50% of screen width
 
 const styles = StyleSheet.create({
   container: {
@@ -147,9 +160,20 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 32,
+    marginBottom: 24,
     textAlign: 'center',
     letterSpacing: 0.5,
+  },
+  lottieContainer: {
+    width: ANIMATION_SIZE,
+    height: ANIMATION_SIZE,
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
   },
   description: {
     fontSize: 19,
@@ -196,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#D4AF37',
     width: '45%',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -204,7 +228,7 @@ const styles = StyleSheet.create({
   nextButtonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#BFA030',
   },
   nextButtonText: {
     color: '#FFFFFF',
