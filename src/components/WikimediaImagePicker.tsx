@@ -19,6 +19,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { searchWikimediaImages } from '../services/mentorBoardService';
 import { WikimediaSearchResult, MentorImage } from '../types/mentorBoard';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface Props {
   visible: boolean;
@@ -226,131 +227,139 @@ const WikimediaImagePicker: React.FC<Props> = ({
       animationType="slide"
       onRequestClose={handleClose}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.container}
-        >
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={24} color="#000000" />
-            </TouchableOpacity>
-            <Text style={styles.title}>Choose a Mentor</Text>
-            <View style={styles.placeholder} />
-          </View>
-
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search for mentors..."
-              value={searchTerm}
-              onChangeText={(text) => {
-                setSearchTerm(text);
-                fetchSuggestions(text);
-              }}
-              onSubmitEditing={() => {
-                handleSearch();
-                setShowSuggestions(false);
-                setSuggestions([]);
-              }}
-              returnKeyType="search"
-            />
-            <TouchableOpacity 
-              style={styles.searchButton} 
-              onPress={() => {
-                handleSearch();
-                setShowSuggestions(false);
-                setSuggestions([]);
-              }}
-            >
-              <MaterialCommunityIcons name="magnify" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-
-          {showSuggestions && suggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
-              {suggestions.map((suggestion) => (
-                <TouchableOpacity
-                  key={suggestion.label}
-                  style={styles.suggestionItem}
-                  onPress={() => {
-                    setSearchTerm(suggestion.label);
-                    setShowSuggestions(false);
-                    setSuggestions([]);
-                    handleSearch();
-                  }}
-                >
-                  <MaterialCommunityIcons name="account" size={20} color="#666666" />
-                  <View style={styles.suggestionTextContainer}>
-                    <Text style={styles.suggestionText}>{suggestion.label}</Text>
-                    <Text style={styles.suggestionDescription}>{suggestion.description}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <SafeAreaView style={styles.safeContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+          >
+            <View style={styles.header}>
+              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.title}>Choose a Mentor</Text>
+              <View style={styles.placeholder} />
             </View>
-          )}
 
-          {loading ? (
-            <View style={styles.centerContainer}>
-              <ActivityIndicator size="large" color="#6366F1" />
-            </View>
-          ) : error ? (
-            <View style={styles.centerContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={handleSearch}>
-                <Text style={styles.retryText}>Retry</Text>
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search for mentors..."
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                value={searchTerm}
+                onChangeText={(text) => {
+                  setSearchTerm(text);
+                  fetchSuggestions(text);
+                }}
+                onSubmitEditing={() => {
+                  handleSearch();
+                  setShowSuggestions(false);
+                  setSuggestions([]);
+                }}
+                returnKeyType="search"
+              />
+              <TouchableOpacity 
+                style={styles.searchButton} 
+                onPress={() => {
+                  handleSearch();
+                  setShowSuggestions(false);
+                  setSuggestions([]);
+                }}
+              >
+                <MaterialCommunityIcons name="magnify" size={24} color="#000000" />
               </TouchableOpacity>
             </View>
-          ) : results.length === 0 ? (
-            <View style={styles.centerContainer}>
-              <Text style={styles.noResultsText}>
-                {searchTerm ? 'No results found' : 'Search for mentors to get started'}
-              </Text>
-            </View>
-          ) : (
-            <>
-              <FlatList
-                data={results}
-                renderItem={renderImageItem}
-                keyExtractor={(item) => item.pageid.toString()}
-                numColumns={3}
-                contentContainerStyle={styles.gridContainer}
-              />
-              {selectedImages.length > 0 && (
-                <View style={styles.bottomBar}>
-                  <ScrollView 
-                    horizontal 
-                    style={styles.selectedImagesScroll}
-                    contentContainerStyle={styles.selectedImagesContent}
-                  >
-                    {selectedImages.map((image) => (
-                      <TouchableOpacity
-                        key={image.pageid}
-                        style={styles.selectedThumbnailContainer}
-                        onPress={() => handleSelectImage(image)}
-                      >
-                        <Image
-                          source={{ uri: image.thumbnail?.source }}
-                          style={styles.selectedThumbnail}
-                        />
-                        <View style={styles.removeButton}>
-                          <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+
+            {showSuggestions && suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                {suggestions.map((suggestion) => (
                   <TouchableOpacity
-                    style={styles.nextButton}
-                    onPress={handleConfirmSelection}
+                    key={suggestion.label}
+                    style={styles.suggestionItem}
+                    onPress={() => {
+                      setSearchTerm(suggestion.label);
+                      setShowSuggestions(false);
+                      setSuggestions([]);
+                      handleSearch();
+                    }}
                   >
-                    <MaterialCommunityIcons name="arrow-right" size={24} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="account" size={20} color="#666666" />
+                    <View style={styles.suggestionTextContainer}>
+                      <Text style={styles.suggestionText}>{suggestion.label}</Text>
+                      <Text style={styles.suggestionDescription}>{suggestion.description}</Text>
+                    </View>
                   </TouchableOpacity>
-                </View>
-              )}
-            </>
-          )}
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+                ))}
+              </View>
+            )}
+
+            {loading ? (
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color="#6366F1" />
+              </View>
+            ) : error ? (
+              <View style={styles.centerContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={handleSearch}>
+                  <Text style={styles.retryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : results.length === 0 ? (
+              <View style={styles.centerContainer}>
+                <Text style={styles.noResultsText}>
+                  {searchTerm ? 'No results found' : 'Search for mentors to get started'}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <FlatList
+                  data={results}
+                  renderItem={renderImageItem}
+                  keyExtractor={(item) => item.pageid.toString()}
+                  numColumns={3}
+                  contentContainerStyle={styles.gridContainer}
+                />
+                {selectedImages.length > 0 && (
+                  <View style={styles.bottomBar}>
+                    <ScrollView 
+                      horizontal 
+                      style={styles.selectedImagesScroll}
+                      contentContainerStyle={styles.selectedImagesContent}
+                    >
+                      {selectedImages.map((image) => (
+                        <TouchableOpacity
+                          key={image.pageid}
+                          style={styles.selectedThumbnailContainer}
+                          onPress={() => handleSelectImage(image)}
+                        >
+                          <Image
+                            source={{ uri: image.thumbnail?.source }}
+                            style={styles.selectedThumbnail}
+                          />
+                          <View style={styles.removeButton}>
+                            <MaterialCommunityIcons name="close" size={16} color="#FFFFFF" />
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={handleConfirmSelection}
+                    >
+                      <MaterialCommunityIcons name="arrow-right" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </LinearGradient>
     </Modal>
   );
 };
@@ -358,9 +367,11 @@ const WikimediaImagePicker: React.FC<Props> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
+    flex: 1,
+  },
+  safeContainer: {
     flex: 1,
   },
   header: {
@@ -370,8 +381,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 12 : 16,
     paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    marginTop: Platform.OS === 'ios' ? 44 : 16,
+    backgroundColor: 'transparent',
   },
   closeButton: {
     padding: 8,
@@ -380,7 +390,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   placeholder: {
     width: 40,
@@ -394,15 +404,16 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 44,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
+    color: '#FFFFFF',
   },
   searchButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#FF0000',
+    backgroundColor: '#D4AF37',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -416,16 +427,16 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   selectedImageItem: {
     borderWidth: 2,
-    borderColor: '#FF0000',
+    borderColor: '#D4AF37',
   },
   thumbnail: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   selectedOverlay: {
     position: 'absolute',
@@ -448,24 +459,22 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#D4AF37',
     borderRadius: 8,
   },
   retryText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
   },
   noResultsText: {
-    color: '#6B7280',
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 16,
     textAlign: 'center',
   },
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -482,7 +491,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   selectedThumbnail: {
     width: 48,
