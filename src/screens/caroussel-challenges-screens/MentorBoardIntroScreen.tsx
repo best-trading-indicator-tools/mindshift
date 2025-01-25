@@ -8,10 +8,12 @@ import {
   SafeAreaView,
   Platform,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import ProgressHeader from '../../components/ProgressHeader';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MentorBoardIntro'>;
 
@@ -107,33 +109,46 @@ const MentorBoardIntroScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <ProgressHeader
-        currentStep={currentPage + 1}
-        totalSteps={TOTAL_STEPS}
-        onNext={handleNext}
-        onExit={handleExit}
-        showNext={true}
-      />
-      {renderPage()}
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity 
-          style={styles.nextButton}
-          onPress={handleNext}
-        >
-          <Text style={styles.nextButtonText}>
-            {currentPage === 2 ? 'Start Exercise' : 'Next'}
-          </Text>
-        </TouchableOpacity>
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <View style={styles.mainContainer}>
+        <ProgressHeader
+          currentStep={currentPage + 1}
+          totalSteps={TOTAL_STEPS}
+          onNext={handleNext}
+          onExit={handleExit}
+          showNext={true}
+        />
+        {renderPage()}
+        <View style={styles.nextButtonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.nextButton,
+              pressed && styles.nextButtonPressed
+            ]}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextButtonText}>
+              {currentPage === 2 ? 'Start Exercise' : 'Next'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+  },
+  mainContainer: {
+    flex: 1,
+    paddingBottom: 16,
   },
   scrollView: {
     flex: 1,
@@ -144,11 +159,13 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 42,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 24,
+    marginBottom: 32,
     marginTop: 0,
-    textAlign: 'left',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
   },
   illustrationContainer: {
     flex: 1,
@@ -165,9 +182,10 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   explanationText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    lineHeight: 28,
+    fontSize: 19,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 32,
+    letterSpacing: 0.3,
   },
   mentorsList: {
     flex: 1,
@@ -175,29 +193,45 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   mentorItem: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    lineHeight: 22,
+    fontSize: 17,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 24,
+    letterSpacing: 0.3,
   },
   boldText: {
     fontWeight: '700',
   },
-  bottomContainer: {
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 40,
-    marginBottom: 40,
+  nextButtonContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 48,
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   nextButton: {
-    backgroundColor: '#E31837',
     paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
+    paddingHorizontal: 40,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D4AF37',
+    width: '60%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  nextButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+    backgroundColor: '#BFA030',
   },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 });
 
