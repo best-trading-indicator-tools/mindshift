@@ -306,12 +306,12 @@ const getCarouselCompletionMessage = (exerciseId: string) => {
     case 'mentor-board':
       return {
         title: '🌟 Mentor Board Created',
-        message: 'Fantastic! You\'ve created your personal board of mentors. Let them inspire your journey ahead!'
+        message: 'Fantastic! You\'ve created your personal board of mentors.\nLet them inspire your journey ahead!'
       };
     case 'vision-board':
       return {
         title: '✨ Vision Board Created',
-        message: 'Amazing! You\'ve visualized your dreams. Keep this vision close as you work towards your goals!'
+        message: 'Amazing! You\'ve visualized your dreams.\nKeep this vision close as you work towards your goals!'
       };
     default:
       return {

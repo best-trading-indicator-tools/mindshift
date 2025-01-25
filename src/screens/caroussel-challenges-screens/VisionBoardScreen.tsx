@@ -22,6 +22,7 @@ import { LayoutTile } from '../../types/layout';
 import { markExerciseAsCompleted } from '../../services/exerciseService';
 import { markChallengeExerciseAsCompleted } from '../../utils/exerciseCompletion';
 import LinearGradient from 'react-native-linear-gradient';
+import { markCarouselExerciseAsCompleted } from '../../utils/exerciseCompletion';
 
 export interface VisionBoardSection {
   id: string;
@@ -83,7 +84,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
           if (route.params?.context === 'challenge' && route.params.challengeId) {
             await markChallengeExerciseAsCompleted(route.params.challengeId, 'vision-board');
           } else {
-            await markExerciseAsCompleted('vision-board', 'Vision Board');
+            await markCarouselExerciseAsCompleted('vision-board');
           }
         }
       }
