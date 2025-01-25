@@ -153,13 +153,13 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient 
-        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
-        style={styles.container}
-        start={{x: 0.5, y: 0}}
-        end={{x: 0.5, y: 1}}
-      >
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Vision Boards</Text>
           <View style={styles.headerRight}>
@@ -178,107 +178,108 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
-        <ScrollView style={styles.content}>
-          {visionBoards.map((board) => (
-            <TouchableOpacity
-              key={board.id}
-              style={[
-                styles.boardCard,
-                styles.boardCardWithImage,
-                (!board.sections.length || !board.sections[0].photos.length) && styles.boardCardEmpty
-              ]}
-              onPress={() => {
-                if (board.sections.length === 0) {
-                  navigation.navigate('NewVisionBoardSection', { 
-                    boardId: board.id,
-                    context: route.params?.context,
-                    challengeId: route.params?.challengeId,
-                    returnTo: route.params?.returnTo
-                  });
-                } else {
-                  navigation.navigate('VisionBoardSections', { 
-                    boardId: board.id,
-                    context: route.params?.context,
-                    challengeId: route.params?.challengeId,
-                    returnTo: route.params?.returnTo
-                  });
-                }
-              }}
-            >
-              {board.sections.length > 0 && board.sections[0].photos.length > 0 ? (
-                <Image
-                  source={{ uri: board.sections[0].photos[0] }}
-                  style={styles.previewImage}
-                />
-              ) : (
-                <View style={styles.placeholderContainer}>
-                  <MaterialCommunityIcons name="image-area" size={120} color="#666666" />
-                </View>
-              )}
-              <View style={[
-                styles.boardHeader,
-                board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.boardHeaderOverImage
-              ]}>
-                <View style={styles.boardTitleRow}>
-                  <View>
-                    <Text style={[
-                      styles.boardName,
-                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
-                    ]}>{board.name}</Text>
-                    <Text style={[
-                      styles.sectionCount,
-                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
-                    ]}>{board.sections.length} {board.sections.length <= 1 ? 'Section' : 'Sections'}</Text>
+        <View style={styles.contentContainer}>
+          <ScrollView style={styles.content}>
+            {visionBoards.map((board) => (
+              <TouchableOpacity
+                key={board.id}
+                style={[
+                  styles.boardCard,
+                  styles.boardCardWithImage,
+                  (!board.sections.length || !board.sections[0].photos.length) && styles.boardCardEmpty
+                ]}
+                onPress={() => {
+                  if (board.sections.length === 0) {
+                    navigation.navigate('NewVisionBoardSection', { 
+                      boardId: board.id,
+                      context: route.params?.context,
+                      challengeId: route.params?.challengeId,
+                      returnTo: route.params?.returnTo
+                    });
+                  } else {
+                    navigation.navigate('VisionBoardSections', { 
+                      boardId: board.id,
+                      context: route.params?.context,
+                      challengeId: route.params?.challengeId,
+                      returnTo: route.params?.returnTo
+                    });
+                  }
+                }}
+              >
+                {board.sections.length > 0 && board.sections[0].photos.length > 0 ? (
+                  <Image
+                    source={{ uri: board.sections[0].photos[0] }}
+                    style={styles.previewImage}
+                  />
+                ) : (
+                  <View style={styles.placeholderContainer}>
+                    <MaterialCommunityIcons name="image-area" size={120} color="#666666" />
                   </View>
-                  <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={() => {
-                      Alert.alert(
-                        board.name,
-                        '',
-                        [
-                          {
-                            text: "Edit Board's Name",
-                            onPress: () => {
-                              setEditingBoard(board);
-                              setShowEditModal(true);
-                            }
-                          },
-                          {
-                            text: 'Share With Friends',
-                            onPress: () => {
-                              // TODO: Implement share functionality
-                            }
-                          },
-                          {
-                            text: 'Delete Board',
-                            style: 'destructive',
-                            onPress: () => handleDeleteBoard(board)
-                          },
-                          {
-                            text: 'Cancel',
-                            style: 'cancel'
-                          }
-                        ]
-                      );
-                    }}
-                  >
-                    <View style={[
-                      styles.menuButtonCircle,
-                      board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.menuButtonOverImage
-                    ]}>
-                      <MaterialCommunityIcons 
-                        name="dots-horizontal" 
-                        size={20} 
-                        color={board.sections.length > 0 && board.sections[0].photos.length > 0 ? "#FFFFFF" : "#666666"} 
-                      />
+                )}
+                <View style={[
+                  styles.boardHeader,
+                  board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.boardHeaderOverImage
+                ]}>
+                  <View style={styles.boardTitleRow}>
+                    <View>
+                      <Text style={[
+                        styles.boardName,
+                        board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                      ]}>{board.name}</Text>
+                      <Text style={[
+                        styles.sectionCount,
+                        board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.textOverImage
+                      ]}>{board.sections.length} {board.sections.length <= 1 ? 'Section' : 'Sections'}</Text>
                     </View>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.menuButton}
+                      onPress={() => {
+                        Alert.alert(
+                          board.name,
+                          '',
+                          [
+                            {
+                              text: "Edit Board's Name",
+                              onPress: () => {
+                                setEditingBoard(board);
+                                setShowEditModal(true);
+                              }
+                            },
+                            {
+                              text: 'Share With Friends',
+                              onPress: () => {
+                                // TODO: Implement share functionality
+                              }
+                            },
+                            {
+                              text: 'Delete Board',
+                              style: 'destructive',
+                              onPress: () => handleDeleteBoard(board)
+                            },
+                            {
+                              text: 'Cancel',
+                              style: 'cancel'
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <View style={[
+                        styles.menuButtonCircle,
+                        board.sections.length > 0 && board.sections[0].photos.length > 0 && styles.menuButtonOverImage
+                      ]}>
+                        <MaterialCommunityIcons 
+                          name="dots-horizontal" 
+                          size={20} 
+                          color={board.sections.length > 0 && board.sections[0].photos.length > 0 ? "#FFFFFF" : "#666666"} 
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           <TouchableOpacity 
             style={styles.createNewBoardButton}
@@ -287,6 +288,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
             <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" style={styles.createButtonIcon} />
             <Text style={styles.createNewBoardText}>Create a New Board</Text>
           </TouchableOpacity>
+        </View>
 
         {/* New Board Modal */}
         <Modal
@@ -360,15 +362,18 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
         </Modal>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
   },
   header: {
     flexDirection: 'row',
