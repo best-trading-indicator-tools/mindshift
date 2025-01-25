@@ -368,6 +368,7 @@ const VisionBoardScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0F172A',
   },
   header: {
     flexDirection: 'row',
@@ -392,6 +393,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: 'transparent',
+    paddingBottom: 100,
   },
   boardCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -474,6 +476,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 20,
     marginBottom: 20,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   createButtonIcon: {
     marginRight: 8,
