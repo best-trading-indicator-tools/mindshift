@@ -26,6 +26,7 @@ import AudioRecorderPlayer, {
 import { PermissionsAndroid } from 'react-native';
 import OpenAI from 'openai';
 import Config from 'react-native-config';
+import LinearGradient from 'react-native-linear-gradient';
 
 const openai = new OpenAI({
   apiKey: Config.OPENAI_API_KEY,
@@ -381,85 +382,92 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <TouchableOpacity 
-          style={styles.exitButton}
-          onPress={handleExitPress}
-        >
-          <MaterialCommunityIcons name="close" size={24} color="#B91C1C" />
-        </TouchableOpacity>
+      <LinearGradient 
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']} 
+        style={styles.container}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <TouchableOpacity 
+            style={styles.exitButton}
+            onPress={handleExitPress}
+          >
+            <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>What are you grateful for today?</Text>
-          <Text style={styles.subtitle}>Type your gratitude or record it with your voice</Text>
-          
-          {entries.map((entry, index) => (
-            <View key={index} style={styles.entryContainer}>
-              <Text style={styles.entryNumber}>{index + 1}.</Text>
-              <View style={styles.entryInputs}>
-                <View style={styles.inputContainer}>
-                  <View style={styles.labelRow}>
-                    <Text style={styles.inputLabel}>I am grateful for...</Text>
-                    <TouchableOpacity
-                      style={[styles.recordButton]}
-                      onPress={() => handleStartRecording(index)}
-                    >
-                      <MaterialCommunityIcons
-                        name="microphone"
-                        size={24}
-                        color="#B91C1C"
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+            <Text style={styles.title}>What are you grateful for today?</Text>
+            <Text style={styles.subtitle}>Type your gratitude or record it with your voice</Text>
+            
+            {entries.map((entry, index) => (
+              <View key={index} style={styles.entryContainer}>
+                <Text style={styles.entryNumber}>{index + 1}.</Text>
+                <View style={styles.entryInputs}>
+                  <View style={styles.inputContainer}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.inputLabel}>I am grateful for...</Text>
+                      <TouchableOpacity
+                        style={[styles.recordButton]}
+                        onPress={() => handleStartRecording(index)}
+                      >
+                        <MaterialCommunityIcons
+                          name="microphone"
+                          size={24}
+                          color="#FFFFFF"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        style={[styles.input, styles.inputWithButton]}
+                        value={entry.what}
+                        onChangeText={(text) => handleUpdateEntry(text, index, 'what')}
+                        placeholder="what are you grateful for?"
+                        placeholderTextColor="rgba(255, 255, 255, 0.7)"
+                        multiline
                       />
-                    </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      style={[styles.input, styles.inputWithButton]}
-                      value={entry.what}
-                      onChangeText={(text) => handleUpdateEntry(text, index, 'what')}
-                      placeholder="what are you grateful for?"
-                      placeholderTextColor="#666"
-                      multiline
-                    />
-                  </View>
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>because...</Text>
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      style={[styles.input, styles.inputWithButton]}
-                      value={entry.why}
-                      onChangeText={(text) => handleUpdateEntry(text, index, 'why')}
-                      placeholder="why are you grateful for it?"
-                      placeholderTextColor="#666"
-                      multiline
-                    />
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>because...</Text>
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        style={[styles.input, styles.inputWithButton]}
+                        value={entry.why}
+                        onChangeText={(text) => handleUpdateEntry(text, index, 'why')}
+                        placeholder="why are you grateful for it?"
+                        placeholderTextColor="rgba(255, 255, 255, 0.7)"
+                        multiline
+                      />
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          ))}
-          
-          <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={handleAddEntry}
-          >
-            <Text style={styles.addButtonText}>+ Add Another</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            ))}
+            
+            <TouchableOpacity 
+              style={styles.addButton} 
+              onPress={handleAddEntry}
+            >
+              <Text style={styles.addButtonText}>+ Add Another</Text>
+            </TouchableOpacity>
+          </ScrollView>
 
-        <TouchableOpacity 
-          style={[
-            styles.completeButton,
-            !isComplete() && styles.completeButtonDisabled
-          ]}
-          onPress={handleComplete}
-          disabled={!isComplete()}
-        >
-          <Text style={styles.completeButtonText}>
-            {isComplete() ? "I'm done" : `Add ${MIN_ENTRIES - entries.filter(isEntryComplete).length} More`}
-          </Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+          <TouchableOpacity 
+            style={[
+              styles.completeButton,
+              !isComplete() && styles.completeButtonDisabled
+            ]}
+            onPress={handleComplete}
+            disabled={!isComplete()}
+          >
+            <Text style={styles.completeButtonText}>
+              {isComplete() ? "I'm done" : `Add ${MIN_ENTRIES - entries.filter(isEntryComplete).length} More`}
+            </Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </LinearGradient>
 
       <Modal
         visible={showExitModal}
@@ -496,7 +504,6 @@ const DailyGratitudeScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   safeArea: {
     flex: 1,
@@ -513,7 +520,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     margin: 12,
@@ -522,14 +529,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
     marginBottom: 24,
     marginTop: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 24,
     textAlign: 'center',
   },
@@ -539,7 +546,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   entryNumber: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 18,
     marginRight: 10,
     marginTop: 12,
@@ -559,17 +566,17 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginLeft: 4,
   },
   input: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 15,
     padding: 15,
     fontSize: 16,
     minHeight: 50,
-    color: '#000000',
+    color: '#FFFFFF',
   },
   addButton: {
     alignSelf: 'flex-start',
@@ -578,12 +585,12 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   addButtonText: {
-    color: '#B91C1C',
+    color: '#D4AF37',
     fontSize: 16,
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: '#B91C1C',
+    backgroundColor: '#D4AF37',
     paddingHorizontal: 50,
     paddingVertical: 20,
     borderRadius: 40,
@@ -596,6 +603,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   completeButtonDisabled: {
     opacity: 0.5,
@@ -629,7 +638,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -692,13 +701,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 4,
   },
   recordingActive: {
-    backgroundColor: '#B91C1C',
+    backgroundColor: '#D4AF37',
   },
   recordingModalContent: {
     backgroundColor: '#1C1C1E',
