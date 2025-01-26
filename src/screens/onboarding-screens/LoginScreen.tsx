@@ -226,7 +226,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       console.log('🚀 LoginScreen: Google sign in successful, navigating to PostQuestionnaire');
       navigation.replace('PostQuestionnaire');
     } catch (error) {
-      console.error('❌ LoginScreen: Google sign in error:', error);
+      //console.error('❌ LoginScreen: Google sign in error:', error);
       handleAuthError(error);
     } finally {
       setLoading(false);
@@ -244,26 +244,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
       });
 
+      // If the user cancelled the login or no response, return silently
+      if (!appleAuthRequestResponse || !appleAuthRequestResponse.identityToken) {
+        console.log('User cancelled Apple sign in or no response received');
+        return;
+      }
+
       const { identityToken, nonce } = appleAuthRequestResponse;
       
-      if (identityToken) {
-        console.log('🔄 LoginScreen: Got Apple identity token, creating credential');
-        const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
-        const userCredential = await auth().signInWithCredential(appleCredential);
-        await createUserProfile(userCredential.user);
-        
-        console.log('🚀 LoginScreen: Apple sign in successful, navigating to PostQuestionnaire');
-        navigation.replace('PostQuestionnaire');
-      } else {
-        throw new Error('No identity token provided');
-      }
+      console.log('🔄 LoginScreen: Got Apple identity token, creating credential');
+      const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
+      const userCredential = await auth().signInWithCredential(appleCredential);
+      await createUserProfile(userCredential.user);
+      
+      console.log('🚀 LoginScreen: Apple sign in successful, navigating to PostQuestionnaire');
+      navigation.replace('PostQuestionnaire');
     } catch (error: any) {
-      console.error('❌ LoginScreen: Apple sign in error:', error);
-      if (error.code === 1000) {
-        setError('Please ensure you are signed in to your Apple ID in device settings and try again');
-      } else {
-        handleAuthError(error);
+      // Handle all possible cancellation scenarios silently
+      if (error.code === 1000 || // Standard cancellation code
+          error.code === 'auth/cancelled-popup-request' ||
+          (typeof error.message === 'string' && (
+            error.message.toLowerCase().includes('cancel') ||
+            error.message.toLowerCase().includes('cancelled') ||
+            error.message.toLowerCase().includes('popup closed') ||
+            error.message.toLowerCase().includes('operation could not be completed')
+          ))
+      ) {
+        console.log('Sign in cancelled or interrupted');
+        return;
       }
+
+      //console.error('❌ LoginScreen: Apple sign in error:', error);
+      // Only show error for genuine failures
+      setError('Unable to sign in with Apple at the moment. Please try again later.');
     } finally {
       setLoading(false);
     }
