@@ -291,10 +291,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaProvider>
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}>
+        style={styles.keyboardView}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled">
@@ -314,7 +319,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#666666"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 value={email}
                 onChangeText={handleEmailChange}
                 onFocus={() => emailFocus.value = 1}
@@ -330,7 +335,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Password"
-                placeholderTextColor="#666666"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 value={password}
                 onChangeText={handlePasswordChange}
                 onFocus={() => passwordFocus.value = 1}
@@ -402,14 +407,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaProvider>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -428,7 +435,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '100%',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     overflow: 'hidden',
     marginBottom: 4,
@@ -440,7 +447,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#D4AF37',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -455,7 +462,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   toggleText: {
-    color: '#FFD700',
+    color: '#D4AF37',
     fontSize: 14,
     marginTop: 20
   },
@@ -468,7 +475,7 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#3A3A3A',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   dividerText: {
     color: '#FFFFFF',
@@ -483,18 +490,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 12,
-    backgroundColor: '#2A2A2A',
-    height: 74, // Fixed height to accommodate the 50x50 icon
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    height: 74,
   },
   googleButton: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   appleButton: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   socialIcon: {
     width: 70,
@@ -507,7 +512,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
     textAlign: 'center',
-    marginRight: 50, // To center the text accounting for the icon
+    marginRight: 50,
   },
   errorText: {
     color: '#FF6B6B',
@@ -522,7 +527,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   forgotPasswordText: {
-    color: '#FFD700',
+    color: '#D4AF37',
     fontSize: 14,
     marginTop: 10,
     marginBottom: 10,
