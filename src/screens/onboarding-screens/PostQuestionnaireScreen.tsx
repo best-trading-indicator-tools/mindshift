@@ -33,66 +33,7 @@ const setupAudioFile = async (url: string): Promise<string> => {
 };
 
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
-  // Get the main stress point from questionnaire responses
-  const getPersonalizedMessage = async () => {
-    const responses = await getQuestionnaireResponses();
-    if (!responses) return "We've crafted a personalized program to help you achieve mental clarity and emotional well-being.";
-    
-    // This is a placeholder - implement the logic based on actual responses structure
-    if (responses.stressLevel > 3) {
-      return "Based on your responses, stress management appears to be your key focus. Our program is perfectly suited to help you develop effective coping strategies.";
-    } else if (responses.sleepIssues) {
-      return "Your responses indicate that improving sleep quality is important to you. Our program includes specialized techniques for better rest and relaxation.";
-    }
-    return "We've designed a comprehensive program to help you achieve your mental wellness goals.";
-  };
-
-  const [message, setMessage] = React.useState<string>("");
-  const audioRef = React.useRef<Sound | null>(null);
   const buttonScale = new Animated.Value(1);
-
-  useEffect(() => {
-    // Load message once
-    getPersonalizedMessage().then(setMessage);
-
-    let soundInstance: Sound | null = null;
-
-    const initAudio = async () => {
-      try {
-        const audioPath = await setupAudioFile(
-          'https://firebasestorage.googleapis.com/v0/b/mindshift-bd937.firebasestorage.app/o/music%2Fhaveagreatday.wav?alt=media&token=140dd18b-06c1-45b5-acb2-c65a58b8d090'
-        );
-
-        // Play audio
-        Sound.setCategory('Playback');
-        soundInstance = new Sound(audioPath, '', (error) => {
-          if (error) {
-            console.error('Failed to load sound', error);
-            return;
-          }
-
-          // Play the sound
-          soundInstance?.play((success) => {
-            if (!success) {
-              console.log('Sound playback failed');
-            }
-          });
-        });
-      } catch (error) {
-        console.error('Error initializing audio:', error);
-      }
-    };
-
-    initAudio();
-
-    // Cleanup
-    return () => {
-      if (soundInstance) {
-        soundInstance.stop();
-        soundInstance.release();
-      }
-    };
-  }, []);
 
   const handlePressIn = () => {
     Animated.spring(buttonScale, {
@@ -123,8 +64,6 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         start={{x: 0.5, y: 0}}
         end={{x: 0.5, y: 1}}
       >
-
-        
         <View style={styles.content}>
           <View style={styles.mainContent}>
             <Text style={styles.title}>
@@ -133,7 +72,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
             
             <Text style={styles.subtitle}>
-              {message}
+              We've designed a comprehensive program to help you achieve your mental wellness goals.
             </Text>
 
             <View style={styles.benefitsContainer}>
@@ -191,33 +130,36 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'space-between',
+    paddingTop: 40,
   },
   mainContent: {
     flex: 1,
-    justifyContent: 'center',
-    marginBottom: 40,
+    justifyContent: 'flex-start',
+    marginBottom: 20,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
+    marginTop: 20,
   },
   subtitle: {
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 44,
+    marginTop: 44,
     lineHeight: 24,
   },
   benefitsContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 24,
-    marginHorizontal: 20,
-    marginTop: 30,
-    marginBottom: 40,
+    marginHorizontal: 0,
+    marginTop: 0,
+    marginBottom: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
@@ -252,10 +194,14 @@ const styles = StyleSheet.create({
   },
   joinText: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
     lineHeight: 22,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    marginTop: 10,
   },
   button: {
     backgroundColor: '#D4AF37',
@@ -271,6 +217,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    marginBottom: 30,
   },
   buttonText: {
     color: '#FFFFFF',
