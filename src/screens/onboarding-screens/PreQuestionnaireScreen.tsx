@@ -14,8 +14,10 @@ const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#121212', '#121212']}
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
         style={styles.gradient}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
       >
         <View style={styles.content}>
           <View style={styles.mainContent}>
@@ -59,46 +61,38 @@ const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
   gradient: {
     flex: 1,
-    padding: 0,
   },
   content: {
     flex: 1,
+    padding: 20,
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: '15%',
-    paddingBottom: '10%',
   },
   mainContent: {
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 20
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 38,
-    letterSpacing: 0.5,
+    marginBottom: 20,
   },
   subtitle: {
-    fontSize: 20,
-    color: '#FFFFFF',
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    marginBottom: 48,
-    opacity: 0.9,
-    lineHeight: 28,
-    marginTop: 20
+    marginBottom: 40,
+    lineHeight: 24,
   },
   benefitsContainer: {
-    width: '100%',
-    marginBottom: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 30,
   },
   benefitsTitle: {
     fontSize: 20,
@@ -109,23 +103,20 @@ const styles = StyleSheet.create({
   },
   benefitRow: {
     flexDirection: 'row',
-    marginBottom: 16,
-    paddingHorizontal: 20,
     alignItems: 'center',
+    marginBottom: 15,
   },
   bulletPoint: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
-    marginRight: 16,
+    backgroundColor: '#64B5F6',
+    marginRight: 10,
   },
   benefitText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
     flex: 1,
-    lineHeight: 24,
   },
   joinText: {
     fontSize: 18,
@@ -136,18 +127,15 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   button: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
-    width: '100%',
-    maxWidth: 300,
+    backgroundColor: '#64B5F6',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

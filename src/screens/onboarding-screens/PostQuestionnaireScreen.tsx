@@ -103,8 +103,10 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#121212', '#121212']}
+        colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
         style={styles.gradient}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
       >
 
         
@@ -121,7 +123,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.benefitsContainer}>
               <Text style={styles.benefitsTitle}>
-                Your 7-Day Journey Includes:
+                Your 7777-Day Journey Includes:
               </Text>
               {[
                 'Personalized stress-reduction techniques',
@@ -157,97 +159,77 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
   gradient: {
     flex: 1,
-    padding: 0,
   },
   content: {
     flex: 1,
+    padding: 20,
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: '15%',
-    paddingBottom: '10%',
   },
   mainContent: {
-    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 44,
-    letterSpacing: 0.5,
+    marginBottom: 20,
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     marginBottom: 40,
-    opacity: 0.9,
-    lineHeight: 26,
+    lineHeight: 24,
   },
   benefitsContainer: {
-    width: '100%',
-    marginBottom: 40,
-    paddingHorizontal: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 30,
   },
   benefitsTitle: {
     fontSize: 20,
+    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 20,
-    opacity: 0.9,
-    textAlign: 'center',
   },
   benefitRow: {
     flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-start',
-    paddingHorizontal: 24,
-    width: '100%',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   bullet: {
-    color: '#FFD700',
+    color: '#64B5F6',
     fontSize: 24,
-    marginRight: 12,
-    fontWeight: 'bold',
-    width: 16,
-    alignSelf: 'flex-start',
+    marginRight: 10,
   },
   benefitText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
     flex: 1,
-    lineHeight: 24,
-    flexWrap: 'wrap',
-    paddingTop: 3,
   },
   joinText: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     marginBottom: 30,
-    opacity: 0.9,
-    lineHeight: 24,
+    lineHeight: 22,
   },
   button: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 18,
-    paddingHorizontal: 36,
-    borderRadius: 30,
-    width: '100%',
-    maxWidth: 300,
+    backgroundColor: '#64B5F6',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#000000',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
