@@ -61,7 +61,7 @@ const QuestionnaireProgressHeader: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     paddingTop: 8,
-    backgroundColor: '#121212',
+    backgroundColor: 'transparent',
     paddingBottom: 8,
   },
   contentContainer: {

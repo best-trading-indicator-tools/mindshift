@@ -11,6 +11,8 @@ import {
   ScaleQuestion, 
   FrequencyQuestion 
 } from '../../services/questionnaireService';
+import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Questionnaire'>;
 
@@ -35,12 +37,10 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       try {
-        // Save answers and mark as completed before any navigation
         await Promise.all([
           saveQuestionnaireResponses(newAnswers),
           markQuestionnaireCompleted()
         ]);
-        // Navigate to login screen after all async operations are complete
         navigation.replace('Login');
       } catch (error) {
         console.error('Error completing questionnaire:', error);
@@ -104,44 +104,74 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <QuestionnaireProgressHeader
-        currentStep={currentQuestionIndex + 1}
-        totalSteps={totalQuestions}
-        onBack={handleBack}
-        showBackButton={currentQuestionIndex > 0}
-      />
-      
-      <View style={styles.content}>
-        <View style={styles.questionContainer}>
-          <Text style={styles.questionText}>{currentQuestion.question}</Text>
+    <LinearGradient 
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <SafeAreaView style={styles.safeContainer}>
+        <QuestionnaireProgressHeader
+          currentStep={currentQuestionIndex + 1}
+          totalSteps={totalQuestions}
+          onBack={handleBack}
+          showBackButton={currentQuestionIndex > 0}
+        />
+        
+        <View style={styles.content}>
+          {currentQuestionIndex === 0 && (
+            <View style={styles.lottieContainer}>
+              <LottieView
+                source={require('../../assets/illustrations/questionnaire/question-1.lottie')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          )}
+          <View style={styles.questionContainer}>
+            <Text style={styles.questionText}>{currentQuestion.question}</Text>
+          </View>
+          {renderOptions()}
         </View>
-        {renderOptions()}
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+  },
+  safeContainer: {
+    flex: 1,
   },
   content: {
     flex: 1,
     padding: 20,
     justifyContent: 'center',
   },
+  lottieContainer: {
+    width: '100%',
+    height: 200,
+    marginBottom: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
+  },
   questionContainer: {
     marginBottom: 40,
     paddingHorizontal: 20,
   },
   questionText: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: 40,
   },
   scaleContainer: {
     flexDirection: 'row',
@@ -150,43 +180,43 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   scaleOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#1E1E1E',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#1E1E1E',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   scaleOptionText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
   },
   frequencyContainer: {
     paddingHorizontal: 20,
   },
   frequencyOption: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#1E1E1E',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   frequencyOptionText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     fontWeight: '500',
   },
   selectedOption: {
-    borderColor: '#6366f1',
-    backgroundColor: '#1E1E1E',
+    borderColor: '#D4AF37',
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
   },
   selectedOptionText: {
-    color: '#6366f1',
+    color: '#D4AF37',
   },
 });
 
