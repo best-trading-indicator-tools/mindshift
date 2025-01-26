@@ -464,7 +464,8 @@ const styles = StyleSheet.create({
   toggleText: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
-    marginTop: 20
+    marginTop: 20,
+    fontWeight: '600'
   },
   dividerContainer: {
     flexDirection: 'row',
@@ -531,6 +532,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
     marginBottom: 10,
+    fontWeight: '600'
   },
   errorContainer: {
     width: '100%',
