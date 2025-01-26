@@ -150,7 +150,7 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
           {currentQuestionIndex === 3 && (
-            <View style={styles.lottieContainer}>
+            <View style={[styles.lottieContainer, { height: 160, marginBottom: 16 }]}>
               <LottieView
                 source={require('../../assets/illustrations/questionnaire/question-4.lottie')}
                 autoPlay
@@ -194,7 +194,9 @@ const styles = StyleSheet.create({
   },
   questionContainer: {
     marginBottom: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
+    width: '100%',
+    alignSelf: 'center',
   },
   questionText: {
     fontSize: 32,
@@ -202,6 +204,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 40,
+    paddingHorizontal: 4,
   },
   scaleContainer: {
     flexDirection: 'row',
