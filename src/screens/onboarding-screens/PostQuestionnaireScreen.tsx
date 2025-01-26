@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
@@ -49,6 +49,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
   const [message, setMessage] = React.useState<string>("");
   const audioRef = React.useRef<Sound | null>(null);
+  const buttonScale = new Animated.Value(1);
 
   useEffect(() => {
     // Load message once
@@ -93,7 +94,21 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     };
   }, []);
 
-  const handleStartTrial = () => {
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleGetStarted = () => {
     navigation.reset({
       index: 0,
       routes: [{ name: 'MainTabs' }],
@@ -123,7 +138,7 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.benefitsContainer}>
               <Text style={styles.benefitsTitle}>
-                Your 7777-Day Journey Includes:
+                Your 7-Day Journey Includes:
               </Text>
               {[
                 'Personalized stress-reduction techniques',
@@ -145,10 +160,19 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <TouchableOpacity
-            style={styles.button}
-            onPress={handleStartTrial}
+            activeOpacity={1}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            onPress={handleGetStarted}
           >
-            <Text style={styles.buttonText}>Begin Your Free Trial</Text>
+            <Animated.View style={[
+              styles.button,
+              {
+                transform: [{ scale: buttonScale }]
+              }
+            ]}>
+              <Text style={styles.buttonText}>Get Started</Text>
+            </Animated.View>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -171,6 +195,7 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     justifyContent: 'center',
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
@@ -189,8 +214,20 @@ const styles = StyleSheet.create({
   benefitsContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 30,
+    padding: 24,
+    marginHorizontal: 20,
+    marginTop: 30,
+    marginBottom: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   benefitsTitle: {
     fontSize: 20,
@@ -204,7 +241,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   bullet: {
-    color: '#64B5F6',
+    color: '#D4AF37',
     fontSize: 24,
     marginRight: 10,
   },
@@ -221,10 +258,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   button: {
-    backgroundColor: '#64B5F6',
-    paddingVertical: 15,
-    borderRadius: 12,
+    backgroundColor: '#D4AF37',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 100,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonText: {
     color: '#FFFFFF',
