@@ -159,6 +159,16 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
           )}
+          {currentQuestionIndex === 4 && (
+            <View style={[styles.lottieContainer, { height: 160, marginBottom: 16 }]}>
+              <LottieView
+                source={require('../../assets/illustrations/questionnaire/question-5.lottie')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          )}
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>{currentQuestion.question}</Text>
           </View>
