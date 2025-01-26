@@ -55,8 +55,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const emailAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withTiming(emailFocus.value ? 1.02 : 1) }],
     borderWidth: withTiming(emailFocus.value ? 1 : 0),
-    borderColor: '#FFD700',
-    shadowColor: '#FFD700',
+    borderColor: '#64B5F6',
+    shadowColor: '#64B5F6',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: withTiming(emailFocus.value ? 0.2 : 0),
     shadowRadius: withTiming(emailFocus.value ? 8 : 0),
@@ -66,8 +66,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const passwordAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withTiming(passwordFocus.value ? 1.02 : 1) }],
     borderWidth: withTiming(passwordFocus.value ? 1 : 0),
-    borderColor: '#FFD700',
-    shadowColor: '#FFD700',
+    borderColor: '#64B5F6',
+    shadowColor: '#64B5F6',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: withTiming(passwordFocus.value ? 0.2 : 0),
     shadowRadius: withTiming(passwordFocus.value ? 8 : 0),
@@ -447,14 +447,14 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#64B5F6',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 10,
   },
   buttonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   toggleText: {
-    color: '#D4AF37',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
     marginTop: 20
   },
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   forgotPasswordText: {
-    color: '#D4AF37',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
     marginTop: 10,
     marginBottom: 10,
