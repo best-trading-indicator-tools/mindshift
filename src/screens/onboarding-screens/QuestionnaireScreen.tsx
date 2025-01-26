@@ -169,6 +169,26 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
           )}
+          {currentQuestionIndex === 5 && (
+            <View style={[styles.lottieContainer, { height: 140, marginBottom: 16 }]}>
+              <LottieView
+                source={require('../../assets/illustrations/questionnaire/question-6.lottie')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          )}
+          {currentQuestionIndex === 6 && (
+            <View style={[styles.lottieContainer, { height: 140, marginBottom: 16 }]}>
+              <LottieView
+                source={require('../../assets/illustrations/questionnaire/question-7.lottie')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          )}
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>{currentQuestion.question}</Text>
           </View>
