@@ -39,18 +39,13 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleGetStarted = React.useCallback(async () => {
     try {
-      await Superwall.shared.register('campaign_trigger')
-        .then(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'MainTabs' }],
-          });
-        })
-        .catch((error) => {
-          console.error('Superwall registration failed:', error);
-        });
+      await Superwall.shared.register('campaign_trigger');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
     } catch (error) {
-      console.error('Error in handleGetStarted:', error);
+      console.error('Superwall registration failed:', error);
     }
   }, [navigation]);
 
@@ -110,21 +105,21 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
 
-          <TouchableOpacity
-            activeOpacity={1}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={handleGetStarted}
-          >
-            <Animated.View style={[
+          <Animated.View 
+            style={[
               styles.button,
-              {
-                transform: [{ scale: buttonScale }]
-              }
-            ]}>
+              { transform: [{ scale: buttonScale }] }
+            ]}
+          >
+            <TouchableOpacity
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              onPress={handleGetStarted}
+              style={{ width: '100%', alignItems: 'center' }}
+            >
               <Text style={styles.buttonText}>Get Started</Text>
-            </Animated.View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </LinearGradient>
     </View>
