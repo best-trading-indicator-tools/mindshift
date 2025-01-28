@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
+import Superwall from '@superwall/react-native-superwall';
 
 import { getQuestionnaireResponses } from '../../services/questionnaireService';
 import RNFS from 'react-native-fs';
@@ -49,11 +50,21 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     }).start();
   };
 
-  const handleGetStarted = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }],
-    });
+  const handleGetStarted = async () => {
+    try {
+      await Superwall.shared.register('campaign_trigger')
+        .then(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'MainTabs' }],
+          });
+        })
+        .catch((error) => {
+          console.error('Superwall registration failed:', error);
+        });
+    } catch (error) {
+      console.error('Error in handleGetStarted:', error);
+    }
   };
 
   return (
