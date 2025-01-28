@@ -34,23 +34,9 @@ const setupAudioFile = async (url: string): Promise<string> => {
 };
 
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
-  const buttonScale = new Animated.Value(1);
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(buttonScale, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(buttonScale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleGetStarted = async () => {
+  const handleGetStarted = React.useCallback(async () => {
     try {
       await Superwall.shared.register('campaign_trigger')
         .then(() => {
@@ -65,7 +51,21 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error in handleGetStarted:', error);
     }
-  };
+  }, [navigation]);
+
+  const handlePressIn = React.useCallback(() => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  }, [buttonScale]);
+
+  const handlePressOut = React.useCallback(() => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, [buttonScale]);
 
   return (
     <View style={styles.container}>
