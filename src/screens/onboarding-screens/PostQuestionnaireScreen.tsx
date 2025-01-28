@@ -34,6 +34,7 @@ const setupAudioFile = async (url: string): Promise<string> => {
 };
 
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
+
   const buttonScale = React.useRef(new Animated.Value(1)).current;
 
   const handleGetStarted = React.useCallback(async () => {
@@ -154,14 +155,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
-    marginTop: 20,
+    marginTop: 40,
   },
   subtitle: {
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     marginBottom: 44,
-    marginTop: 44,
+    marginTop: 16,
     lineHeight: 24,
   },
   benefitsContainer: {
