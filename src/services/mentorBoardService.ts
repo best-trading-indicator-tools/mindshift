@@ -18,6 +18,7 @@ export const searchWikimediaImages = async (query: string): Promise<WikimediaSea
       `iiprop=url&` +
       `origin=*`;
 
+      
     console.log('Making Wikimedia API request:', url);
     const response = await fetch(url);
     const data = await response.json();
