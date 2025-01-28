@@ -28,6 +28,7 @@
     "@react-navigation/native-stack": "^6.9.17",
     "@rneui/base": "^4.0.0-rc.8",
     "@rneui/themed": "^4.0.0-rc.8",
+    "@superwall/react-native-superwall": "^1.4.5",
     "@types/react-native-push-notification": "^8.1.4",
     "@types/react-native-video": "^5.0.20",
     "lottie-react-native": "^7.2.2",

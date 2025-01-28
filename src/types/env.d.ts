@@ -14,4 +14,5 @@ declare module '@env' {
   export const FIREBASE_APP_ID: string;
   // Pexels API
   export const PEXELS_API_KEY: string;
+  export const SUPERWALL_API_KEY: string;
 }

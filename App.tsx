@@ -10,12 +10,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AppNavigator from './src/navigation/AppNavigator';
-import { ActivityIndicator, View, unstable_batchedUpdates, LogBox } from 'react-native';
+import { ActivityIndicator, View, unstable_batchedUpdates, LogBox, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { getQuestionnaireStatus } from './src/services/questionnaireService';
 import { enableScreens } from 'react-native-screens';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import Superwall from '@superwall/react-native-superwall';
+import { SUPERWALL_API_KEY } from '@env';
 
 // Disable Reanimated warnings in development
 if (__DEV__) {
@@ -65,6 +67,11 @@ function App(): JSX.Element {
   const memoizedNavigator = React.useMemo(() => {
     return <AppNavigator initialRoute={initialRoute} />;
   }, [initialRoute]);
+
+  React.useEffect(() => {
+    // Initialisation de Superwall
+    Superwall.configure(SUPERWALL_API_KEY);
+  }, []);
 
   if (initializing) {
     return (
