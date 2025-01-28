@@ -16,8 +16,9 @@ import { getQuestionnaireStatus } from './src/services/questionnaireService';
 import { enableScreens } from 'react-native-screens';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import Superwall from '@superwall/react-native-superwall';
+import Superwall, { SubscriptionStatus } from '@superwall/react-native-superwall';
 import { SUPERWALL_API_KEY } from '@env';
+import { MyPurchaseController } from './src/services/PurchaseController';
 
 // Disable Reanimated warnings in development
 if (__DEV__) {
@@ -69,8 +70,10 @@ function App(): JSX.Element {
   }, [initialRoute]);
 
   React.useEffect(() => {
-    // Initialisation de Superwall
-    Superwall.configure(SUPERWALL_API_KEY);
+    const purchaseController = new MyPurchaseController();
+    Superwall.configure(SUPERWALL_API_KEY, undefined, purchaseController);
+    
+    Superwall.shared.setSubscriptionStatus(SubscriptionStatus.UNKNOWN);
   }, []);
 
   if (initializing) {
