@@ -36,6 +36,29 @@ const setupAudioFile = async (url: string): Promise<string> => {
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   const buttonScale = React.useRef(new Animated.Value(1)).current;
 
+  useEffect(() => {
+    // Enable playback in silence mode
+    Sound.setCategory('Playback');
+
+    const sound = new Sound(require('../../assets/audio/haveagreatday.wav'), (error) => {
+      if (error) {
+        console.error('Failed to load sound', error);
+        return;
+      }
+      
+      sound.play((success) => {
+        if (!success) {
+          console.error('Sound playback failed');
+        }
+        sound.release();
+      });
+    });
+
+    return () => {
+      sound.release();
+    };
+  }, []);
+
   const handleGetStarted = React.useCallback(async () => {
     try {
       await Superwall.shared.register('campaign_trigger');

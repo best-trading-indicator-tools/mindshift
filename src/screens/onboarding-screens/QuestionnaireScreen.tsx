@@ -65,14 +65,6 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Ajoutons aussi un useEffect pour suivre les re-renders
-  useEffect(() => {
-    console.log('\n=== Component Update ===');
-    console.log('currentQuestionIndex:', currentQuestionIndex);
-    console.log('answers:', answers);
-    console.log('=== End Update ===\n');
-  }, [currentQuestionIndex, answers]);
-
   const renderScaleOptions = (question: ScaleQuestion) => {
     return (
       <View style={styles.scaleContainer}>
@@ -168,6 +160,28 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
   const questionStyles = getQuestionSpecificStyles();
 
+  // Rendu de toutes les animations
+  const renderAllAnimations = () => {
+    return Object.values(LOTTIE_ANIMATIONS).map((animation, index) => (
+      <View 
+        key={index} 
+        style={[
+          styles.lottieContainer,
+          // On cache les animations qui ne correspondent pas à la question actuelle
+          { opacity: currentQuestionIndex === index ? 1 : 0,
+            position: currentQuestionIndex === index ? 'relative' : 'absolute' }
+        ]}
+      >
+        <LottieView
+          source={animation}
+          autoPlay={currentQuestionIndex === index}
+          loop
+          style={styles.lottieAnimation}
+        />
+      </View>
+    ));
+  };
+
   return (
     <LinearGradient 
       colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
@@ -184,14 +198,9 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         />
         
         <View style={styles.content}>
-          <View style={questionStyles.lottieContainer}>
-            <LottieView
-              source={LOTTIE_ANIMATIONS[currentQuestionIndex]}
-              autoPlay
-              loop
-              style={styles.lottieAnimation}
-            />
-          </View>
+          {/* Au lieu d'avoir une seule animation qui change,
+              on a toutes les animations déjà chargées */}
+          {/* {renderAllAnimations()} */}
           
           <View style={questionStyles.questionContainer}>
             <Text style={questionStyles.questionText}>{currentQuestion.question}</Text>
