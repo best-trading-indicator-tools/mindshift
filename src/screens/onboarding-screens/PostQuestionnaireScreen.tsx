@@ -34,15 +34,16 @@ const setupAudioFile = async (url: string): Promise<string> => {
 };
 
 const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
-
   const buttonScale = React.useRef(new Animated.Value(1)).current;
 
   const handleGetStarted = React.useCallback(async () => {
     try {
       await Superwall.shared.register('campaign_trigger');
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
+      requestAnimationFrame(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
       });
     } catch (error) {
       console.error('Superwall registration failed:', error);
