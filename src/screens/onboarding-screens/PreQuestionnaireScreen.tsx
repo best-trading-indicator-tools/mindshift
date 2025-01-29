@@ -1,31 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
+import { LOTTIE_ANIMATIONS } from '../onboarding-screens/QuestionnaireScreen';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PreQuestionnaire'>;
 
 const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
+  const [isLoading, setIsLoading] = useState(true);
   const buttonScale = new Animated.Value(1);
 
-  const handlePressIn = () => {
-    Animated.spring(buttonScale, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
+  useEffect(() => {
+    // Simuler un temps de chargement pour précharger les animations
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
 
-  const handlePressOut = () => {
-    Animated.spring(buttonScale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleGetStarted = () => {
-    navigation.navigate('Questionnaire');
+    if (!isLoading) {
+      navigation.navigate('Questionnaire');
+    }
   };
 
   return (
@@ -36,6 +35,18 @@ const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         start={{x: 0.5, y: 0}}
         end={{x: 0.5, y: 1}}
       >
+        {/* Préchargement invisible des animations */}
+        <View style={{ position: 'absolute', opacity: 0 }}>
+          {Object.values(LOTTIE_ANIMATIONS).map((animation, index) => (
+            <LottieView
+              key={index}
+              source={animation}
+              style={{ width: 1, height: 1 }}
+              autoPlay={false}
+            />
+          ))}
+        </View>
+
         <View style={styles.content}>
           <View style={styles.mainContent}>
             <View style={styles.animationContainer}>
@@ -72,17 +83,18 @@ const PreQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
           <TouchableOpacity
             activeOpacity={1}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
             onPress={handleGetStarted}
+            disabled={isLoading}
           >
             <Animated.View style={[
               styles.button,
               {
-                transform: [{ scale: buttonScale }]
+                opacity: isLoading ? 0.7 : 1
               }
             ]}>
-              <Text style={styles.buttonText}>Feel Better Today</Text>
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Loading...' : 'Feel Better Today'}
+              </Text>
             </Animated.View>
           </TouchableOpacity>
         </View>

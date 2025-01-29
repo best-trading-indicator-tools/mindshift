@@ -69,11 +69,28 @@ function App(): JSX.Element {
     return <AppNavigator initialRoute={initialRoute} />;
   }, [initialRoute]);
 
-  React.useEffect(() => {
-    const purchaseController = new MyPurchaseController();
-    Superwall.configure(SUPERWALL_API_KEY, undefined, purchaseController);
+  useEffect(() => {
+    let isMounted = true;
     
-    Superwall.shared.setSubscriptionStatus(SubscriptionStatus.UNKNOWN);
+    const checkSubscriptionStatus = async () => {
+      try {
+        if (isMounted) {
+          await Superwall.shared.register('MindShiftAccess');
+        }
+      } catch (error) {
+        console.error('Subscription check failed:', error);
+      }
+    };
+
+    // Utiliser requestAnimationFrame pour éviter la boucle
+    const timeoutId = setTimeout(() => {
+      checkSubscriptionStatus();
+    }, 0);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   if (initializing) {

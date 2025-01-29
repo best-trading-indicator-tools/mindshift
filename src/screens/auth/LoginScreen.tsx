@@ -10,7 +10,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       // ... code de login Google ...
       
-      navigation.navigate('PostQuestionnaire');
+      requestAnimationFrame(() => {
+        navigation.navigate('PostQuestionnaire');
+      });
     } catch (error) {
       console.error('Google sign in failed:', error);
     }

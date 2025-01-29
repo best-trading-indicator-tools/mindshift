@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -16,9 +16,21 @@ import LottieView from 'lottie-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Questionnaire'>;
 
+// Exporter les animations pour pouvoir les précharger
+export const LOTTIE_ANIMATIONS: Record<number, any> = {
+  0: require('../../assets/illustrations/questionnaire/question-1.lottie'),
+  1: require('../../assets/illustrations/questionnaire/question-2.lottie'),
+  2: require('../../assets/illustrations/questionnaire/question-3.lottie'),
+  3: require('../../assets/illustrations/questionnaire/question-4.lottie'),
+  4: require('../../assets/illustrations/questionnaire/question-5.lottie'),
+  5: require('../../assets/illustrations/questionnaire/question-6.lottie'),
+  6: require('../../assets/illustrations/questionnaire/question-7.lottie'),
+} as const;
+
 const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
@@ -33,8 +45,13 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     const newAnswers = { ...answers, [currentQuestion.id]: answer };
     
     if (currentQuestionIndex < totalQuestions - 1) {
+      setIsTransitioning(true);
       setAnswers(newAnswers);
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 100);
     } else {
       try {
         await Promise.all([
@@ -47,6 +64,14 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
       }
     }
   };
+
+  // Ajoutons aussi un useEffect pour suivre les re-renders
+  useEffect(() => {
+    console.log('\n=== Component Update ===');
+    console.log('currentQuestionIndex:', currentQuestionIndex);
+    console.log('answers:', answers);
+    console.log('=== End Update ===\n');
+  }, [currentQuestionIndex, answers]);
 
   const renderScaleOptions = (question: ScaleQuestion) => {
     return (
@@ -74,12 +99,12 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderFrequencyOptions = (question: FrequencyQuestion) => {
     return (
-      <View style={styles.frequencyContainer}>
+      <View style={questionStyles.frequencyContainer}>
         {question.options.map((option) => (
           <TouchableOpacity
             key={option}
             style={[
-              styles.frequencyOption,
+              currentQuestionIndex === 3 ? questionStyles.frequencyOption : styles.frequencyOption,
               answers[question.id] === option && styles.selectedOption
             ]}
             onPress={() => handleAnswer(option)}
@@ -103,6 +128,46 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
     return renderFrequencyOptions(currentQuestion);
   };
 
+  const getQuestionSpecificStyles = () => {
+    // Ajustements spécifiques pour la question 4 (index 3)
+    if (currentQuestionIndex === 3) {
+      return {
+        lottieContainer: {
+          ...styles.lottieContainer,
+          height: 140, // Réduire la hauteur de l'image
+          marginBottom: 10, // Réduire l'espace sous l'image
+        },
+        questionContainer: {
+          ...styles.questionContainer,
+          marginBottom: 15, // Réduire l'espace sous la question
+        },
+        questionText: {
+          ...styles.questionText,
+          fontSize: 28, // Réduire légèrement la taille du texte
+        },
+        frequencyContainer: {
+          ...styles.frequencyContainer,
+          marginTop: 0,
+          paddingHorizontal: 20,
+        },
+        frequencyOption: {
+          ...styles.frequencyOption,
+          marginBottom: 8, // Réduire l'espace entre les options
+          padding: 14, // Réduire légèrement le padding des options
+        }
+      };
+    }
+    return {
+      lottieContainer: styles.lottieContainer,
+      questionContainer: styles.questionContainer,
+      questionText: styles.questionText,
+      frequencyContainer: styles.frequencyContainer,
+      frequencyOption: styles.frequencyOption,
+    };
+  };
+
+  const questionStyles = getQuestionSpecificStyles();
+
   return (
     <LinearGradient 
       colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
@@ -119,78 +184,17 @@ const QuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
         />
         
         <View style={styles.content}>
-          {currentQuestionIndex === 0 && (
-            <View style={styles.lottieContainer}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-1.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 1 && (
-            <View style={[styles.lottieContainer, { marginBottom: 16 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-2.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 2 && (
-            <View style={[styles.lottieContainer, { height: 160 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-3.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 3 && (
-            <View style={[styles.lottieContainer, { height: 160, marginBottom: 16 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-4.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 4 && (
-            <View style={[styles.lottieContainer, { height: 160, marginBottom: 16 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-5.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 5 && (
-            <View style={[styles.lottieContainer, { height: 140, marginBottom: 16 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-6.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          {currentQuestionIndex === 6 && (
-            <View style={[styles.lottieContainer, { height: 140, marginBottom: 16 }]}>
-              <LottieView
-                source={require('../../assets/illustrations/questionnaire/question-7.lottie')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
-            </View>
-          )}
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionText}>{currentQuestion.question}</Text>
+          <View style={questionStyles.lottieContainer}>
+            <LottieView
+              source={LOTTIE_ANIMATIONS[currentQuestionIndex]}
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
+            />
+          </View>
+          
+          <View style={questionStyles.questionContainer}>
+            <Text style={questionStyles.questionText}>{currentQuestion.question}</Text>
           </View>
           {renderOptions()}
         </View>
@@ -209,12 +213,13 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 40,
   },
   lottieContainer: {
     width: '100%',
-    height: 200,
-    marginBottom: 32,
+    height: 160,
+    marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -223,7 +228,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   questionContainer: {
-    marginBottom: 40,
+    marginBottom: 30,
     paddingHorizontal: 0,
     width: '100%',
     alignSelf: 'center',
@@ -259,6 +264,7 @@ const styles = StyleSheet.create({
   },
   frequencyContainer: {
     paddingHorizontal: 20,
+    marginTop: 10,
   },
   frequencyOption: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
