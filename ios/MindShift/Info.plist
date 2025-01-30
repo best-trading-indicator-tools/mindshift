@@ -60,6 +60,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take mentor photos.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>We need access to documents for file attachments in support requests.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -68,8 +70,6 @@
 	<string>We need access to your microphone to record your affirmations.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to select mentor images.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to take mentor photos.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>
