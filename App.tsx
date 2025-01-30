@@ -20,6 +20,7 @@ import Superwall, { SubscriptionStatus } from '@superwall/react-native-superwall
 import { SUPERWALL_API_KEY } from '@env';
 import { MyPurchaseController } from './src/services/PurchaseController';
 
+
 // Disable Reanimated warnings in development
 if (__DEV__) {
   const IGNORED_LOGS = [
@@ -69,28 +70,26 @@ function App(): JSX.Element {
     return <AppNavigator initialRoute={initialRoute} />;
   }, [initialRoute]);
 
+  // Add Superwall event listeners in the same useEffect
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkSubscriptionStatus = async () => {
+    const configureSuperwall = async () => {
       try {
-        if (isMounted) {
-          await Superwall.shared.register('MindShiftAccess');
-        }
+        const purchaseController = new MyPurchaseController();
+        purchaseController.addSubscriptionStatusListener((hasActiveSubscription: boolean) => {
+          if (hasActiveSubscription) {
+            Superwall.shared.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+          } else {
+            Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
+          }
+        });
+
+        await Superwall.configure(SUPERWALL_API_KEY, undefined, purchaseController);
       } catch (error) {
-        console.error('Subscription check failed:', error);
+        console.error('Failed to configure Superwall:', error);
       }
     };
 
-    // Utiliser requestAnimationFrame pour éviter la boucle
-    const timeoutId = setTimeout(() => {
-      checkSubscriptionStatus();
-    }, 0);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
+    configureSuperwall();
   }, []);
 
   if (initializing) {
