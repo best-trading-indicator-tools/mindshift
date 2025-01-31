@@ -81,7 +81,7 @@ const MentorBoardDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         style={styles.deleteButton}
         onPress={() => handleDeleteMentor(mentor)}
       >
-        <MaterialCommunityIcons name="close" size={20} color="#666666" />
+        <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
@@ -225,15 +225,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   mentorImage: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
@@ -242,18 +242,20 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   mentorName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '500',
     color: '#FFFFFF',
   },
   deleteButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 16,
     position: 'absolute',
-    top: 8,
-    right: 8,
-    padding: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    zIndex: 1,
+    top: 12,
+    right: 12,
   },
   bottomBar: {
     flexDirection: 'row',
