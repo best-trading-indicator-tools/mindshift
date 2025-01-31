@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, Platform } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -169,13 +169,15 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F8F9FA']}
-        style={styles.gradient}
-      >
+    <LinearGradient
+      colors={['#0F172A', '#1E3A5F', '#2D5F7C']}
+      style={styles.container}
+      start={{x: 0.5, y: 0}}
+      end={{x: 0.5, y: 1}}
+    >
+      <SafeAreaView style={styles.safeArea}>
         <TouchableOpacity onPress={handleExit} style={styles.exitButton}>
-          <MaterialCommunityIcons name="close" size={24} color="rgba(0,0,0,0.6)" />
+          <MaterialCommunityIcons name="close" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -298,29 +300,28 @@ const SelfHypnosisExerciseScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
         </Modal>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
-  gradient: {
+  safeArea: {
     flex: 1,
-    paddingTop: 16,
+    backgroundColor: 'transparent',
   },
   exitButton: {
     position: 'absolute',
-    top: 16,
+    top: 60,
     right: 16,
     zIndex: 1,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -336,23 +337,25 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   trackTitle: {
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '700',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
   trackDescription: {
-    color: 'rgba(0,0,0,0.6)',
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 17,
     lineHeight: 24,
     letterSpacing: -0.2,
   },
   playerCard: {
-    backgroundColor: '#E8E9EC',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   audioFileInfo: {
     flexDirection: 'row',
@@ -364,12 +367,12 @@ const styles = StyleSheet.create({
   },
   audioTitle: {
     fontSize: 15,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   audioSize: {
     fontSize: 13,
-    color: '#4A4A4A',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 2,
   },
   playerControls: {
@@ -395,13 +398,13 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     marginHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: Platform.OS === 'ios' ? 32 : 16,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#D4AF37',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: "#FF6B6B",
+    shadowColor: "#000000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -411,7 +414,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   doneButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 17,
     fontWeight: '600',
     letterSpacing: -0.4,
@@ -452,11 +455,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   selectedCard: {
-    borderColor: '#FF6B6B',
-    borderWidth: 1,
+    borderColor: '#D4AF37',
   },
   selectedText: {
-    color: '#FF6B6B',
+    color: '#D4AF37',
   },
 });
 
