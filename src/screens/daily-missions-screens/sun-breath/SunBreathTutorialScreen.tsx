@@ -9,6 +9,13 @@ import { audioService, AUDIO_FILES } from '../../../services/audioService';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SunBreathTutorial'>;
+
+type RouteParams = {
+  context?: 'challenge' | 'daily';
+  challengeId?: string;
+  returnTo?: keyof RootStackParamList;
+};
+
 type Props = NativeStackScreenProps<RootStackParamList, 'SunBreathTutorial'>;
 
 export const tutorialSteps = [
@@ -80,13 +87,22 @@ const SunBreathTutorialScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleExit = () => {
-    navigation.navigate('SunBreathExercise', {
-      context: route.params?.challengeId ? 'challenge' : 'daily',
-      challengeId: route.params?.challengeId,
-      returnTo: route.params?.returnTo
-    });
+  const handleExit = async () => {
+    if (route.params?.challengeId) {
+      navigation.navigate('ChallengeDetail', {
+        challenge: {
+          id: route.params.challengeId,
+          title: 'Ultimate',
+          duration: 21,
+          description: 'Your subconscious mind shapes your reality.',
+          image: require('../../../assets/illustrations/challenges/challenge-21.png')
+        }
+      });
+    } else {
+      navigation.navigate('MainTabs');
+    }
   };
+
 
   const currentTutorial = tutorialSteps[currentStep];
 
