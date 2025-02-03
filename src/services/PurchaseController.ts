@@ -1,5 +1,6 @@
 import Superwall from '@superwall/react-native-superwall';
 import { PurchaseController, PurchaseResult, RestorationResult, SubscriptionStatus } from '@superwall/react-native-superwall';
+import { auth, firestore, UserData } from '../services/firebase';
 
 type SubscriptionStatusListener = (hasActiveSubscription: boolean) => void;
 
@@ -88,6 +89,44 @@ export class MyPurchaseController extends PurchaseController {
       return RestorationResult.failed(
         error instanceof Error ? error : new Error('Unknown error')
       );
+    }
+  }
+
+  async updateSubscriptionStatus(status: SubscriptionStatus, type?: 'monthly' | 'yearly') {
+    const userId = auth().currentUser?.uid;
+    if (!userId) return;
+
+    const userRef = firestore().collection('users').doc(userId);
+    
+    if (status === SubscriptionStatus.ACTIVE) {
+      const subscriptionEndDate = type === 'yearly' 
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      await userRef.update({
+        subscriptionStatus: type || 'monthly',
+        subscriptionStartDate: new Date(),
+        subscriptionEndDate,
+        lastUpdated: new Date()
+      });
+    } else {
+      // Vérifie si l'utilisateur est encore en période d'essai
+      const userData = (await userRef.get()).data() as UserData;
+      const isTrialValid = userData?.trialEndDate && new Date(userData.trialEndDate) > new Date();
+      
+      await userRef.update({
+        subscriptionStatus: isTrialValid ? 'trial' : 'free',
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        lastUpdated: new Date()
+      });
+    }
+
+    // Notifie Superwall
+    if (status === SubscriptionStatus.ACTIVE) {
+      Superwall.shared.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
+    } else {
+      Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
     }
   }
 } 

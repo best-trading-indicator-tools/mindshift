@@ -1,12 +1,20 @@
 import firestore from '@react-native-firebase/firestore';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
+// Exporter les services Firebase
+export { auth, firestore };
+
 export interface UserData {
   id: string;
   email: string | null;
   name: string | null;
   createdAt: Date;
   lastLoginAt: Date;
+  subscriptionStatus: 'free' | 'trial' | 'monthly' | 'yearly';
+  subscriptionStartDate?: Date;
+  subscriptionEndDate?: Date;
+  trialStartDate?: Date;
+  trialEndDate?: Date;
 }
 
 export const createUserProfile = async (user: FirebaseAuthTypes.User): Promise<void> => {
@@ -20,6 +28,9 @@ export const createUserProfile = async (user: FirebaseAuthTypes.User): Promise<v
       name: user.displayName,
       createdAt: new Date(),
       lastLoginAt: new Date(),
+      subscriptionStatus: 'trial',
+      trialStartDate: new Date(),
+      trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     };
 
     try {
