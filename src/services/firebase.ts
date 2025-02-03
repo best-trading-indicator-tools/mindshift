@@ -17,7 +17,6 @@ export interface UserData {
   trialEndDate?: Date;
 }
 
-
 export const createUserProfile = async (user: FirebaseAuthTypes.User): Promise<void> => {
   const userRef = firestore().collection('users').doc(user.uid);
   const snapshot = await userRef.get();
