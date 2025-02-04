@@ -486,6 +486,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 10,
+    marginTop: 25,
   },
   buttonText: {
     color: '#000000',
