@@ -165,15 +165,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleEmailAuth = async () => {
-    validateEmail(email);
-    validatePassword(password);
-    
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
     try {
+      // Activer la validation
+      setShowValidation(true);
+      validateEmail(email);
+      validatePassword(password);
+      
+      if (!email || !password) {
+        setError('Please fill in all fields');
+        return;
+      }
+
       console.log('🔑 LoginScreen: Starting email authentication');
       setLoading(true);
       setError(null);
@@ -181,24 +183,43 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       let userCredential: FirebaseAuthTypes.UserCredential;
       
       if (isSignUp) {
-
-        userCredential = await auth().createUserWithEmailAndPassword(email, password);
-        await createUserProfile(userCredential.user);
+        try {
+          userCredential = await auth().createUserWithEmailAndPassword(email, password);
+          await createUserProfile(userCredential.user);
+          navigation.replace('PostQuestionnaire');
+        } catch (signUpError: any) {
+          // Gérer les erreurs spécifiques à l'inscription
+          if (signUpError.code === 'auth/email-already-in-use') {
+            setError('An account with this email already exists');
+          } else if (signUpError.code === 'auth/weak-password') {
+            setError('Password should be at least 6 characters');
+          } else if (signUpError.code === 'auth/invalid-email') {
+            setError('Please enter a valid email address');
+          } else {
+            setError('Unable to create account. Please try again.');
+          }
+          throw signUpError; // Propager l'erreur pour le finally
+        }
       } else {
-        userCredential = await auth().signInWithEmailAndPassword(email, password);
+        try {
+          userCredential = await auth().signInWithEmailAndPassword(email, password);
+          navigation.replace('PostQuestionnaire');
+        } catch (signInError: any) {
+          if (signInError.code === 'auth/user-not-found') {
+            setError('No account found with this email');
+          } else if (signInError.code === 'auth/wrong-password') {
+            setError('Incorrect password');
+          } else if (signInError.code === 'auth/invalid-email') {
+            setError('Please enter a valid email address');
+          } else {
+            setError('Unable to sign in. Please check your credentials.');
+          }
+          throw signInError; // Propager l'erreur pour le finally
+        }
       }
-      
-      navigation.replace('PostQuestionnaire');
-    } catch (error: any) {
-      if (error.code === 'auth/invalid-email') {
-        setError('Please enter a valid email address');
-      } else if (error.code === 'auth/user-not-found') {
-        setError('No account found with this email');
-      } else if (error.code === 'auth/wrong-password') {
-        setError('Incorrect password');
-      } else {
-        handleAuthError(error);
-      }
+    } catch (error) {
+      // Ne pas appeler handleAuthError ici car nous gérons déjà les erreurs spécifiquement
+      console.error('Authentication error:', error);
     } finally {
       setLoading(false);
     }
