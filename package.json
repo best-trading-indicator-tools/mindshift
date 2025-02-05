@@ -13,7 +13,8 @@
     "iphone16promax": "npx react-native run-ios --simulator=\"iPhone 16 Pro Max\"",
     "iphone16pro": "npx react-native run-ios --simulator=\"iPhone 16 Pro\"",
     "iphone11promax": "npx react-native run-ios --simulator=\"iPhone 11 Pro Max\"",
-    "david": "npx react-native run-ios --device \"00008130-00141D593803401C\""
+    "david": "npx react-native run-ios --device \"00008130-00141D593803401C\"",
+    "init": "npm install && cd ios && pod install && cd .."
   },
   "dependencies": {
     "@invertase/react-native-apple-authentication": "^2.4.0",
