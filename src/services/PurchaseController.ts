@@ -18,6 +18,7 @@ import {
 } from 'react-native-iap';
 import { Platform } from 'react-native';
 import Config from 'react-native-config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type SubscriptionStatusListener = (hasActiveSubscription: boolean) => void;
 
@@ -28,13 +29,17 @@ interface ExtendedPurchase extends ProductPurchase {
 
 // Product IDs should match your App Store Connect / Google Play Console products
 const SUBSCRIPTION_SKUS = Platform.select({
-  ios: ['com.mindshift.monthly', 'com.mindshift.yearly'],
-  android: ['com.mindshift.monthly', 'com.mindshift.yearly'],
+  ios: ['com.mindshift.subscription.monthly', 'com.mindshift.subscription.annual'],
+  android: ['com.mindshift.subscription.monthly', 'com.mindshift.subscription.annual'],
   default: []
 }) as string[];
 
+const SUBSCRIPTION_STATUS_KEY = '@subscription_status';
+const SUBSCRIPTION_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h en millisecondes
+
 export class MyPurchaseController extends PurchaseController {
   private listeners: SubscriptionStatusListener[] = [];
+  private lastCheckTimestamp: number = 0;
 
   constructor() {
     super();
@@ -56,10 +61,40 @@ export class MyPurchaseController extends PurchaseController {
 
   addSubscriptionStatusListener(listener: SubscriptionStatusListener) {
     this.listeners.push(listener);
-    this.checkSubscriptionStatus();
+    this.getStoredSubscriptionStatus().then(status => {
+      listener(status);
+    });
   }
 
-  private async checkSubscriptionStatus() {
+  private async getStoredSubscriptionStatus(): Promise<boolean> {
+    try {
+      const status = await AsyncStorage.getItem(SUBSCRIPTION_STATUS_KEY);
+      return status === 'true';
+    } catch (error) {
+      console.error('Failed to get stored subscription status:', error);
+      return false;
+    }
+  }
+
+  private async setStoredSubscriptionStatus(hasActiveSubscription: boolean) {
+    try {
+      await AsyncStorage.setItem(SUBSCRIPTION_STATUS_KEY, String(hasActiveSubscription));
+      this.lastCheckTimestamp = Date.now();
+    } catch (error) {
+      console.error('Failed to store subscription status:', error);
+    }
+  }
+
+  async checkSubscriptionStatus(forceCheck: boolean = false) {
+    const shouldCheck = forceCheck || 
+      (Date.now() - this.lastCheckTimestamp) > SUBSCRIPTION_CHECK_INTERVAL;
+
+    if (!shouldCheck) {
+      const storedStatus = await this.getStoredSubscriptionStatus();
+      this.notifyListeners(storedStatus);
+      return storedStatus;
+    }
+
     try {
       const purchases = await getAvailablePurchases();
       const hasActiveSubscription = purchases.some((purchase: ExtendedPurchase) => {
@@ -72,10 +107,14 @@ export class MyPurchaseController extends PurchaseController {
         return false;
       });
       
+      await this.setStoredSubscriptionStatus(hasActiveSubscription);
       this.notifyListeners(hasActiveSubscription);
+      return hasActiveSubscription;
     } catch (error) {
       console.error('Failed to check subscription status:', error);
-      this.notifyListeners(false);
+      const storedStatus = await this.getStoredSubscriptionStatus();
+      this.notifyListeners(storedStatus);
+      return storedStatus;
     }
   }
 
@@ -210,5 +249,7 @@ export class MyPurchaseController extends PurchaseController {
     } else {
       Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
     }
+
+    await this.setStoredSubscriptionStatus(status === SubscriptionStatus.ACTIVE);
   }
 } 

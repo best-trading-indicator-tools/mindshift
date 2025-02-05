@@ -29,6 +29,8 @@ import Animated, {
   withSequence,
   withRepeat,
 } from 'react-native-reanimated';
+import Superwall from '@superwall/react-native-superwall';
+import { firestore } from '../../services/firebase';
 
 GoogleSignin.configure({
   webClientId: Config.FIREBASE_CLIENT_ID,
@@ -38,6 +40,14 @@ interface GoogleSignInError {
   code: string | number;
   message: string;
 }
+
+const isNewUser = async (userId: string): Promise<boolean> => {
+  const userDoc = await firestore().collection('users').doc(userId).get();
+  const userData = userDoc.data();
+  
+  // Un utilisateur est considéré comme nouveau s'il n'a jamais eu d'abonnement ou d'essai
+  return userData?.subscriptionStatus === 'free' || !userData?.subscriptionStatus;
+};
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -186,6 +196,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         try {
           userCredential = await auth().createUserWithEmailAndPassword(email, password);
           await createUserProfile(userCredential.user);
+          
+          // Nouveau compte - montrer le paywall
+          await Superwall.shared.register('campaign_trigger');
+          
           navigation.replace('PostQuestionnaire');
         } catch (signUpError: any) {
           // Gérer les erreurs spécifiques à l'inscription
@@ -203,6 +217,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       } else {
         try {
           userCredential = await auth().signInWithEmailAndPassword(email, password);
+          
+          // Vérifier si l'utilisateur a un abonnement actif ou un essai valide
+          const userData = (await firestore().collection('users').doc(userCredential.user.uid).get()).data();
+          const isTrialValid = userData?.trialEndDate && new Date(userData.trialEndDate) > new Date();
+          const hasActiveSubscription = userData?.subscriptionStatus === 'monthly' || userData?.subscriptionStatus === 'yearly';
+
+          if (!hasActiveSubscription && !isTrialValid) {
+            await Superwall.shared.register('campaign_trigger');
+          }
+          
           navigation.replace('PostQuestionnaire');
         } catch (signInError: any) {
           if (signInError.code === 'auth/user-not-found') {
@@ -242,12 +266,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       console.log('🔄 LoginScreen: Got Google access token, creating credential');
       const googleCredential = auth.GoogleAuthProvider.credential(null, accessToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
+      
+      // Créer/mettre à jour le profil avec l'email
       await createUserProfile(userCredential.user);
       
-      console.log('🚀 LoginScreen: Google sign in successful, navigating to PostQuestionnaire');
+      // Vérifier si l'utilisateur a un abonnement actif ou un essai valide
+      const userData = (await firestore().collection('users').doc(userCredential.user.uid).get()).data();
+      const isTrialValid = userData?.trialEndDate && new Date(userData.trialEndDate) > new Date();
+      const hasActiveSubscription = userData?.subscriptionStatus === 'monthly' || userData?.subscriptionStatus === 'yearly';
+
+      if (!hasActiveSubscription && !isTrialValid) {
+        await Superwall.shared.register('campaign_trigger');
+      }
+      
       navigation.replace('PostQuestionnaire');
-    } catch (error) {
-      //console.error('❌ LoginScreen: Google sign in error:', error);
+    } catch (error: any) {
       handleAuthError(error);
     } finally {
       setLoading(false);
@@ -265,7 +298,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
       });
 
-      // If the user cancelled the login or no response, return silently
       if (!appleAuthRequestResponse || !appleAuthRequestResponse.identityToken) {
         console.log('User cancelled Apple sign in or no response received');
         return;
@@ -276,9 +308,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       console.log('🔄 LoginScreen: Got Apple identity token, creating credential');
       const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
       const userCredential = await auth().signInWithCredential(appleCredential);
+      
+      // Créer/mettre à jour le profil avec l'email
       await createUserProfile(userCredential.user);
       
-      console.log('🚀 LoginScreen: Apple sign in successful, navigating to PostQuestionnaire');
+      // Vérifier si l'utilisateur a un abonnement actif ou un essai valide
+      const userData = (await firestore().collection('users').doc(userCredential.user.uid).get()).data();
+      const isTrialValid = userData?.trialEndDate && new Date(userData.trialEndDate) > new Date();
+      const hasActiveSubscription = userData?.subscriptionStatus === 'monthly' || userData?.subscriptionStatus === 'yearly';
+
+      if (!hasActiveSubscription && !isTrialValid) {
+        await Superwall.shared.register('campaign_trigger');
+      }
+      
       navigation.replace('PostQuestionnaire');
     } catch (error: any) {
       // Handle all possible cancellation scenarios silently
