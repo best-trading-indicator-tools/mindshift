@@ -3208,6 +3208,12 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNIap (12.16.2):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - ReactCommon/turbomodule/core
   - RNReanimated (3.16.7):
     - DoubleConversion
     - glog
@@ -3524,6 +3530,7 @@ DEPENDENCIES:
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
+  - RNIap (from `../node_modules/react-native-iap`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSound (from `../node_modules/react-native-sound`)
@@ -3732,6 +3739,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-google-signin/google-signin"
+  RNIap:
+    :path: "../node_modules/react-native-iap"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -3856,6 +3865,7 @@ SPEC CHECKSUMS:
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 7843b2a5cef477136a3c1f2ffae7c0b7f6b3255a
   RNGoogleSignin: 27c2199f487ee08cc692d8d2c035bc9c154ddc22
+  RNIap: daac81aa70fe3ac6d6967c1c8da3dc4b415b73d6
   RNReanimated: ddc60075b382b872662cadaf9972b07d52a8fce7
   RNScreens: 3d9895696d5716e9a780237a9c2589c7aa3d199f
   RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852

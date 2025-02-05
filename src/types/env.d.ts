@@ -15,4 +15,6 @@ declare module '@env' {
   // Pexels API
   export const PEXELS_API_KEY: string;
   export const SUPERWALL_API_KEY: string;
+  // Shared Secret
+  export const APP_STORE_SHARED_SECRET: string;
 }

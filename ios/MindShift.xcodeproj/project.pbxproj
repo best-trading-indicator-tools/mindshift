@@ -14,6 +14,7 @@
 		3CB330DDB968CD00442B8300 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		4D32536F23CBFF7BAE53D2BC /* Pods_MindShift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0205712A57A5FD13A9D7682 /* Pods_MindShift.framework */; };
 		54B2F2669FEE4439A3AC2F03 /* Pods_MindShift_MindShiftTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E2E938A9094C8C13842D65 /* Pods_MindShift_MindShiftTests.framework */; };
+		5527B9162D535E6700C9D6B0 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5527B9152D535E6700C9D6B0 /* StoreKit.framework */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A123B45C6D7E8F91 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A123B45C6D7E8F90 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
@@ -54,6 +55,7 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = MindShift/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MindShift/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		25E2E938A9094C8C13842D65 /* Pods_MindShift_MindShiftTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MindShift_MindShiftTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5527B9152D535E6700C9D6B0 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		55806A952D24672A00C20682 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		55806A972D24672A00C20682 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		55806AAF2D2468D100C20682 /* MindShift.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = MindShift.entitlements; path = MindShift/MindShift.entitlements; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D32536F23CBFF7BAE53D2BC /* Pods_MindShift.framework in Frameworks */,
+				5527B9162D535E6700C9D6B0 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,6 +125,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5527B9152D535E6700C9D6B0 /* StoreKit.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				55806A952D24672A00C20682 /* WidgetKit.framework */,
 				55806A972D24672A00C20682 /* SwiftUI.framework */,
