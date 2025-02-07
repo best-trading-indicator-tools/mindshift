@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:StoreKitTest.storekit">
+   </FileRef>
+   <FileRef
       location = "group:MindShift.xcodeproj">
    </FileRef>
    <FileRef
