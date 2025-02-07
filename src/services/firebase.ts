@@ -28,9 +28,7 @@ export const createUserProfile = async (user: FirebaseAuthTypes.User): Promise<v
       name: user.displayName,
       createdAt: new Date(),
       lastLoginAt: new Date(),
-      subscriptionStatus: 'trial',
-      trialStartDate: new Date(),
-      trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      subscriptionStatus: 'free',
     };
 
     try {

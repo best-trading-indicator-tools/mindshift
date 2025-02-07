@@ -213,32 +213,41 @@ export class MyPurchaseController extends PurchaseController {
     }
   }
 
-  async updateSubscriptionStatus(status: SubscriptionStatus, type?: 'monthly' | 'yearly') {
+  async updateSubscriptionStatus(status: SubscriptionStatus, type?: 'monthly' | 'yearly' | 'trial') {
     const userId = auth().currentUser?.uid;
     if (!userId) return;
 
     const userRef = firestore().collection('users').doc(userId);
     
     if (status === SubscriptionStatus.ACTIVE) {
-      const subscriptionEndDate = type === 'yearly' 
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      if (type === 'trial') {
+        // Si c'est un essai, on définit les dates d'essai
+        await userRef.update({
+          subscriptionStatus: 'trial',
+          trialStartDate: new Date(),
+          trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 jours
+          lastUpdated: new Date()
+        });
+      } else {
+        // Si c'est un abonnement payant
+        const subscriptionEndDate = type === 'yearly' 
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-      await userRef.update({
-        subscriptionStatus: type || 'monthly',
-        subscriptionStartDate: new Date(),
-        subscriptionEndDate,
-        lastUpdated: new Date()
-      });
+        await userRef.update({
+          subscriptionStatus: type || 'monthly',
+          subscriptionStartDate: new Date(),
+          subscriptionEndDate,
+          lastUpdated: new Date()
+        });
+      }
     } else {
-      // Vérifie si l'utilisateur est encore en période d'essai
-      const userData = (await userRef.get()).data() as UserData;
-      const isTrialValid = userData?.trialEndDate && new Date(userData.trialEndDate) > new Date();
-      
       await userRef.update({
-        subscriptionStatus: isTrialValid ? 'trial' : 'free',
+        subscriptionStatus: 'free',
         subscriptionStartDate: null,
         subscriptionEndDate: null,
+        trialStartDate: null,
+        trialEndDate: null,
         lastUpdated: new Date()
       });
     }
