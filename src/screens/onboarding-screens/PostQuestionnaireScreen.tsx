@@ -62,12 +62,6 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
   const handleGetStarted = React.useCallback(async () => {
     try {
       await Superwall.shared.register('campaign_trigger');
-      requestAnimationFrame(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'MainTabs' }],
-        });
-      });
     } catch (error) {
       console.error('Superwall registration failed:', error);
     }
@@ -124,9 +118,6 @@ const PostQuestionnaireScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </View>
 
-            <Text style={styles.joinText}>
-              Start your free 7-day trial now and experience the transformation. No commitment required.
-            </Text>
           </View>
 
           <Animated.View 

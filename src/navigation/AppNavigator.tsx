@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { navigationRef } from '../services/SuperwallDelegate';
 
 // Screen imports
 import HomeScreen from '../screens/home-screens/HomeScreen';
@@ -319,300 +320,298 @@ interface AppNavigatorProps {
 
 const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRoute = 'PreQuestionnaire' }) => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+      initialRouteName={initialRoute}
+    >
+      <Stack.Screen
+        name="PreQuestionnaire"
+        component={PreQuestionnaireScreen}
+        options={{
           headerShown: false,
+          gestureEnabled: false,
         }}
-        initialRouteName={initialRoute}
-      >
-        <Stack.Screen
-          name="PreQuestionnaire"
-          component={PreQuestionnaireScreen}
-          options={{
-            headerShown: false,
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen}
-          options={{
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen 
-          name="PostQuestionnaire" 
-          component={PostQuestionnaireScreen}
-          options={{
-            headerShown: false,
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Questionnaire" 
-          component={QuestionnaireScreen}
-          options={{
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen 
-          name="MainTabs" 
-          component={MainTabNavigator}
-          options={{
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen name="AiCoach" component={AiCoachScreen} />
-        <Stack.Screen name="Support" component={SupportScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="NotificationsPush" component={NotificationsPushScreen} />
-        <Stack.Screen 
-          name="DeepBreathing" 
-          component={DeepBreathingScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="PassiveIncantations" 
-          component={PassiveIncantationsScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="DailyGratitude"
-          component={DailyGratitudeScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right'
-          }}
-        />
-        <Stack.Screen 
-          name="GoldenChecklist" 
-          component={GoldenChecklistScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="GoldenChecklistIntro" 
-          component={GoldenChecklistIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
-        <Stack.Screen name="VisionBoardIntro" component={VisionBoardIntroScreen} />
-        <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />
-        <Stack.Screen name="MentorBoard" component={MentorBoardScreen} />
-        <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
-        <Stack.Screen name="VisionBoardSectionPhotos" component={VisionBoardSectionPhotosScreen} />
-        <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
-        <Stack.Screen name="VisionBoardEditSectionName" component={VisionBoardEditSectionNameScreen} />
-        <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
-        <Stack.Screen name="MentorBoardDetails" component={MentorBoardDetailsScreen} />
-        <Stack.Screen 
-          name="DailyGratitudeIntro" 
-          component={DailyGratitudeIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="DeepBreathingIntro" 
-          component={DeepBreathingIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="PassiveIncantationsIntro" 
-          component={PassiveIncantationsIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="Trial" 
-          component={TrialScreen}
-          options={{
-            gestureEnabled: false,
-          }}
-        />
-        <Stack.Screen
-          name="GratitudeBeads"
-          component={GratitudeBeadsScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="GratitudeBeadsIntro"
-          component={GratitudeBeadsIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="SunBreathTutorial" 
-          component={SunBreathTutorialScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="SunBreathExercise" 
-          component={SunBreathExerciseScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="SunBreathComplete" 
-          component={SunBreathCompleteScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen 
+        name="PostQuestionnaire" 
+        component={PostQuestionnaireScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen 
+        name="Questionnaire" 
+        component={QuestionnaireScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen 
+        name="MainTabs" 
+        component={MainTabNavigator}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen name="AiCoach" component={AiCoachScreen} />
+      <Stack.Screen name="Support" component={SupportScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="NotificationsPush" component={NotificationsPushScreen} />
+      <Stack.Screen 
+        name="DeepBreathing" 
+        component={DeepBreathingScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="PassiveIncantations" 
+        component={PassiveIncantationsScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="DailyGratitude"
+        component={DailyGratitudeScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right'
+        }}
+      />
+      <Stack.Screen 
+        name="GoldenChecklist" 
+        component={GoldenChecklistScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="GoldenChecklistIntro" 
+        component={GoldenChecklistIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen name="VisionBoard" component={VisionBoardScreen} />
+      <Stack.Screen name="VisionBoardIntro" component={VisionBoardIntroScreen} />
+      <Stack.Screen name="MentorBoardIntro" component={MentorBoardIntroScreen} />
+      <Stack.Screen name="MentorBoard" component={MentorBoardScreen} />
+      <Stack.Screen name="VisionBoardSections" component={VisionBoardSectionsScreen} />
+      <Stack.Screen name="VisionBoardSectionPhotos" component={VisionBoardSectionPhotosScreen} />
+      <Stack.Screen name="NewVisionBoardSection" component={NewVisionBoardSection} />
+      <Stack.Screen name="VisionBoardEditSectionName" component={VisionBoardEditSectionNameScreen} />
+      <Stack.Screen name="MusicSelection" component={MusicSelectionScreen} />
+      <Stack.Screen name="MentorBoardDetails" component={MentorBoardDetailsScreen} />
+      <Stack.Screen 
+        name="DailyGratitudeIntro" 
+        component={DailyGratitudeIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="DeepBreathingIntro" 
+        component={DeepBreathingIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="PassiveIncantationsIntro" 
+        component={PassiveIncantationsIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="Trial" 
+        component={TrialScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="GratitudeBeads"
+        component={GratitudeBeadsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="GratitudeBeadsIntro"
+        component={GratitudeBeadsIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="SunBreathTutorial" 
+        component={SunBreathTutorialScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="SunBreathExercise" 
+        component={SunBreathExerciseScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="SunBreathComplete" 
+        component={SunBreathCompleteScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen name="SunBreathSettings" component={SunBreathSettingsScreen} />
 
-        <Stack.Screen 
-          name="Language" 
-          component={LanguageScreen}
-          options={{
-            headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen 
+        name="Language" 
+        component={LanguageScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen 
-          name="DeleteAccount" 
-          component={DeleteAccountScreen}
-          options={{
-            headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen 
+        name="DeleteAccount" 
+        component={DeleteAccountScreen}
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen 
-          name="ManageActiveIncantations" 
-          component={ManageActiveIncantationsScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="ActiveIncantationsExercise" 
-          component={ActiveIncantationsExerciseScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="ActiveIncantationsIntro" 
-          component={ActiveIncantationsIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen 
+        name="ManageActiveIncantations" 
+        component={ManageActiveIncantationsScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="ActiveIncantationsExercise" 
+        component={ActiveIncantationsExerciseScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="ActiveIncantationsIntro" 
+        component={ActiveIncantationsIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen
-          name="ChallengeDetail"
-          component={ChallengeDetailScreen}
-          options={{ headerShown: false }}
-        />
+      <Stack.Screen
+        name="ChallengeDetail"
+        component={ChallengeDetailScreen}
+        options={{ headerShown: false }}
+      />
 
-        <Stack.Screen 
-          name="DeepBreathingComplete" 
-          component={DeepBreathingCompleteScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen 
+        name="DeepBreathingComplete" 
+        component={DeepBreathingCompleteScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen 
-          name="SelfHypnosisIntro" 
-          component={SelfHypnosisIntroScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen 
-          name="SelfHypnosisExercise" 
-          component={SelfHypnosisExerciseScreen}
-          options={{
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen 
+        name="SelfHypnosisIntro" 
+        component={SelfHypnosisIntroScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen 
+        name="SelfHypnosisExercise" 
+        component={SelfHypnosisExerciseScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen
-          name="GuidedRelaxationIntro"
-          component={GuidedRelaxationIntroScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="GuidedRelaxationExercise"
-          component={GuidedRelaxationExerciseScreen}
-          options={{ headerShown: false }}
-        />
+      <Stack.Screen
+        name="GuidedRelaxationIntro"
+        component={GuidedRelaxationIntroScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GuidedRelaxationExercise"
+        component={GuidedRelaxationExerciseScreen}
+        options={{ headerShown: false }}
+      />
 
-        <Stack.Screen
-          name="GoldenChecklistAnalysis"
-          component={GoldenChecklistAnalysisScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen
+        name="GoldenChecklistAnalysis"
+        component={GoldenChecklistAnalysisScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen
-          name="GratitudeAnalysis"
-          component={DailyGratitudeAnalysisScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen
+        name="GratitudeAnalysis"
+        component={DailyGratitudeAnalysisScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-        <Stack.Screen
-          name="GratitudeBeadsAnalysis"
-          component={GratitudeBeadsAnalysisScreen}
-          options={{
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_right',
-          }}
-        />
+      <Stack.Screen
+        name="GratitudeBeadsAnalysis"
+        component={GratitudeBeadsAnalysisScreen}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_right',
+        }}
+      />
 
-      </Stack.Navigator>
-    </NavigationContainer>
+    </Stack.Navigator>
   );
 };
 

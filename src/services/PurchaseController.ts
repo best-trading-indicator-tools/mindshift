@@ -40,6 +40,7 @@ const SUBSCRIPTION_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h en millisecondes
 export class MyPurchaseController extends PurchaseController {
   private listeners: SubscriptionStatusListener[] = [];
   private lastCheckTimestamp: number = 0;
+  private _lastNotifiedStatus: boolean = false;
 
   constructor() {
     super();
@@ -107,6 +108,10 @@ export class MyPurchaseController extends PurchaseController {
         return false;
       });
       
+      if (!hasActiveSubscription) {
+        Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
+      }
+      
       await this.setStoredSubscriptionStatus(hasActiveSubscription);
       this.notifyListeners(hasActiveSubscription);
       return hasActiveSubscription;
@@ -119,6 +124,8 @@ export class MyPurchaseController extends PurchaseController {
   }
 
   private notifyListeners(hasActiveSubscription: boolean) {
+    if (this._lastNotifiedStatus === hasActiveSubscription) return;
+    this._lastNotifiedStatus = hasActiveSubscription;
     this.listeners.forEach(listener => listener(hasActiveSubscription));
   }
 
@@ -133,7 +140,17 @@ export class MyPurchaseController extends PurchaseController {
         }]
       });
       
-      if (purchase && 'transactionReceipt' in purchase) {
+      if (!purchase) {
+        return {
+          type: 'cancelled',
+          toJSON: () => ({ type: 'cancelled' })
+        } as PurchaseResult;
+      }
+
+      if ('transactionReceipt' in purchase) {
+        // Attendre que la transaction soit terminée avant de continuer
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const receipt = await validateReceiptIos({
           receiptBody: {
             'receipt-data': purchase.transactionReceipt,
@@ -148,6 +165,9 @@ export class MyPurchaseController extends PurchaseController {
           });
         }
 
+        // Attendre encore un peu avant de mettre à jour le statut
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const type = productId.includes('yearly') ? 'yearly' : 'monthly';
         await this.updateSubscriptionStatus(SubscriptionStatus.ACTIVE, type);
 
@@ -159,6 +179,15 @@ export class MyPurchaseController extends PurchaseController {
       
       throw new Error('No transaction receipt');
     } catch (error) {
+      if (error instanceof Error && 
+          (error.message.includes('cancelled') || 
+           error.message.includes('user canceled'))) {
+        return {
+          type: 'cancelled',
+          toJSON: () => ({ type: 'cancelled' })
+        } as PurchaseResult;
+      }
+
       console.error('App Store purchase failed:', error);
       const purchaseError = error as PurchaseError;
       return {
@@ -219,46 +248,48 @@ export class MyPurchaseController extends PurchaseController {
 
     const userRef = firestore().collection('users').doc(userId);
     
-    if (status === SubscriptionStatus.ACTIVE) {
-      if (type === 'trial') {
-        // Si c'est un essai, on définit les dates d'essai
-        await userRef.update({
-          subscriptionStatus: 'trial',
-          trialStartDate: new Date(),
-          trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 jours
-          lastUpdated: new Date()
-        });
-      } else {
-        // Si c'est un abonnement payant
-        const subscriptionEndDate = type === 'yearly' 
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    try {
+      if (status === SubscriptionStatus.ACTIVE) {
+        if (type === 'trial') {
+          // Si c'est un essai, on définit les dates d'essai
+          await userRef.update({
+            subscriptionStatus: 'trial',
+            trialStartDate: new Date(),
+            trialEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 jours
+            lastUpdated: new Date()
+          });
+        } else {
+          // Si c'est un abonnement payant
+          const subscriptionEndDate = type === 'yearly' 
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
+          await userRef.update({
+            subscriptionStatus: type || 'monthly',
+            subscriptionStartDate: new Date(),
+            subscriptionEndDate,
+            lastUpdated: new Date()
+          });
+        }
+      } else {
         await userRef.update({
-          subscriptionStatus: type || 'monthly',
-          subscriptionStartDate: new Date(),
-          subscriptionEndDate,
+          subscriptionStatus: 'free',
+          subscriptionStartDate: null,
+          subscriptionEndDate: null,
+          trialStartDate: null,
+          trialEndDate: null,
           lastUpdated: new Date()
         });
       }
-    } else {
-      await userRef.update({
-        subscriptionStatus: 'free',
-        subscriptionStartDate: null,
-        subscriptionEndDate: null,
-        trialStartDate: null,
-        trialEndDate: null,
-        lastUpdated: new Date()
-      });
-    }
 
-    // Notifie Superwall
-    if (status === SubscriptionStatus.ACTIVE) {
-      Superwall.shared.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-    } else {
-      Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
-    }
+      // Notifie Superwall une seule fois
+      Superwall.shared.setSubscriptionStatus(
+        status === SubscriptionStatus.ACTIVE ? SubscriptionStatus.ACTIVE : SubscriptionStatus.INACTIVE
+      );
 
-    await this.setStoredSubscriptionStatus(status === SubscriptionStatus.ACTIVE);
+      await this.setStoredSubscriptionStatus(status === SubscriptionStatus.ACTIVE);
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+    }
   }
 } 

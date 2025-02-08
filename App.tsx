@@ -5,21 +5,21 @@
  * @format
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@rneui/themed';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import AppNavigator from './src/navigation/AppNavigator';
-import { ActivityIndicator, View, unstable_batchedUpdates, LogBox, Platform } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { getQuestionnaireStatus } from './src/services/questionnaireService';
 import { enableScreens } from 'react-native-screens';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import Superwall, { SubscriptionStatus } from '@superwall/react-native-superwall';
 import { SUPERWALL_API_KEY } from '@env';
 import { MyPurchaseController } from './src/services/PurchaseController';
-
+import { NavigationContainer } from '@react-navigation/native';
+import { createSuperwallOptions, navigationRef, delegate } from './src/services/SuperwallDelegate';
 
 // Disable Reanimated warnings in development
 if (__DEV__) {
@@ -30,6 +30,7 @@ if (__DEV__) {
     'Require cycle:',
     'Tried to modify key',
     'Please report: Excessive number of pending callbacks',
+    'Maximum update depth exceeded'
   ];
 
   const oldConsoleWarn = console.warn;
@@ -46,51 +47,34 @@ function App(): JSX.Element {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initialRoute, setInitialRoute] = useState<'PreQuestionnaire' | 'MainTabs' | 'PostQuestionnaire'>('PreQuestionnaire');
-  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Configuration initiale unique de Superwall
+  const purchaseController = new MyPurchaseController();
+  const options = createSuperwallOptions();
+  
+  // Configurer Superwall immédiatement au démarrage
+  Superwall.configure(SUPERWALL_API_KEY, options, purchaseController)
+    .then(() => {
+      Superwall.shared.setDelegate(delegate);
+      purchaseController.addSubscriptionStatusListener((hasActiveSubscription: boolean) => {
+        const newStatus = hasActiveSubscription ? SubscriptionStatus.ACTIVE : SubscriptionStatus.INACTIVE;
+        Superwall.shared.setSubscriptionStatus(newStatus);
+      });
+    })
+    .catch(error => {
+      console.error('Failed to configure Superwall:', error);
+    });
 
   const handleAuthStateChanged = useCallback((firebaseUser: FirebaseAuthTypes.User | null) => {
-    if (!hasInitialized) {
-      unstable_batchedUpdates(() => {
-        setUser(firebaseUser);
-        setInitialRoute(firebaseUser ? 'MainTabs' : 'PreQuestionnaire');
-        setInitializing(false);
-        setHasInitialized(true);
-      });
-    } else {
-      setUser(firebaseUser);
-    }
-  }, [hasInitialized]);
+    setUser(firebaseUser);
+    setInitialRoute(firebaseUser ? 'MainTabs' : 'PreQuestionnaire');
+    setInitializing(false);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(handleAuthStateChanged);
     return () => unsubscribe();
   }, [handleAuthStateChanged]);
-
-  const memoizedNavigator = React.useMemo(() => {
-    return <AppNavigator initialRoute={initialRoute} />;
-  }, [initialRoute]);
-
-  // Add Superwall event listeners in the same useEffect
-  useEffect(() => {
-    const configureSuperwall = async () => {
-      try {
-        const purchaseController = new MyPurchaseController();
-        purchaseController.addSubscriptionStatusListener((hasActiveSubscription: boolean) => {
-          if (hasActiveSubscription) {
-            Superwall.shared.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-          } else {
-            Superwall.shared.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
-          }
-        });
-
-        await Superwall.configure(SUPERWALL_API_KEY, undefined, purchaseController);
-      } catch (error) {
-        console.error('Failed to configure Superwall:', error);
-      }
-    };
-
-    configureSuperwall();
-  }, []);
 
   if (initializing) {
     return (
@@ -104,7 +88,9 @@ function App(): JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          {memoizedNavigator}
+          <NavigationContainer ref={navigationRef}>
+            <AppNavigator initialRoute={initialRoute} />
+          </NavigationContainer>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

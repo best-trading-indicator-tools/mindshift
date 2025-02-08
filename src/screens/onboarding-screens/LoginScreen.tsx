@@ -198,9 +198,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           await createUserProfile(userCredential.user);
           
           // Nouveau compte - montrer le paywall
+          // Attendre un court instant avant de naviguer
           await Superwall.shared.register('campaign_trigger');
           
-          navigation.replace('PostQuestionnaire');
+          // Utiliser setTimeout pour éviter la boucle de mise à jour
+          setTimeout(() => {
+            navigation.replace('PostQuestionnaire');
+          }, 100);
         } catch (signUpError: any) {
           // Gérer les erreurs spécifiques à l'inscription
           if (signUpError.code === 'auth/email-already-in-use') {
@@ -227,7 +231,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             await Superwall.shared.register('campaign_trigger');
           }
           
-          navigation.replace('PostQuestionnaire');
+          // Utiliser setTimeout pour éviter la boucle de mise à jour
+          setTimeout(() => {
+            navigation.replace('PostQuestionnaire');
+          }, 100);
         } catch (signInError: any) {
           if (signInError.code === 'auth/user-not-found') {
             setError('No account found with this email');
